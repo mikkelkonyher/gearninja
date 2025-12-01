@@ -78,6 +78,17 @@ export function CreateGuitarPage() {
     year: "",
   });
 
+  // Check if user is logged in on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError("Log ind for at oprette en annonce");
+      }
+    };
+    checkAuth();
+  }, []);
+
   // Load existing product data when editing
   useEffect(() => {
     if (editProduct) {
