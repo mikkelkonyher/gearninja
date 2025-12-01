@@ -10,8 +10,8 @@ const categories = [
   'Bas',
   'Guitar',
   'Keyboards',
-  'Synths',
   'Blæs',
+  'Strygere',
   'Studieudstyr',
   'Øvelokaler',
 ];
@@ -81,6 +81,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       categoryPath = "/guitar";
                     } else if (category === "Bas") {
                       categoryPath = "/bas";
+                    } else if (category === "Keyboards") {
+                      categoryPath = "/keyboards";
+                    } else if (category === "Blæs") {
+                      categoryPath = "/blaes";
+                    } else if (category === "Strygere") {
+                      categoryPath = "/strygere";
+                    } else if (category === "Studieudstyr") {
+                      categoryPath = "/studieudstyr";
                     }
               return (
                 <Link
@@ -197,6 +205,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       categoryPath = "/guitar";
                     } else if (category === "Bas") {
                       categoryPath = "/bas";
+                    } else if (category === "Keyboards") {
+                      categoryPath = "/keyboards";
+                    } else if (category === "Blæs") {
+                      categoryPath = "/blaes";
+                    } else if (category === "Strygere") {
+                      categoryPath = "/strygere";
+                    } else if (category === "Studieudstyr") {
+                      categoryPath = "/studieudstyr";
                     }
                     return (
                       <Link
