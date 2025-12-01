@@ -39,7 +39,11 @@ export function GuitarPage() {
       const to = from + itemsPerPage - 1;
 
       // Fetch products with pagination
-      const { data, error: fetchError, count } = await supabase
+      const {
+        data,
+        error: fetchError,
+        count,
+      } = await supabase
         .from("products")
         .select("*", { count: "exact" })
         .eq("category", "guitar")
@@ -128,7 +132,11 @@ export function GuitarPage() {
                     {product.image_urls && product.image_urls.length > 0 ? (
                       <img
                         src={product.image_urls[0]}
-                        alt={product.brand && product.model ? `${product.brand} ${product.model}` : product.type}
+                        alt={
+                          product.brand && product.model
+                            ? `${product.brand} ${product.model}`
+                            : product.type
+                        }
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
@@ -181,22 +189,26 @@ export function GuitarPage() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 rounded-lg border transition-colors ${
-                    currentPage === page
-                      ? "bg-neon-blue border-neon-blue text-white"
-                      : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                      currentPage === page
+                        ? "bg-neon-blue border-neon-blue text-white"
+                        : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
             </div>
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
               disabled={currentPage === totalPages}
               className="p-2 rounded-lg border border-white/10 bg-secondary/40 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary/60 transition-colors"
             >
@@ -208,4 +220,3 @@ export function GuitarPage() {
     </div>
   );
 }
-
