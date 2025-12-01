@@ -23,6 +23,7 @@ interface Product {
   year: number | null;
   image_urls: string[];
   created_at: string;
+  user_id: string;
 }
 
 export function ProductDetailPage() {
@@ -34,6 +35,7 @@ export function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
+  const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -53,10 +55,32 @@ export function ProductDetailPage() {
       if (fetchError) throw fetchError;
 
       setProduct(data);
+
+      // Fetch creator username
+      if (data?.user_id) {
+        await fetchCreatorUsername(data.user_id);
+      }
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente produkt");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCreatorUsername = async (userId: string) => {
+    try {
+      const { data: userData, error: userError } = await supabase
+        .rpc('get_user_username', { user_uuid: userId });
+
+      if (!userError && userData) {
+        const username = userData.username || userData.email?.split('@')[0] || 'Bruger';
+        setCreatorUsername(username);
+      } else {
+        setCreatorUsername('Bruger');
+      }
+    } catch (err) {
+      console.error('Error fetching creator username:', err);
+      setCreatorUsername('Bruger');
     }
   };
 
@@ -334,6 +358,15 @@ export function ProductDetailPage() {
                           Lokation
                         </h3>
                         <p className="text-white text-base">{product.location}</p>
+                      </div>
+                    )}
+
+                    {creatorUsername && (
+                      <div className="pt-3 border-t border-white/5">
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                          Sælger
+                        </h3>
+                        <p className="text-white text-base">{creatorUsername}</p>
                       </div>
                     )}
                   </div>

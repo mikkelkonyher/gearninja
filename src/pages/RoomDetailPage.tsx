@@ -26,6 +26,7 @@ interface RehearsalRoom {
   type: string;
   image_urls: string[];
   created_at: string;
+  user_id: string;
 }
 
 export function RoomDetailPage() {
@@ -37,6 +38,7 @@ export function RoomDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
+  const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -56,10 +58,32 @@ export function RoomDetailPage() {
       if (fetchError) throw fetchError;
 
       setRoom(data);
+
+      // Fetch creator username
+      if (data?.user_id) {
+        await fetchCreatorUsername(data.user_id);
+      }
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente lokale");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCreatorUsername = async (userId: string) => {
+    try {
+      const { data: userData, error: userError } = await supabase
+        .rpc('get_user_username', { user_uuid: userId });
+
+      if (!userError && userData) {
+        const username = userData.username || userData.email?.split('@')[0] || 'Bruger';
+        setCreatorUsername(username);
+      } else {
+        setCreatorUsername('Bruger');
+      }
+    } catch (err) {
+      console.error('Error fetching creator username:', err);
+      setCreatorUsername('Bruger');
     }
   };
 
@@ -323,6 +347,18 @@ export function RoomDetailPage() {
                     <p className="text-white whitespace-pre-wrap leading-relaxed">
                       {room.description}
                     </p>
+                  </div>
+                )}
+
+                {creatorUsername && (
+                  <div className="p-4 rounded-xl border border-white/10 bg-secondary/40">
+                    <div className="flex items-center gap-3 mb-2">
+                      <MapPin className="w-5 h-5 text-neon-blue" />
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                        Udlejer
+                      </h3>
+                    </div>
+                    <p className="text-white">{creatorUsername}</p>
                   </div>
                 )}
               </div>
