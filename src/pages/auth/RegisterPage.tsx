@@ -34,7 +34,7 @@ export function RegisterPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("register", {
+      const { error } = await supabase.functions.invoke("register", {
         body: {
           email: formData.email,
           password: formData.password,

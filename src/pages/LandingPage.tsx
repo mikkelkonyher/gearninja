@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ArrowRight, Music, Users, Mic2, Speaker, Search } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 
