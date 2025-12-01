@@ -9,6 +9,7 @@ import {
   Headphones,
   Building2,
   ArrowLeft,
+  Music,
 } from "lucide-react";
 
 const categories = [
@@ -59,6 +60,14 @@ const categories = [
     color: "from-cyan-500/20 to-blue-500/20",
     borderColor: "border-cyan-500/30",
     hoverColor: "hover:border-cyan-500/60",
+  },
+  {
+    name: "Strygere",
+    slug: "strygere",
+    icon: Music,
+    color: "from-violet-500/20 to-purple-500/20",
+    borderColor: "border-violet-500/30",
+    hoverColor: "hover:border-violet-500/60",
   },
   {
     name: "Studieudstyr",
