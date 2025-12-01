@@ -19,6 +19,7 @@ const categories = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
+  const [username, setUsername] = React.useState<string | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const navigate = useNavigate();
 
@@ -27,12 +28,22 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
     supabase.auth.getUser().then(({ data }) => {
       if (!isMounted) return;
-      setUserEmail(data.user?.email ?? null);
+      const user = data.user;
+      setUserEmail(user?.email ?? null);
+      setUsername(
+        (user?.user_metadata as any)?.username ??
+          (user?.email ? user.email.split('@')[0] : null)
+      );
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        setUserEmail(session?.user?.email ?? null);
+        const user = session?.user ?? null;
+        setUserEmail(user?.email ?? null);
+        setUsername(
+          (user?.user_metadata as any)?.username ??
+            (user?.email ? user.email.split('@')[0] : null)
+        );
       }
     );
 
@@ -87,18 +98,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {userEmail ? (
               <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
                 <span className="hidden text-sm text-muted-foreground md:inline">
-                  {userEmail}
+                  {username ?? userEmail}
                 </span>
                 <button
                   onClick={() => setIsUserMenuOpen((open) => !open)}
                   className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
                 >
-                  {userEmail.charAt(0).toUpperCase()}
+                  {(username ?? userEmail).charAt(0).toUpperCase()}
                 </button>
                 {isUserMenuOpen && (
                   <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
                     <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
-                      {userEmail}
+                      {username ?? userEmail}
                     </div>
                     <nav className="py-1">
                       <button
@@ -185,6 +196,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       >
                         Profil
                       </Button>
+                      <span className="text-xs text-muted-foreground pl-1">
+                        {username ?? userEmail}
+                      </span>
                       <Button
                         variant="ghost"
                         className="w-full justify-start"

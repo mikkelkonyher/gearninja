@@ -10,6 +10,7 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
+    username: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -18,6 +19,11 @@ export function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!formData.username.trim()) {
+      setError('Vælg et brugernavn');
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Adgangskoderne matcher ikke');
@@ -30,6 +36,11 @@ export function RegisterPage() {
       const { error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          data: {
+            username: formData.username.trim(),
+          },
+        },
       });
 
       if (error) throw error;
@@ -64,6 +75,17 @@ export function RegisterPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Brugernavn</label>
+              <input
+                type="text"
+                required
+                className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                placeholder="f.eks. trommeslager87"
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              />
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-300">Email</label>
               <div className="relative">
