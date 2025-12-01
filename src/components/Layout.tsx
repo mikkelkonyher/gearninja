@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Music, Search } from 'lucide-react';
+import { Menu, X, Search } from 'lucide-react';
 import { Button } from './ui/Button';
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -26,9 +26,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="relative flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-purple-600 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] transition-all duration-300">
-              <Music className="w-6 h-6 text-white" />
-            </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 group-hover:from-neon-blue group-hover:to-neon-purple transition-all duration-300">
               GearNinja
             </span>
