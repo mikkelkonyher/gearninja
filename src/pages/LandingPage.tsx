@@ -8,7 +8,7 @@ export function LandingPage() {
   return (
     <div className="flex flex-col gap-20 pb-20">
       {/* Hero Section */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
+      <section className="relative pt-16 pb-20 md:pt-20 md:pb-24 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -17,13 +17,13 @@ export function LandingPage() {
             className="space-y-6"
           >
             {/* Landing search */}
-            <div className="max-w-xl mx-auto">
+            <div className="max-w-3xl mx-auto">
               <div className="relative group">
-                <Search className="w-5 h-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors" />
+                <Search className="w-6 h-6 text-muted-foreground absolute left-5 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors" />
                 <input
                   type="text"
                   placeholder="Søg efter guitarer, trommesæt, studieudstyr eller øvelokaler..."
-                  className="w-full pl-11 pr-4 py-3 rounded-full bg-background/80 border border-white/15 text-sm md:text-base text-foreground placeholder:text-muted-foreground/70 shadow-[0_0_0_1px_rgba(15,23,42,0.6)] focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-neon-blue transition-all"
+                  className="w-full pl-14 pr-5 py-4 md:py-5 rounded-full bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-white/20 text-base md:text-lg text-foreground placeholder:text-muted-foreground/70 shadow-[0_18px_45px_rgba(0,0,0,0.8)] focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-neon-blue transition-all"
                 />
               </div>
             </div>
