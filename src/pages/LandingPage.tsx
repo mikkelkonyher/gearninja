@@ -1,8 +1,7 @@
-
-import { motion } from 'framer-motion';
-import { ArrowRight, Music, Users, Mic2, Speaker, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Button } from '../components/ui/Button';
+import { motion } from "framer-motion";
+import { ArrowRight, Music, Users, Mic2, Speaker, Search } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "../components/ui/Button";
 
 export function LandingPage() {
   return (
@@ -22,7 +21,7 @@ export function LandingPage() {
                 <Search className="w-6 h-6 text-muted-foreground absolute left-5 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors" />
                 <input
                   type="text"
-                  placeholder="Søg efter guitarer, trommesæt, studieudstyr eller øvelokaler..."
+                  placeholder="Søg efter musikudstyr..."
                   className="w-full pl-14 pr-5 py-4 md:py-5 rounded-full bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-white/20 text-base md:text-lg text-foreground placeholder:text-muted-foreground/70 shadow-[0_18px_45px_rgba(0,0,0,0.8)] focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-neon-blue transition-all"
                 />
               </div>
@@ -38,13 +37,21 @@ export function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">
-                <Button variant="neon" size="lg" className="w-full sm:w-auto group">
+                <Button
+                  variant="neon"
+                  size="lg"
+                  className="w-full sm:w-auto group"
+                >
                   Kom i gang
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
               <Link to="/category/all">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
                   Udforsk markedet
                 </Button>
               </Link>
@@ -72,21 +79,41 @@ export function LandingPage() {
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
             {[
-              { title: 'Fender Jazz Bass', meta: '34" · 4-strenget · Vintage', likes: 42 },
-              { title: 'Nord Stage 3', meta: '88 keys · Stage piano', likes: 35 },
-              { title: 'Ludwig Supraphonic', meta: '14x5" · Snare', likes: 28 },
-              { title: 'Universal Audio Apollo Twin', meta: '2x6 Thunderbolt', likes: 21 },
-              { title: 'Roland Juno-106', meta: 'Analog polysynth', likes: 18 },
-              { title: 'Mesa Boogie Dual Rectifier', meta: 'Guitarforstærker', likes: 16 },
-              { title: 'Moog Sub 37', meta: 'Monosynth', likes: 14 },
+              {
+                title: "Fender Jazz Bass",
+                meta: '34" · 4-strenget · Vintage',
+                likes: 42,
+              },
+              {
+                title: "Nord Stage 3",
+                meta: "88 keys · Stage piano",
+                likes: 35,
+              },
+              { title: "Ludwig Supraphonic", meta: '14x5" · Snare', likes: 28 },
+              {
+                title: "Universal Audio Apollo Twin",
+                meta: "2x6 Thunderbolt",
+                likes: 21,
+              },
+              { title: "Roland Juno-106", meta: "Analog polysynth", likes: 18 },
+              {
+                title: "Mesa Boogie Dual Rectifier",
+                meta: "Guitarforstærker",
+                likes: 16,
+              },
+              { title: "Moog Sub 37", meta: "Monosynth", likes: 14 },
             ].map((item) => (
               <motion.div
                 key={item.title}
                 whileHover={{ y: -2 }}
                 className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
               >
-                <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
-                  style={{ backgroundImage: 'url(https://images.pexels.com/photos/164745/pexels-photo-164745.jpeg?auto=compress&cs=tinysrgb&w=640)' }}
+                <div
+                  className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
+                  style={{
+                    backgroundImage:
+                      "url(https://images.pexels.com/photos/164745/pexels-photo-164745.jpeg?auto=compress&cs=tinysrgb&w=640)",
+                  }}
                 />
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-sm font-semibold text-white line-clamp-2">
@@ -115,21 +142,37 @@ export function LandingPage() {
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
             {[
-              { title: 'Gibson Les Paul Studio 2012', meta: 'København · 7.500 kr.' },
-              { title: 'Elektron Digitakt', meta: 'Aarhus · 3.800 kr.' },
-              { title: 'Yamaha HS8 monitors (sæt)', meta: 'Odense · 2.900 kr.' },
-              { title: 'Shure SM7B', meta: 'Online handel · 2.000 kr.' },
-              { title: 'Boss RC-505 Loop Station', meta: 'København · 2.300 kr.' },
-              { title: 'Gretsch Brooklyn Drum Kit', meta: 'Aalborg · 11.500 kr.' },
-              { title: 'Line 6 HX Stomp', meta: 'Aarhus · 2.400 kr.' },
+              {
+                title: "Gibson Les Paul Studio 2012",
+                meta: "København · 7.500 kr.",
+              },
+              { title: "Elektron Digitakt", meta: "Aarhus · 3.800 kr." },
+              {
+                title: "Yamaha HS8 monitors (sæt)",
+                meta: "Odense · 2.900 kr.",
+              },
+              { title: "Shure SM7B", meta: "Online handel · 2.000 kr." },
+              {
+                title: "Boss RC-505 Loop Station",
+                meta: "København · 2.300 kr.",
+              },
+              {
+                title: "Gretsch Brooklyn Drum Kit",
+                meta: "Aalborg · 11.500 kr.",
+              },
+              { title: "Line 6 HX Stomp", meta: "Aarhus · 2.400 kr." },
             ].map((item) => (
               <motion.div
                 key={item.title}
                 whileHover={{ y: -2 }}
                 className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
               >
-                <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
-                  style={{ backgroundImage: 'url(https://images.pexels.com/photos/709746/pexels-photo-709746.jpeg?auto=compress&cs=tinysrgb&w=640)' }}
+                <div
+                  className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
+                  style={{
+                    backgroundImage:
+                      "url(https://images.pexels.com/photos/709746/pexels-photo-709746.jpeg?auto=compress&cs=tinysrgb&w=640)",
+                  }}
                 />
                 <h3 className="text-sm font-semibold text-white line-clamp-2">
                   {item.title}
@@ -152,21 +195,46 @@ export function LandingPage() {
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
             {[
-              { title: 'Øvelokale v. Nørrebro', meta: 'Delt · 24/7 adgang · 2.000 kr./md.' },
-              { title: 'Projektstudie i Aarhus C', meta: 'Kontrolrum + vokalboks' },
-              { title: 'Trommevenligt rum i kælder', meta: 'Lydisoleret · Kbh NV' },
-              { title: 'Lydstudie til podcast', meta: 'Full setup · Frederiksberg' },
-              { title: 'Replokale v. Vesterbro', meta: 'Backline inkluderet · 3.200 kr./md.' },
-              { title: 'Delestudie i Kolding', meta: '2 producere · delt husleje' },
-              { title: 'Øvelokale til metalband', meta: 'Tykkere vægge end normalt' },
+              {
+                title: "Øvelokale v. Nørrebro",
+                meta: "Delt · 24/7 adgang · 2.000 kr./md.",
+              },
+              {
+                title: "Projektstudie i Aarhus C",
+                meta: "Kontrolrum + vokalboks",
+              },
+              {
+                title: "Trommevenligt rum i kælder",
+                meta: "Lydisoleret · Kbh NV",
+              },
+              {
+                title: "Lydstudie til podcast",
+                meta: "Full setup · Frederiksberg",
+              },
+              {
+                title: "Replokale v. Vesterbro",
+                meta: "Backline inkluderet · 3.200 kr./md.",
+              },
+              {
+                title: "Delestudie i Kolding",
+                meta: "2 producere · delt husleje",
+              },
+              {
+                title: "Øvelokale til metalband",
+                meta: "Tykkere vægge end normalt",
+              },
             ].map((item) => (
               <motion.div
                 key={item.title}
                 whileHover={{ y: -2 }}
                 className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
               >
-                <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
-                  style={{ backgroundImage: 'url(https://images.pexels.com/photos/8101520/pexels-photo-8101520.jpeg?auto=compress&cs=tinysrgb&w=640)' }}
+                <div
+                  className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
+                  style={{
+                    backgroundImage:
+                      "url(https://images.pexels.com/photos/8101520/pexels-photo-8101520.jpeg?auto=compress&cs=tinysrgb&w=640)",
+                  }}
                 />
                 <h3 className="text-sm font-semibold text-white line-clamp-2">
                   {item.title}
@@ -186,7 +254,8 @@ export function LandingPage() {
               Klar til at tage din musik til næste niveau?
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Opret en gratis profil i dag og bliv en del af Danmarks hurtigst voksende musikfællesskab.
+              Opret en gratis profil i dag og bliv en del af Danmarks hurtigst
+              voksende musikfællesskab.
             </p>
             <Link to="/register">
               <Button variant="neon" size="lg">
