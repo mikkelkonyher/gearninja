@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Package, Heart, Users, Settings, ArrowRight } from "lucide-react";
+import { Loader2, Package, Heart, Settings, ArrowRight } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export function ProfilePage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [user, setUser] = useState<any>(null);
 
@@ -31,10 +29,11 @@ export function ProfilePage() {
         return;
       }
       setUser(currentUser);
-      setLoading(false);
     } catch (err: any) {
-      setError(err.message || "Kunne ikke hente brugerinformation");
-      setLoading(false);
+      console.error("Error checking user:", err);
+      navigate("/login", {
+        state: { message: "Kunne ikke hente brugerinformation" },
+      });
     }
   };
 
@@ -42,7 +41,6 @@ export function ProfilePage() {
     if (!user) return;
 
     try {
-      setLoading(true);
       // Just get count for display
       const { count, error: fetchError } = await supabase
         .from("products")
@@ -54,8 +52,6 @@ export function ProfilePage() {
       setTotalCount(count || 0);
     } catch (err: any) {
       console.error("Error fetching product count:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
