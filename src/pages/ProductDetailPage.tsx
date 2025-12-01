@@ -1,0 +1,413 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Loader2,
+  Maximize2,
+} from "lucide-react";
+import { supabase } from "../lib/supabase";
+
+interface Product {
+  id: string;
+  type: string;
+  brand: string | null;
+  model: string | null;
+  description: string | null;
+  price: number | null;
+  location: string | null;
+  condition: string | null;
+  year: number | null;
+  image_urls: string[];
+  created_at: string;
+}
+
+export function ProductDetailPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
+
+  useEffect(() => {
+    if (id) {
+      fetchProduct(id);
+    }
+  }, [id]);
+
+  const fetchProduct = async (productId: string) => {
+    try {
+      setLoading(true);
+      const { data, error: fetchError } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", productId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      setProduct(data);
+    } catch (err: any) {
+      setError(err.message || "Kunne ikke hente produkt");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const nextImage = () => {
+    if (!product || !product.image_urls) return;
+    setCurrentImageIndex((prev) =>
+      prev < product.image_urls.length - 1 ? prev + 1 : 0
+    );
+  };
+
+  const prevImage = () => {
+    if (!product || !product.image_urls) return;
+    setCurrentImageIndex((prev) =>
+      prev > 0 ? prev - 1 : product.image_urls.length - 1
+    );
+  };
+
+  const openLightbox = (index: number) => {
+    setLightboxImageIndex(index);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => {
+    setIsLightboxOpen(false);
+  };
+
+  const nextLightboxImage = () => {
+    if (!product || !product.image_urls) return;
+    setLightboxImageIndex((prev) =>
+      prev < product.image_urls.length - 1 ? prev + 1 : 0
+    );
+  };
+
+  const prevLightboxImage = () => {
+    if (!product || !product.image_urls) return;
+    setLightboxImageIndex((prev) =>
+      prev > 0 ? prev - 1 : product.image_urls.length - 1
+    );
+  };
+
+  const formatPrice = (price: number | null) => {
+    if (!price) return "Pris på anmodning";
+    return `${price.toLocaleString("da-DK")} kr.`;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-neon-blue" />
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-[80vh] py-8 px-4">
+        <div className="max-w-3xl mx-auto">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-neon-blue transition-colors mb-4"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Tilbage</span>
+          </button>
+          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">
+            {error || "Produkt ikke fundet"}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const hasMultipleImages = product.image_urls && product.image_urls.length > 1;
+
+  return (
+    <>
+      <div className="min-h-[80vh] py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-neon-blue transition-colors mb-6"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Tilbage</span>
+          </button>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Image Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="relative"
+            >
+              {product.image_urls && product.image_urls.length > 0 ? (
+                <div className="relative aspect-square rounded-xl overflow-hidden bg-slate-700 border border-white/10">
+                  <AnimatePresence mode="wait">
+                    <motion.img
+                      key={currentImageIndex}
+                      src={product.image_urls[currentImageIndex]}
+                      alt={
+                        product.brand && product.model
+                          ? `${product.brand} ${product.model}`
+                          : product.type
+                      }
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="w-full h-full object-cover cursor-pointer"
+                      onClick={() => openLightbox(currentImageIndex)}
+                    />
+                  </AnimatePresence>
+
+                  {/* Arrow Controls */}
+                  {hasMultipleImages && (
+                    <>
+                      <button
+                        onClick={prevImage}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors text-white"
+                        aria-label="Forrige billede"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </button>
+                      <button
+                        onClick={nextImage}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors text-white"
+                        aria-label="Næste billede"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </button>
+                    </>
+                  )}
+
+                  {/* Image Counter */}
+                  {hasMultipleImages && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-background/80 backdrop-blur-sm text-white text-sm">
+                      {currentImageIndex + 1} / {product.image_urls.length}
+                    </div>
+                  )}
+
+                  {/* Enlarge Icon */}
+                  <button
+                    onClick={() => openLightbox(currentImageIndex)}
+                    className="absolute top-4 right-4 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background transition-colors text-white"
+                    aria-label="Forstør billede"
+                  >
+                    <Maximize2 className="w-5 h-5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="aspect-square rounded-xl bg-slate-700 border border-white/10 flex items-center justify-center text-muted-foreground">
+                  Intet billede
+                </div>
+              )}
+
+              {/* Thumbnail Navigation */}
+              {hasMultipleImages && (
+                <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                  {product.image_urls.map((url, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                        currentImageIndex === index
+                          ? "border-neon-blue"
+                          : "border-white/10 opacity-60 hover:opacity-100"
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt={`Thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Product Details */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="space-y-6"
+            >
+              {/* Header Section */}
+              <div className="pb-6 border-b border-white/10">
+                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
+                  {product.brand && product.model
+                    ? `${product.brand} ${product.model}`
+                    : product.type}
+                </h1>
+                <p className="text-2xl font-bold text-neon-blue">
+                  {formatPrice(product.price)}
+                </p>
+              </div>
+
+              {/* Product Information Cards */}
+              <div className="space-y-4">
+                {/* Basic Info Card */}
+                <div className="p-5 rounded-xl border border-white/10 bg-secondary/20 backdrop-blur-sm">
+                  <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-white/10">
+                    Produktinformation
+                  </h2>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                        Type
+                      </h3>
+                      <p className="text-white text-base">{product.type}</p>
+                    </div>
+
+                    {product.brand && (
+                      <div className="pt-3 border-t border-white/5">
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                          Mærke
+                        </h3>
+                        <p className="text-white text-base">{product.brand}</p>
+                      </div>
+                    )}
+
+                    {product.model && (
+                      <div className="pt-3 border-t border-white/5">
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                          Model
+                        </h3>
+                        <p className="text-white text-base">{product.model}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description Card */}
+                {product.description && (
+                  <div className="p-5 rounded-xl border border-white/10 bg-secondary/20 backdrop-blur-sm">
+                    <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-white/10">
+                      Beskrivelse
+                    </h2>
+                    <p className="text-white whitespace-pre-wrap leading-relaxed">
+                      {product.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Details Card */}
+                <div className="p-5 rounded-xl border border-white/10 bg-secondary/20 backdrop-blur-sm">
+                  <h2 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-white/10">
+                    Detaljer
+                  </h2>
+                  <div className="space-y-4">
+                    {product.condition && (
+                      <div>
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                          Stand
+                        </h3>
+                        <p className="text-white text-base">{product.condition}</p>
+                      </div>
+                    )}
+
+                    {product.year && (
+                      <div className={product.condition ? "pt-3 border-t border-white/5" : ""}>
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                          Produktionsår
+                        </h3>
+                        <p className="text-white text-base">{product.year}</p>
+                      </div>
+                    )}
+
+                    {product.location && (
+                      <div className={(product.condition || product.year) ? "pt-3 border-t border-white/5" : ""}>
+                        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                          Lokation
+                        </h3>
+                        <p className="text-white text-base">{product.location}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {isLightboxOpen && product.image_urls && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+            onClick={closeLightbox}
+          >
+            <button
+              onClick={closeLightbox}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10"
+              aria-label="Luk"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            {hasMultipleImages && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    prevLightboxImage();
+                  }}
+                  className="absolute left-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10"
+                  aria-label="Forrige billede"
+                >
+                  <ChevronLeft className="w-8 h-8" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    nextLightboxImage();
+                  }}
+                  className="absolute right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10"
+                  aria-label="Næste billede"
+                >
+                  <ChevronRight className="w-8 h-8" />
+                </button>
+              </>
+            )}
+
+            <motion.img
+              key={lightboxImageIndex}
+              src={product.image_urls[lightboxImageIndex]}
+              alt={`Billede ${lightboxImageIndex + 1}`}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="max-w-full max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {hasMultipleImages && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm">
+                {lightboxImageIndex + 1} / {product.image_urls.length}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+

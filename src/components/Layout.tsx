@@ -73,16 +73,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
-            {categories.map((category) => (
-              <Link
-                key={category}
-                to={`/category/${category.toLowerCase()}`}
-                className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-neon-blue transition-colors relative group"
-              >
-                {category}
-                <span className="absolute inset-x-0 -bottom-[1px] h-[1px] bg-neon-blue scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
-              </Link>
-            ))}
+            {categories.map((category) => {
+                    let categoryPath = `/category/${category.toLowerCase()}`;
+                    if (category === "Trommer") {
+                      categoryPath = "/trommer";
+                    } else if (category === "Guitar") {
+                      categoryPath = "/guitar";
+                    }
+              return (
+                <Link
+                  key={category}
+                  to={categoryPath}
+                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-neon-blue transition-colors relative group"
+                >
+                  {category}
+                  <span className="absolute inset-x-0 -bottom-[1px] h-[1px] bg-neon-blue scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+                </Link>
+              );
+            })}
           </nav>
 
           {/* Actions */}
@@ -164,16 +172,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
                 <nav className="flex flex-col gap-2">
-                  {categories.map((category) => (
-                    <Link
-                      key={category}
-                      to={`/category/${category.toLowerCase()}`}
-                      className="px-4 py-2 text-base font-medium text-muted-foreground hover:text-neon-blue hover:bg-white/5 rounded-md transition-colors"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {category}
-                    </Link>
-                  ))}
+                  {categories.map((category) => {
+                    let categoryPath = `/category/${category.toLowerCase()}`;
+                    if (category === "Trommer") {
+                      categoryPath = "/trommer";
+                    } else if (category === "Guitar") {
+                      categoryPath = "/guitar";
+                    }
+                    return (
+                      <Link
+                        key={category}
+                        to={categoryPath}
+                        className="px-4 py-2 text-base font-medium text-muted-foreground hover:text-neon-blue hover:bg-white/5 rounded-md transition-colors"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {category}
+                      </Link>
+                    );
+                  })}
                 </nav>
                 <div className="flex flex-col gap-2 pt-4 border-t border-white/10">
                   {userEmail ? (
