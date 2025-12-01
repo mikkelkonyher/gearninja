@@ -26,6 +26,9 @@ import { FavoritterPage } from './pages/FavoritterPage';
 import { FoelgerePage } from './pages/FoelgerePage';
 import { IndstillingerPage } from './pages/IndstillingerPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
+import { CreateOevelokalerPage } from './pages/CreateOevelokalerPage';
+import { OevelokalerPage } from './pages/OevelokalerPage';
+import { RoomDetailPage } from './pages/RoomDetailPage';
 
 function App() {
   return (
@@ -43,6 +46,7 @@ function App() {
           <Route path="/create/blaes" element={<CreateBlaesPage />} />
           <Route path="/create/studieudstyr" element={<CreateStudieudstyrPage />} />
           <Route path="/create/strygere" element={<CreateStrygerePage />} />
+          <Route path="/create/oevelokaler" element={<CreateOevelokalerPage />} />
           <Route path="/trommer" element={<TrommerPage />} />
           <Route path="/guitar" element={<GuitarPage />} />
           <Route path="/bas" element={<BasPage />} />
@@ -50,7 +54,9 @@ function App() {
           <Route path="/blaes" element={<BlaesPage />} />
           <Route path="/studieudstyr" element={<StudieudstyrPage />} />
           <Route path="/strygere" element={<StrygerePage />} />
+          <Route path="/oevelokaler" element={<OevelokalerPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/room/:id" element={<RoomDetailPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/mine-annoncer" element={<MineAnnoncerPage />} />
           <Route path="/favoritter" element={<FavoritterPage />} />
