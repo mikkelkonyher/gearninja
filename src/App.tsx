@@ -25,6 +25,7 @@ import { MineAnnoncerPage } from './pages/MineAnnoncerPage';
 import { FavoritterPage } from './pages/FavoritterPage';
 import { FoelgerePage } from './pages/FoelgerePage';
 import { IndstillingerPage } from './pages/IndstillingerPage';
+import { SearchResultsPage } from './pages/SearchResultsPage';
 
 function App() {
   return (
@@ -55,6 +56,7 @@ function App() {
           <Route path="/favoritter" element={<FavoritterPage />} />
           <Route path="/foelgere" element={<FoelgerePage />} />
           <Route path="/indstillinger" element={<IndstillingerPage />} />
+          <Route path="/search" element={<SearchResultsPage />} />
           {/* Placeholder for category routes */}
           <Route path="/category/:slug" element={<div className="text-center py-20 text-2xl text-muted-foreground">Kategori side kommer snart...</div>} />
         </Routes>

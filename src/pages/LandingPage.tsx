@@ -18,6 +18,7 @@ export function LandingPage() {
   const navigate = useNavigate();
   const [newestProducts, setNewestProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchNewestProducts();
@@ -52,6 +53,13 @@ export function LandingPage() {
     }
     return product.brand || product.model || "Produkt";
   };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
   return (
     <div className="flex flex-col gap-20 pb-20">
       {/* Hero Section */}
@@ -64,16 +72,18 @@ export function LandingPage() {
             className="space-y-6"
           >
             {/* Landing search */}
-            <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
               <div className="relative group">
-                <Search className="w-6 h-6 text-muted-foreground absolute left-5 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors" />
+                <Search className="w-6 h-6 text-muted-foreground absolute left-5 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Søg efter musikudstyr..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-14 pr-5 py-4 md:py-5 rounded-full bg-gradient-to-r from-slate-950/90 via-slate-900/90 to-slate-950/90 border border-white/20 text-base md:text-lg text-foreground placeholder:text-muted-foreground/70 shadow-[0_18px_45px_rgba(0,0,0,0.8)] focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-neon-blue transition-all"
                 />
               </div>
-            </div>
+            </form>
 
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-gray-400">
