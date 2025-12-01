@@ -4,7 +4,6 @@ import {
   Drumstick,
   Guitar,
   Piano,
-  Radio,
   Wind,
   Headphones,
   Building2,
@@ -44,14 +43,6 @@ const categories = [
     color: "from-yellow-500/20 to-orange-500/20",
     borderColor: "border-yellow-500/30",
     hoverColor: "hover:border-yellow-500/60",
-  },
-  {
-    name: "Synths",
-    slug: "synths",
-    icon: Radio,
-    color: "from-green-500/20 to-emerald-500/20",
-    borderColor: "border-green-500/30",
-    hoverColor: "hover:border-green-500/60",
   },
   {
     name: "Blæs",
