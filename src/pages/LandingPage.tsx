@@ -1,9 +1,57 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, Search, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
+import { supabase } from "../lib/supabase";
+
+interface Product {
+  id: string;
+  brand: string | null;
+  model: string | null;
+  location: string | null;
+  price: number | null;
+  image_urls: string[];
+}
 
 export function LandingPage() {
+  const navigate = useNavigate();
+  const [newestProducts, setNewestProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchNewestProducts();
+  }, []);
+
+  const fetchNewestProducts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, brand, model, location, price, image_urls")
+        .order("created_at", { ascending: false })
+        .limit(15);
+
+      if (error) throw error;
+
+      setNewestProducts(data || []);
+    } catch (err) {
+      console.error("Error fetching newest products:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatPrice = (price: number | null) => {
+    if (!price) return "Pris på anmodning";
+    return `${price.toLocaleString("da-DK")} kr.`;
+  };
+
+  const getProductTitle = (product: Product) => {
+    if (product.brand && product.model) {
+      return `${product.brand} ${product.model}`;
+    }
+    return product.brand || product.model || "Produkt";
+  };
   return (
     <div className="flex flex-col gap-20 pb-20">
       {/* Hero Section */}
@@ -68,14 +116,11 @@ export function LandingPage() {
       {/* Carousels */}
       <section className="container mx-auto px-4 space-y-12">
         {/* Popular musicgear */}
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex flex-col items-center gap-1">
             <h2 className="text-xl font-semibold text-white text-center">
               Populært gear
             </h2>
-            <button className="text-xs text-muted-foreground hover:text-white">
-              Se alt populært
-            </button>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
             {[
@@ -131,67 +176,63 @@ export function LandingPage() {
         </div>
 
         {/* Newest uploads */}
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex flex-col items-center gap-1">
             <h2 className="text-xl font-semibold text-white text-center">
               Nyeste uploads
             </h2>
-            <button className="text-xs text-muted-foreground hover:text-white">
-              Se alle nye annoncer
-            </button>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
-            {[
-              {
-                title: "Gibson Les Paul Studio 2012",
-                meta: "København · 7.500 kr.",
-              },
-              { title: "Elektron Digitakt", meta: "Aarhus · 3.800 kr." },
-              {
-                title: "Yamaha HS8 monitors (sæt)",
-                meta: "Odense · 2.900 kr.",
-              },
-              { title: "Shure SM7B", meta: "Online handel · 2.000 kr." },
-              {
-                title: "Boss RC-505 Loop Station",
-                meta: "København · 2.300 kr.",
-              },
-              {
-                title: "Gretsch Brooklyn Drum Kit",
-                meta: "Aalborg · 11.500 kr.",
-              },
-              { title: "Line 6 HX Stomp", meta: "Aarhus · 2.400 kr." },
-            ].map((item) => (
-              <motion.div
-                key={item.title}
-                whileHover={{ y: -2 }}
-                className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
-              >
-                <div
-                  className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
-                  style={{
-                    backgroundImage:
-                      "url(https://images.pexels.com/photos/709746/pexels-photo-709746.jpeg?auto=compress&cs=tinysrgb&w=640)",
-                  }}
-                />
-                <h3 className="text-sm font-semibold text-white line-clamp-2">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-muted-foreground">{item.meta}</p>
-              </motion.div>
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-neon-blue" />
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
+              {newestProducts.length === 0 ? (
+                <div className="w-full text-center py-12 text-muted-foreground">
+                  Ingen produkter endnu
+                </div>
+              ) : (
+                newestProducts.map((product) => (
+                  <motion.div
+                    key={product.id}
+                    whileHover={{ y: -2 }}
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
+                  >
+                    <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden">
+                      {product.image_urls && product.image_urls.length > 0 ? (
+                        <img
+                          src={product.image_urls[0]}
+                          alt={getProductTitle(product)}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          Intet billede
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-semibold text-white line-clamp-2">
+                      {getProductTitle(product)}
+                    </h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {product.location && `${product.location} · `}
+                      {formatPrice(product.price)}
+                    </p>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {/* Newest rehearsalroom/studio uploads */}
-        <div className="space-y-3">
+        <div className="space-y-6">
           <div className="flex flex-col items-center gap-1">
             <h2 className="text-xl font-semibold text-white text-center">
               Nye øvelokaler &amp; studier
             </h2>
-            <button className="text-xs text-muted-foreground hover:text-white">
-              Se alle lokaler
-            </button>
           </div>
           <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
             {[
