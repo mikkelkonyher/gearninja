@@ -48,50 +48,123 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Features Grid */}
-      <section className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              icon: <Music className="w-8 h-8 text-neon-blue" />,
-              title: "Køb & Salg",
-              description: "Find det perfekte instrument eller sælg dit gamle gear sikkert og nemt."
-            },
-            {
-              icon: <Users className="w-8 h-8 text-neon-purple" />,
-              title: "Find Bandmates",
-              description: "Mangler i en bassist? Opret en profil og find musikere i dit område."
-            },
-            {
-              icon: <Speaker className="w-8 h-8 text-neon-green" />,
-              title: "Øvelokaler",
-              description: "Lej professionelle øvelokaler eller find nogen at dele dit eget med."
-            },
-            {
-              icon: <Mic2 className="w-8 h-8 text-pink-500" />,
-              title: "Studieudstyr",
-              description: "Opgrader dit hjemmestudie med professionelt grej fra andre brugere."
-            }
-          ].map((feature, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              viewport={{ once: true }}
-              className="p-6 rounded-2xl bg-secondary/30 border border-white/5 hover:border-white/10 hover:bg-secondary/50 transition-all group"
-            >
-              <div className="mb-4 p-3 rounded-xl bg-background/50 w-fit group-hover:scale-110 transition-transform duration-300">
-                {feature.icon}
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-white group-hover:text-neon-blue transition-colors">
-                {feature.title}
-              </h3>
-              <p className="text-muted-foreground">
-                {feature.description}
-              </p>
-            </motion.div>
-          ))}
+      {/* Carousels */}
+      <section className="container mx-auto px-4 space-y-12">
+        {/* Popular musicgear */}
+        <div className="space-y-3">
+          <div className="flex flex-col items-center gap-1">
+            <h2 className="text-xl font-semibold text-white text-center">
+              Populært gear
+            </h2>
+            <button className="text-xs text-muted-foreground hover:text-white">
+              Se alt populært
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
+            {[
+              { title: 'Fender Jazz Bass', meta: '34" · 4-strenget · Vintage', likes: 42 },
+              { title: 'Nord Stage 3', meta: '88 keys · Stage piano', likes: 35 },
+              { title: 'Ludwig Supraphonic', meta: '14x5" · Snare', likes: 28 },
+              { title: 'Universal Audio Apollo Twin', meta: '2x6 Thunderbolt', likes: 21 },
+              { title: 'Roland Juno-106', meta: 'Analog polysynth', likes: 18 },
+              { title: 'Mesa Boogie Dual Rectifier', meta: 'Guitarforstærker', likes: 16 },
+              { title: 'Moog Sub 37', meta: 'Monosynth', likes: 14 },
+            ].map((item) => (
+              <motion.div
+                key={item.title}
+                whileHover={{ y: -2 }}
+                className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
+              >
+                <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
+                  style={{ backgroundImage: 'url(https://images.pexels.com/photos/164745/pexels-photo-164745.jpeg?auto=compress&cs=tinysrgb&w=640)' }}
+                />
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-white line-clamp-2">
+                    {item.title}
+                  </h3>
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <span>♥</span>
+                    <span>{item.likes}</span>
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">{item.meta}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Newest uploads */}
+        <div className="space-y-3">
+          <div className="flex flex-col items-center gap-1">
+            <h2 className="text-xl font-semibold text-white text-center">
+              Nyeste uploads
+            </h2>
+            <button className="text-xs text-muted-foreground hover:text-white">
+              Se alle nye annoncer
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
+            {[
+              { title: 'Gibson Les Paul Studio 2012', meta: 'København · 7.500 kr.' },
+              { title: 'Elektron Digitakt', meta: 'Aarhus · 3.800 kr.' },
+              { title: 'Yamaha HS8 monitors (sæt)', meta: 'Odense · 2.900 kr.' },
+              { title: 'Shure SM7B', meta: 'Online handel · 2.000 kr.' },
+              { title: 'Boss RC-505 Loop Station', meta: 'København · 2.300 kr.' },
+              { title: 'Gretsch Brooklyn Drum Kit', meta: 'Aalborg · 11.500 kr.' },
+              { title: 'Line 6 HX Stomp', meta: 'Aarhus · 2.400 kr.' },
+            ].map((item) => (
+              <motion.div
+                key={item.title}
+                whileHover={{ y: -2 }}
+                className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
+              >
+                <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
+                  style={{ backgroundImage: 'url(https://images.pexels.com/photos/709746/pexels-photo-709746.jpeg?auto=compress&cs=tinysrgb&w=640)' }}
+                />
+                <h3 className="text-sm font-semibold text-white line-clamp-2">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-muted-foreground">{item.meta}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Newest rehearsalroom/studio uploads */}
+        <div className="space-y-3">
+          <div className="flex flex-col items-center gap-1">
+            <h2 className="text-xl font-semibold text-white text-center">
+              Nye øvelokaler &amp; studier
+            </h2>
+            <button className="text-xs text-muted-foreground hover:text-white">
+              Se alle lokaler
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
+            {[
+              { title: 'Øvelokale v. Nørrebro', meta: 'Delt · 24/7 adgang · 2.000 kr./md.' },
+              { title: 'Projektstudie i Aarhus C', meta: 'Kontrolrum + vokalboks' },
+              { title: 'Trommevenligt rum i kælder', meta: 'Lydisoleret · Kbh NV' },
+              { title: 'Lydstudie til podcast', meta: 'Full setup · Frederiksberg' },
+              { title: 'Replokale v. Vesterbro', meta: 'Backline inkluderet · 3.200 kr./md.' },
+              { title: 'Delestudie i Kolding', meta: '2 producere · delt husleje' },
+              { title: 'Øvelokale til metalband', meta: 'Tykkere vægge end normalt' },
+            ].map((item) => (
+              <motion.div
+                key={item.title}
+                whileHover={{ y: -2 }}
+                className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
+              >
+                <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
+                  style={{ backgroundImage: 'url(https://images.pexels.com/photos/8101520/pexels-photo-8101520.jpeg?auto=compress&cs=tinysrgb&w=640)' }}
+                />
+                <h3 className="text-sm font-semibold text-white line-clamp-2">
+                  {item.title}
+                </h3>
+                <p className="text-xs text-muted-foreground">{item.meta}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

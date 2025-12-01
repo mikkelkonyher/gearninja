@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Search } from 'lucide-react';
 import { Button } from './ui/Button';
-
+import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const categories = [
@@ -18,6 +18,35 @@ const categories = [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [userEmail, setUserEmail] = React.useState<string | null>(null);
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (!isMounted) return;
+      setUserEmail(data.user?.email ?? null);
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUserEmail(session?.user?.email ?? null);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsUserMenuOpen(false);
+    navigate('/');
+  };
 
 
   return (
@@ -55,14 +84,61 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 className="pl-10 pr-4 py-1.5 bg-secondary/50 border border-white/10 rounded-full text-sm focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all w-64 placeholder:text-muted-foreground/50"
               />
             </div>
-            <div className="flex items-center gap-2 border-l border-white/10 pl-4">
-              <Link to="/login">
-                <Button variant="ghost" size="sm">Log ind</Button>
-              </Link>
-              <Link to="/register">
-                <Button variant="neon" size="sm">Opret bruger</Button>
-              </Link>
-            </div>
+            {userEmail ? (
+              <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
+                <span className="hidden text-sm text-muted-foreground md:inline">
+                  {userEmail}
+                </span>
+                <button
+                  onClick={() => setIsUserMenuOpen((open) => !open)}
+                  className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
+                >
+                  {userEmail.charAt(0).toUpperCase()}
+                </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
+                    <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
+                      {userEmail}
+                    </div>
+                    <nav className="py-1">
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/profile');
+                        }}
+                      >
+                        Profil
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/inbox');
+                        }}
+                      >
+                        Indbakke
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                        onClick={handleLogout}
+                      >
+                        Log ud
+                      </button>
+                    </nav>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 border-l border-white/10 pl-4">
+                <Link to="/login">
+                  <Button variant="ghost" size="sm">Log ind</Button>
+                </Link>
+                <Link to="/register">
+                  <Button variant="neon" size="sm">Opret bruger</Button>
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -97,12 +173,49 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   ))}
                 </nav>
                 <div className="flex flex-col gap-2 pt-4 border-t border-white/10">
-                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="ghost" className="w-full justify-start">Log ind</Button>
-                  </Link>
-                  <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
-                    <Button variant="neon" className="w-full">Opret bruger</Button>
-                  </Link>
+                  {userEmail ? (
+                    <>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          navigate('/profile');
+                        }}
+                      >
+                        Profil
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          navigate('/inbox');
+                        }}
+                      >
+                        Indbakke
+                      </Button>
+                      <Button
+                        variant="neon"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          setIsMobileMenuOpen(false);
+                          handleLogout();
+                        }}
+                      >
+                        Log ud
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="ghost" className="w-full justify-start">Log ind</Button>
+                      </Link>
+                      <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Button variant="neon" className="w-full">Opret bruger</Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>
