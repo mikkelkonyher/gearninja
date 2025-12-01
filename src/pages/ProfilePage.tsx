@@ -41,17 +41,26 @@ export function ProfilePage() {
     if (!user) return;
 
     try {
-      // Just get count for display
-      const { count, error: fetchError } = await supabase
+      // Get count for products
+      const { count: productsCount, error: productsError } = await supabase
         .from("products")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id);
 
-      if (fetchError) throw fetchError;
+      if (productsError) throw productsError;
 
-      setTotalCount(count || 0);
+      // Get count for rehearsal rooms
+      const { count: roomsCount, error: roomsError } = await supabase
+        .from("rehearsal_rooms")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (roomsError) throw roomsError;
+
+      // Combine counts
+      setTotalCount((productsCount || 0) + (roomsCount || 0));
     } catch (err: any) {
-      console.error("Error fetching product count:", err);
+      console.error("Error fetching announcement count:", err);
     }
   };
 
