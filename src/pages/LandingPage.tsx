@@ -1,6 +1,6 @@
 
 import { motion } from 'framer-motion';
-import { ArrowRight, Music, Users, Mic2, Speaker } from 'lucide-react';
+import { ArrowRight, Music, Users, Mic2, Speaker, Search } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 
@@ -14,17 +14,27 @@ export function LandingPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
+            className="space-y-6"
           >
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+            {/* Landing search */}
+            <div className="max-w-xl mx-auto">
+              <div className="relative group">
+                <Search className="w-5 h-5 text-muted-foreground absolute left-4 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Søg efter guitarer, trommesæt, studieudstyr eller øvelokaler..."
+                  className="w-full pl-11 pr-4 py-3 rounded-full bg-background/80 border border-white/15 text-sm md:text-base text-foreground placeholder:text-muted-foreground/70 shadow-[0_0_0_1px_rgba(15,23,42,0.6)] focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-neon-blue transition-all"
+                />
+              </div>
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-gray-400">
-                Din portal til
+                Køb. Sælg. Connect.
               </span>
-              <br />
-              <span className="text-neon-blue">musikalsk frihed</span>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              Køb og sælg brugt gear, find dit næste øvelokale, eller connect med ligesindede musikere. 
-              Alt samlet ét sted.
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Fra musikere, til musikere – uden støj.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/register">

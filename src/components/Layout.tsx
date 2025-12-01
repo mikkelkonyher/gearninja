@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X, Search } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -72,7 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
             {categories.map((category) => (
               <Link
                 key={category}
@@ -87,14 +87,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-4">
-            <div className="relative group">
-              <Search className="w-5 h-5 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Søg efter gear..." 
-                className="pl-10 pr-4 py-1.5 bg-secondary/50 border border-white/10 rounded-full text-sm focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all w-64 placeholder:text-muted-foreground/50"
-              />
-            </div>
             {userEmail ? (
               <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
                 <span className="hidden text-sm text-muted-foreground md:inline">
