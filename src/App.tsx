@@ -10,6 +10,8 @@ import { TrommerPage } from './pages/TrommerPage';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { CreateGuitarPage } from './pages/CreateGuitarPage';
 import { GuitarPage } from './pages/GuitarPage';
+import { CreateBasPage } from './pages/CreateBasPage';
+import { BasPage } from './pages/BasPage';
 
 function App() {
   return (
@@ -22,8 +24,10 @@ function App() {
           <Route path="/create" element={<CreateAnnouncementPage />} />
           <Route path="/create/trommer" element={<CreateTrommerPage />} />
           <Route path="/create/guitar" element={<CreateGuitarPage />} />
+          <Route path="/create/bas" element={<CreateBasPage />} />
           <Route path="/trommer" element={<TrommerPage />} />
           <Route path="/guitar" element={<GuitarPage />} />
+          <Route path="/bas" element={<BasPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           {/* Placeholder for category routes */}
           <Route path="/category/:slug" element={<div className="text-center py-20 text-2xl text-muted-foreground">Kategori side kommer snart...</div>} />

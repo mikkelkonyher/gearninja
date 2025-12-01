@@ -18,7 +18,7 @@ interface Product {
   created_at: string;
 }
 
-export function GuitarPage() {
+export function BasPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,7 +35,7 @@ export function GuitarPage() {
       const { data, error: fetchError } = await supabase
         .from("products")
         .select("*")
-        .eq("category", "guitar")
+        .eq("category", "bas")
         .order("created_at", { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -64,7 +64,7 @@ export function GuitarPage() {
           className="mb-8 text-center"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-            Guitar
+            Bas
           </h1>
           <p className="text-lg text-muted-foreground">
             {products.length > 0
@@ -98,7 +98,7 @@ export function GuitarPage() {
             {products.length === 0 ? (
               <div className="col-span-full text-center py-20">
                 <p className="text-muted-foreground text-lg">
-                  Ingen guitar annoncer endnu. Vær den første til at oprette en!
+                  Ingen bas annoncer endnu. Vær den første til at oprette en!
                 </p>
               </div>
             ) : (

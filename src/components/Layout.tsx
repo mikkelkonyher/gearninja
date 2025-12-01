@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Plus } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -79,6 +79,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       categoryPath = "/trommer";
                     } else if (category === "Guitar") {
                       categoryPath = "/guitar";
+                    } else if (category === "Bas") {
+                      categoryPath = "/bas";
                     }
               return (
                 <Link
@@ -95,6 +97,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Actions */}
           <div className="hidden md:flex items-center gap-4">
+            <Link
+              to="/create"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
+              aria-label="Opret annonce"
+            >
+              <Plus className="w-5 h-5" />
+            </Link>
             {userEmail ? (
               <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
                 <span className="hidden text-sm text-muted-foreground md:inline">
@@ -171,6 +180,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
               className="lg:hidden border-b border-white/10 bg-background"
             >
               <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
+                <Link
+                  to="/create"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span className="font-medium">Opret annonce</span>
+                </Link>
                 <nav className="flex flex-col gap-2">
                   {categories.map((category) => {
                     let categoryPath = `/category/${category.toLowerCase()}`;
@@ -178,6 +195,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       categoryPath = "/trommer";
                     } else if (category === "Guitar") {
                       categoryPath = "/guitar";
+                    } else if (category === "Bas") {
+                      categoryPath = "/bas";
                     }
                     return (
                       <Link

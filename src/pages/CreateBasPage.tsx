@@ -11,13 +11,13 @@ import {
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 
-const guitarTypes = [
-  "Akustisk guitar",
-  "Elektrisk guitar",
-  "Semi-hollow guitar",
-  "Guitarforstærker",
+const basTypes = [
+  "Elektrisk bas",
+  "Akustisk bas",
   "Effektpedal",
-  "Tilbehør til guitar",
+  "Kontrabas",
+  "Basforstærker",
+  "Tilbehør til bas",
   "Andet",
 ];
 
@@ -56,7 +56,7 @@ interface ImageFile {
   uploadedUrl?: string;
 }
 
-export function CreateGuitarPage() {
+export function CreateBasPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -178,7 +178,7 @@ export function CreateGuitarPage() {
       // Create product
       const { error: insertError } = await supabase.from("products").insert({
         user_id: user.id,
-        category: "guitar",
+        category: "bas",
         type: formData.type,
         brand: formData.brand || null,
         model: formData.model || null,
@@ -192,7 +192,7 @@ export function CreateGuitarPage() {
 
       if (insertError) throw insertError;
 
-      navigate("/guitar", { state: { message: "Annonce oprettet!" } });
+      navigate("/bas", { state: { message: "Annonce oprettet!" } });
     } catch (err: any) {
       setError(err.message || "Der skete en fejl under oprettelsen");
     } finally {
@@ -218,7 +218,7 @@ export function CreateGuitarPage() {
               <span className="text-sm">Tilbage</span>
             </button>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-              Opret annonce - Guitar
+              Opret annonce - Bas
             </h1>
             <p className="text-lg text-muted-foreground">
               Udfyld informationerne nedenfor for at oprette din annonce
@@ -246,7 +246,7 @@ export function CreateGuitarPage() {
                 className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
               >
                 <option value="">Vælg type</option>
-                {guitarTypes.map((type) => (
+                {basTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>
@@ -267,7 +267,7 @@ export function CreateGuitarPage() {
                     setFormData({ ...formData, brand: e.target.value })
                   }
                   className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
-                  placeholder="f.eks. Fender, Gibson"
+                  placeholder="f.eks. Fender, Music Man"
                 />
               </div>
               <div className="space-y-2">
@@ -281,7 +281,7 @@ export function CreateGuitarPage() {
                     setFormData({ ...formData, model: e.target.value })
                   }
                   className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
-                  placeholder="f.eks. Stratocaster"
+                  placeholder="f.eks. Precision Bass"
                 />
               </div>
             </div>
