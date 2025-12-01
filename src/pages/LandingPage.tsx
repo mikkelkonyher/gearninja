@@ -14,14 +14,31 @@ interface Product {
   image_urls: string[];
 }
 
+interface RehearsalRoom {
+  id: string;
+  name: string | null;
+  address: string | null;
+  location: string | null;
+  description: string | null;
+  payment_type: string | null;
+  price: number | null;
+  room_size: number | null;
+  type: string;
+  image_urls: string[];
+  created_at: string;
+}
+
 export function LandingPage() {
   const navigate = useNavigate();
   const [newestProducts, setNewestProducts] = useState<Product[]>([]);
+  const [rehearsalRooms, setRehearsalRooms] = useState<RehearsalRoom[]>([]);
   const [loading, setLoading] = useState(true);
+  const [roomsLoading, setRoomsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     fetchNewestProducts();
+    fetchRehearsalRooms();
   }, []);
 
   const fetchNewestProducts = async () => {
@@ -42,6 +59,24 @@ export function LandingPage() {
     }
   };
 
+  const fetchRehearsalRooms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("rehearsal_rooms")
+        .select("id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at")
+        .order("created_at", { ascending: false })
+        .limit(15);
+
+      if (error) throw error;
+
+      setRehearsalRooms(data || []);
+    } catch (err) {
+      console.error("Error fetching rehearsal rooms:", err);
+    } finally {
+      setRoomsLoading(false);
+    }
+  };
+
   const formatPrice = (price: number | null) => {
     if (!price) return "Pris på anmodning";
     return `${price.toLocaleString("da-DK")} kr.`;
@@ -53,6 +88,7 @@ export function LandingPage() {
     }
     return product.brand || product.model || "Produkt";
   };
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,56 +280,53 @@ export function LandingPage() {
               Nye øvelokaler &amp; studier
             </h2>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
-            {[
-              {
-                title: "Øvelokale v. Nørrebro",
-                meta: "Delt · 24/7 adgang · 2.000 kr./md.",
-              },
-              {
-                title: "Projektstudie i Aarhus C",
-                meta: "Kontrolrum + vokalboks",
-              },
-              {
-                title: "Trommevenligt rum i kælder",
-                meta: "Lydisoleret · Kbh NV",
-              },
-              {
-                title: "Lydstudie til podcast",
-                meta: "Full setup · Frederiksberg",
-              },
-              {
-                title: "Replokale v. Vesterbro",
-                meta: "Backline inkluderet · 3.200 kr./md.",
-              },
-              {
-                title: "Delestudie i Kolding",
-                meta: "2 producere · delt husleje",
-              },
-              {
-                title: "Øvelokale til metalband",
-                meta: "Tykkere vægge end normalt",
-              },
-            ].map((item) => (
-              <motion.div
-                key={item.title}
-                whileHover={{ y: -2 }}
-                className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
-              >
-                <div
-                  className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
-                  style={{
-                    backgroundImage:
-                      "url(https://images.pexels.com/photos/8101520/pexels-photo-8101520.jpeg?auto=compress&cs=tinysrgb&w=640)",
-                  }}
-                />
-                <h3 className="text-sm font-semibold text-white line-clamp-2">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-muted-foreground">{item.meta}</p>
-              </motion.div>
-            ))}
-          </div>
+          {roomsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-neon-blue" />
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
+              {rehearsalRooms.length === 0 ? (
+                <div className="w-full text-center py-12 text-muted-foreground">
+                  Ingen øvelokaler endnu
+                </div>
+              ) : (
+                rehearsalRooms.map((room) => (
+                  <motion.div
+                    key={room.id}
+                    whileHover={{ y: -2 }}
+                    onClick={() => navigate(`/room/${room.id}`)}
+                    className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
+                  >
+                    <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden">
+                      {room.image_urls && room.image_urls.length > 0 ? (
+                        <img
+                          src={room.image_urls[0]}
+                          alt={room.name || room.type}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          Intet billede
+                        </div>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-semibold text-white line-clamp-2">
+                      {room.name || room.type}
+                    </h3>
+                    {room.location && (
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {room.location}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {room.type}
+                    </p>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </section>
 
