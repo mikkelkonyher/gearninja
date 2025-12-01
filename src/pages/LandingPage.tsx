@@ -46,13 +46,13 @@ export function LandingPage() {
                   <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link to="/category/all">
+              <Link to="/create">
                 <Button
                   variant="outline"
                   size="lg"
                   className="w-full sm:w-auto"
                 >
-                  Udforsk markedet
+                  Opret annonce
                 </Button>
               </Link>
             </div>
