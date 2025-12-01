@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface Product {
@@ -63,9 +63,18 @@ export function TrommerPage() {
           transition={{ duration: 0.5 }}
           className="mb-8 text-center"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-            Trommer
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <h1 className="text-4xl md:text-5xl font-bold text-white">
+              Trommer
+            </h1>
+            <button
+              onClick={() => navigate("/create/trommer")}
+              className="p-2 rounded-full bg-neon-blue/20 hover:bg-neon-blue/30 border border-neon-blue/50 hover:border-neon-blue transition-colors text-neon-blue"
+              aria-label="Opret trommer annonce"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+          </div>
           <p className="text-lg text-muted-foreground">
             {products.length > 0
               ? `${products.length} annoncer fundet`

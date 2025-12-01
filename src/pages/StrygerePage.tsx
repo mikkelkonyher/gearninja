@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface Product {
@@ -74,9 +74,18 @@ export function StrygerePage() {
           transition={{ duration: 0.5 }}
           className="mb-8 text-center"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-            Strygere
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <h1 className="text-4xl md:text-5xl font-bold text-white">
+              Strygere
+            </h1>
+            <button
+              onClick={() => navigate("/create/strygere")}
+              className="p-2 rounded-full bg-neon-blue/20 hover:bg-neon-blue/30 border border-neon-blue/50 hover:border-neon-blue transition-colors text-neon-blue"
+              aria-label="Opret strygere annonce"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+          </div>
           <p className="text-lg text-muted-foreground">
             {totalCount > 0
               ? `${totalCount} annoncer fundet`
