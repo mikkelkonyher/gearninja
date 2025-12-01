@@ -22,6 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [username, setUsername] = React.useState<string | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const navigate = useNavigate();
+  const userMenuRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -58,6 +59,23 @@ export function Layout({ children }: { children: React.ReactNode }) {
     setIsUserMenuOpen(false);
     navigate('/');
   };
+
+  // Close user menu when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isUserMenuOpen && userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
 
   return (
@@ -113,7 +131,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Plus className="w-5 h-5" />
             </Link>
             {userEmail ? (
-              <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
+              <div className="relative flex items-center gap-3 border-l border-white/10 pl-4" ref={userMenuRef}>
                 <span className="hidden text-sm text-muted-foreground md:inline">
                   {username ?? userEmail}
                 </span>

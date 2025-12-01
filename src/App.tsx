@@ -20,6 +20,11 @@ import { CreateStudieudstyrPage } from './pages/CreateStudieudstyrPage';
 import { StudieudstyrPage } from './pages/StudieudstyrPage';
 import { CreateStrygerePage } from './pages/CreateStrygerePage';
 import { StrygerePage } from './pages/StrygerePage';
+import { ProfilePage } from './pages/ProfilePage';
+import { MineAnnoncerPage } from './pages/MineAnnoncerPage';
+import { FavoritterPage } from './pages/FavoritterPage';
+import { FoelgerePage } from './pages/FoelgerePage';
+import { IndstillingerPage } from './pages/IndstillingerPage';
 
 function App() {
   return (
@@ -45,6 +50,11 @@ function App() {
           <Route path="/studieudstyr" element={<StudieudstyrPage />} />
           <Route path="/strygere" element={<StrygerePage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/mine-annoncer" element={<MineAnnoncerPage />} />
+          <Route path="/favoritter" element={<FavoritterPage />} />
+          <Route path="/foelgere" element={<FoelgerePage />} />
+          <Route path="/indstillinger" element={<IndstillingerPage />} />
           {/* Placeholder for category routes */}
           <Route path="/category/:slug" element={<div className="text-center py-20 text-2xl text-muted-foreground">Kategori side kommer snart...</div>} />
         </Routes>

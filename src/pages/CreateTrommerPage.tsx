@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -52,13 +52,18 @@ const currentYear = new Date().getFullYear();
 const years = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
 
 interface ImageFile {
-  file: File;
+  file?: File;
   preview: string;
   uploadedUrl?: string;
+  isExisting?: boolean;
 }
 
 export function CreateTrommerPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const editProduct = (location.state as any)?.editProduct;
+  const isEditMode = !!editProduct;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageFile[]>([]);
@@ -73,6 +78,32 @@ export function CreateTrommerPage() {
     condition: "",
     year: "",
   });
+
+  // Load existing product data when editing
+  useEffect(() => {
+    if (editProduct) {
+      setFormData({
+        type: editProduct.type || "",
+        brand: editProduct.brand || "",
+        model: editProduct.model || "",
+        description: editProduct.description || "",
+        price: editProduct.price ? editProduct.price.toString() : "",
+        location: editProduct.location || "",
+        condition: editProduct.condition || "",
+        year: editProduct.year ? editProduct.year.toString() : "Ved ikke",
+      });
+
+      // Load existing images
+      if (editProduct.image_urls && editProduct.image_urls.length > 0) {
+        const existingImages: ImageFile[] = editProduct.image_urls.map((url: string) => ({
+          preview: url,
+          uploadedUrl: url,
+          isExisting: true,
+        }));
+        setImages(existingImages);
+      }
+    }
+  }, [editProduct]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -93,12 +124,14 @@ export function CreateTrommerPage() {
   };
 
   const removeImage = (index: number) => {
+    const imageToRemove = images[index];
     const newImages = images.filter((_, i) => i !== index);
-    newImages.forEach((img) => {
-      if (img.preview.startsWith("blob:")) {
-        URL.revokeObjectURL(img.preview);
-      }
-    });
+    
+    // Revoke blob URL if it's a new upload
+    if (imageToRemove.preview.startsWith("blob:")) {
+      URL.revokeObjectURL(imageToRemove.preview);
+    }
+    
     setImages(newImages);
   };
 
@@ -129,26 +162,58 @@ export function CreateTrommerPage() {
     const uploadedUrls: string[] = [];
 
     for (const image of images) {
-      const fileExt = image.file.name.split(".").pop();
-      const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      // If it's an existing image, keep the URL
+      if (image.isExisting && image.uploadedUrl) {
+        uploadedUrls.push(image.uploadedUrl);
+        continue;
+      }
 
-      const { error: uploadError } = await supabase.storage
-        .from("gearninjaImages")
-        .upload(fileName, image.file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      // Upload new images
+      if (image.file) {
+        const fileExt = image.file.name.split(".").pop();
+        const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      if (uploadError) throw uploadError;
+        const { error: uploadError } = await supabase.storage
+          .from("gearninjaImages")
+          .upload(fileName, image.file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("gearninjaImages")
-        .getPublicUrl(fileName);
+        if (uploadError) throw uploadError;
 
-      uploadedUrls.push(publicUrl);
+        const { data: { publicUrl } } = supabase.storage
+          .from("gearninjaImages")
+          .getPublicUrl(fileName);
+
+        uploadedUrls.push(publicUrl);
+      }
     }
 
     return uploadedUrls;
+  };
+
+  const deleteRemovedImages = async () => {
+    if (!editProduct?.image_urls) return;
+
+    const currentUrls = images
+      .filter((img) => img.isExisting && img.uploadedUrl)
+      .map((img) => img.uploadedUrl!);
+
+    const removedUrls = editProduct.image_urls.filter(
+      (url: string) => !currentUrls.includes(url)
+    );
+
+    for (const url of removedUrls) {
+      try {
+        const path = url.split("/gearninjaImages/")[1];
+        if (path) {
+          await supabase.storage.from("gearninjaImages").remove([path]);
+        }
+      } catch (err) {
+        console.error("Error deleting removed image:", err);
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -173,12 +238,15 @@ export function CreateTrommerPage() {
         throw new Error("Du skal være logget ind for at oprette en annonce");
       }
 
-      // Upload images
+      // Delete removed images if editing
+      if (isEditMode) {
+        await deleteRemovedImages();
+      }
+
+      // Upload new images and get all image URLs
       const imageUrls = await uploadImages();
 
-      // Create product
-      const { error: insertError } = await supabase.from("products").insert({
-        user_id: user.id,
+      const productData = {
         category: "trommer",
         type: formData.type,
         brand: formData.brand || null,
@@ -189,13 +257,34 @@ export function CreateTrommerPage() {
         condition: formData.condition || null,
         year: formData.year && formData.year !== "Ved ikke" ? parseInt(formData.year) : null,
         image_urls: imageUrls,
-      });
+      };
 
-      if (insertError) throw insertError;
+      if (isEditMode && editProduct) {
+        // Update existing product
+        const { error: updateError } = await supabase
+          .from("products")
+          .update(productData)
+          .eq("id", editProduct.id)
+          .eq("user_id", user.id);
 
-      navigate("/trommer", { state: { message: "Annonce oprettet!" } });
+        if (updateError) throw updateError;
+
+        navigate("/mine-annoncer", { state: { message: "Annonce opdateret!" } });
+      } else {
+        // Create new product
+        const { error: insertError } = await supabase
+          .from("products")
+          .insert({
+            ...productData,
+            user_id: user.id,
+          });
+
+        if (insertError) throw insertError;
+
+        navigate("/trommer", { state: { message: "Annonce oprettet!" } });
+      }
     } catch (err: any) {
-      setError(err.message || "Der skete en fejl under oprettelsen");
+      setError(err.message || "Der skete en fejl");
     } finally {
       setLoading(false);
     }
@@ -212,17 +301,19 @@ export function CreateTrommerPage() {
           {/* Header */}
           <div className="mb-8">
             <button
-              onClick={() => navigate("/create")}
+              onClick={() => navigate(isEditMode ? "/mine-annoncer" : "/create")}
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-neon-blue transition-colors mb-4"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="text-sm">Tilbage</span>
             </button>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-              Opret annonce - Trommer
+              {isEditMode ? "Rediger annonce - Trommer" : "Opret annonce - Trommer"}
             </h1>
             <p className="text-lg text-muted-foreground">
-              Udfyld informationerne nedenfor for at oprette din annonce
+              {isEditMode
+                ? "Opdater informationerne nedenfor for din annonce"
+                : "Udfyld informationerne nedenfor for at oprette din annonce"}
             </p>
           </div>
 
@@ -459,10 +550,10 @@ export function CreateTrommerPage() {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                    Opretter...
+                    {isEditMode ? "Gemmer..." : "Opretter..."}
                   </>
                 ) : (
-                  "Opret annonce"
+                  isEditMode ? "Gem ændringer" : "Opret annonce"
                 )}
               </Button>
             </div>

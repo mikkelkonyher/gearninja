@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface Product {
@@ -24,29 +24,40 @@ export function StrygerePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+  }, [currentPage]);
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error: fetchError } = await supabase
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      // Fetch products with pagination
+      const { data, error: fetchError, count } = await supabase
         .from("products")
-        .select("*")
+        .select("*", { count: "exact" })
         .eq("category", "strygere")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (fetchError) throw fetchError;
 
       setProducts(data || []);
+      setTotalCount(count || 0);
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente produkter");
     } finally {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   const formatPrice = (price: number | null) => {
     if (!price) return "Pris på anmodning";
@@ -67,8 +78,8 @@ export function StrygerePage() {
             Strygere
           </h1>
           <p className="text-lg text-muted-foreground">
-            {products.length > 0
-              ? `${products.length} annoncer fundet`
+            {totalCount > 0
+              ? `${totalCount} annoncer fundet`
               : "Ingen annoncer endnu"}
           </p>
           {location.state?.message && (
@@ -156,6 +167,41 @@ export function StrygerePage() {
                 </motion.div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="mt-8 flex items-center justify-center gap-4">
+            <button
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-white/10 bg-secondary/40 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary/60 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center gap-2">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-4 py-2 rounded-lg border transition-colors ${
+                    currentPage === page
+                      ? "bg-neon-blue border-neon-blue text-white"
+                      : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border border-white/10 bg-secondary/40 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary/60 transition-colors"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         )}
       </div>
