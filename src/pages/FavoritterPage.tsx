@@ -72,15 +72,51 @@ export function FavoritterPage() {
         .from("favorites")
         .select(`
           id,
-          product:products (*),
-          room:rehearsal_rooms (*)
+          product_id,
+          room_id,
+          created_at
         `)
         .eq("user_id", currentUserId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      setFavorites(data || []);
+      // Fetch related products and rooms separately
+      const favoriteItems: FavoriteItem[] = [];
+      
+      for (const fav of data || []) {
+        if (fav.product_id) {
+          const { data: product } = await supabase
+            .from("products")
+            .select("*")
+            .eq("id", fav.product_id)
+            .single();
+          
+          if (product) {
+            favoriteItems.push({
+              id: fav.id,
+              product: product,
+              room: null,
+            });
+          }
+        } else if (fav.room_id) {
+          const { data: room } = await supabase
+            .from("rehearsal_rooms")
+            .select("*")
+            .eq("id", fav.room_id)
+            .single();
+          
+          if (room) {
+            favoriteItems.push({
+              id: fav.id,
+              product: null,
+              room: room,
+            });
+          }
+        }
+      }
+
+      setFavorites(favoriteItems);
     } catch (error) {
       console.error("Error fetching favorites:", error);
     } finally {

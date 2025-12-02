@@ -142,11 +142,6 @@ export function TrommerPage() {
                         Intet billede
                       </div>
                     )}
-                    {product.condition && (
-                      <div className="absolute top-2 right-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded">
-                        {product.condition}
-                      </div>
-                    )}
                     
                     {/* Favorite Button */}
                     <div className="absolute top-2 right-2 z-10">

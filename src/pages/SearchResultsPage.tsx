@@ -193,11 +193,6 @@ export function SearchResultsPage() {
                         Intet billede
                       </div>
                     )}
-                    {product.condition && (
-                      <div className="absolute top-2 right-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded">
-                        {product.condition}
-                      </div>
-                    )}
                     <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
                       {product.type}
                     </div>
