@@ -37,24 +37,35 @@ export function FavoriteButton({ itemId, itemType, currentUserId, className = ""
   };
 
   const fetchFavoriteStatus = async () => {
-    // Get total count
-    const { count } = await supabase
-      .from("favorites")
-      .select("*", { count: "exact", head: true })
-      .eq(itemType === "product" ? "product_id" : "room_id", itemId);
-
-    setLikesCount(count || 0);
-
-    // Check if user favorited it
-    if (currentUserId) {
-      const { data } = await supabase
+    try {
+      // Get total count
+      const { count, error: countError } = await supabase
         .from("favorites")
-        .select("id")
-        .eq("user_id", currentUserId)
-        .eq(itemType === "product" ? "product_id" : "room_id", itemId)
-        .single();
+        .select("*", { count: "exact", head: true })
+        .eq(itemType === "product" ? "product_id" : "room_id", itemId);
 
-      setIsFavorited(!!data);
+      if (!countError) {
+        setLikesCount(count || 0);
+      }
+
+      // Check if user favorited it
+      if (currentUserId) {
+        const { data, error } = await supabase
+          .from("favorites")
+          .select("id")
+          .eq("user_id", currentUserId)
+          .eq(itemType === "product" ? "product_id" : "room_id", itemId)
+          .maybeSingle();
+
+        if (!error) {
+          setIsFavorited(!!data);
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching favorite status:", err);
+      // Set defaults on error
+      setLikesCount(0);
+      setIsFavorited(false);
     }
   };
 
