@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Upload,
-  X,
-  GripVertical,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, Upload, X, GripVertical, Loader2 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 import { compressImageFile } from "../lib/utils";
+import { extractEdgeFunctionError } from "../lib/edgeFunctionError";
 
 const drumTypes = [
   "Akustiske trommer",
@@ -50,7 +45,10 @@ const locations = [
 
 // Generate years from current year back to 1950
 const currentYear = new Date().getFullYear();
-const years = Array.from({ length: currentYear - 1949 }, (_, i) => currentYear - i);
+const years = Array.from(
+  { length: currentYear - 1949 },
+  (_, i) => currentYear - i
+);
 
 interface ImageFile {
   file?: File;
@@ -83,7 +81,9 @@ export function CreateTrommerPage() {
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         setError("Log ind for at oprette en annonce");
       }
@@ -107,11 +107,13 @@ export function CreateTrommerPage() {
 
       // Load existing images
       if (editProduct.image_urls && editProduct.image_urls.length > 0) {
-        const existingImages: ImageFile[] = editProduct.image_urls.map((url: string) => ({
-          preview: url,
-          uploadedUrl: url,
-          isExisting: true,
-        }));
+        const existingImages: ImageFile[] = editProduct.image_urls.map(
+          (url: string) => ({
+            preview: url,
+            uploadedUrl: url,
+            isExisting: true,
+          })
+        );
         setImages(existingImages);
       }
     }
@@ -142,12 +144,12 @@ export function CreateTrommerPage() {
   const removeImage = (index: number) => {
     const imageToRemove = images[index];
     const newImages = images.filter((_, i) => i !== index);
-    
+
     // Revoke blob URL if it's a new upload
     if (imageToRemove.preview.startsWith("blob:")) {
       URL.revokeObjectURL(imageToRemove.preview);
     }
-    
+
     setImages(newImages);
   };
 
@@ -172,7 +174,9 @@ export function CreateTrommerPage() {
   };
 
   const uploadImages = async (): Promise<string[]> => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) throw new Error("Du skal være logget ind");
 
     const uploadedUrls: string[] = [];
@@ -187,7 +191,9 @@ export function CreateTrommerPage() {
       // Upload new images
       if (image.file) {
         const fileExt = image.file.name.split(".").pop();
-        const fileName = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileName = `${user.id}/${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(7)}.${fileExt}`;
 
         const { error: uploadError } = await supabase.storage
           .from("gearninjaImages")
@@ -198,9 +204,9 @@ export function CreateTrommerPage() {
 
         if (uploadError) throw uploadError;
 
-        const { data: { publicUrl } } = supabase.storage
-          .from("gearninjaImages")
-          .getPublicUrl(fileName);
+        const {
+          data: { publicUrl },
+        } = supabase.storage.from("gearninjaImages").getPublicUrl(fileName);
 
         uploadedUrls.push(publicUrl);
       }
@@ -249,7 +255,9 @@ export function CreateTrommerPage() {
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) {
         throw new Error("Du skal være logget ind for at oprette en annonce");
       }
@@ -271,36 +279,51 @@ export function CreateTrommerPage() {
         price: formData.price ? parseFloat(formData.price) : null,
         location: formData.location || null,
         condition: formData.condition || null,
-        year: formData.year && formData.year !== "Ved ikke" ? parseInt(formData.year) : null,
+        year:
+          formData.year && formData.year !== "Ved ikke"
+            ? parseInt(formData.year)
+            : null,
         image_urls: imageUrls,
       };
 
       // Get auth token for Edge Function
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         throw new Error("Du skal være logget ind");
       }
 
       // Call Edge Function
-      const { error: functionError } = await supabase.functions.invoke(
+      const { data, error: functionError } = await supabase.functions.invoke(
         "create-product",
         {
-          body: isEditMode && editProduct
-            ? { ...productData, id: editProduct.id }
-            : productData,
+          body:
+            isEditMode && editProduct
+              ? { ...productData, id: editProduct.id }
+              : productData,
           headers: {
             authorization: `Bearer ${session.access_token}`,
-            apikey: import.meta.env.PUSHIABLE_API_KEY || import.meta.env.VITE_PUSHIABLE_API_KEY || "",
+            apikey:
+              import.meta.env.PUSHIABLE_API_KEY ||
+              import.meta.env.VITE_PUSHIABLE_API_KEY ||
+              "",
           },
         }
       );
 
       if (functionError) {
-        throw new Error(functionError.message || "Der skete en fejl");
+        const errorMessage = await extractEdgeFunctionError(
+          functionError,
+          data
+        );
+        throw new Error(errorMessage);
       }
 
       if (isEditMode) {
-        navigate("/mine-annoncer", { state: { message: "Annonce opdateret!" } });
+        navigate("/mine-annoncer", {
+          state: { message: "Annonce opdateret!" },
+        });
       } else {
         navigate("/trommer", { state: { message: "Annonce oprettet!" } });
       }
@@ -322,14 +345,18 @@ export function CreateTrommerPage() {
           {/* Header */}
           <div className="mb-8">
             <button
-              onClick={() => navigate(isEditMode ? "/mine-annoncer" : "/create")}
+              onClick={() =>
+                navigate(isEditMode ? "/mine-annoncer" : "/create")
+              }
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-neon-blue transition-colors mb-4"
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="text-sm">Tilbage</span>
             </button>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
-              {isEditMode ? "Rediger annonce - Trommer" : "Opret annonce - Trommer"}
+              {isEditMode
+                ? "Rediger annonce - Trommer"
+                : "Opret annonce - Trommer"}
             </h1>
             <p className="text-lg text-muted-foreground">
               {isEditMode
@@ -484,7 +511,9 @@ export function CreateTrommerPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Produktionsår</label>
+                <label className="text-sm font-medium text-gray-300">
+                  Produktionsår
+                </label>
                 <select
                   value={formData.year}
                   onChange={(e) =>
@@ -519,9 +548,7 @@ export function CreateTrommerPage() {
                     onDragEnd={handleDragEnd}
                     whileDrag={{ opacity: 0.5 }}
                     className={`relative group aspect-square rounded-lg overflow-hidden border-2 bg-background/30 ${
-                      index === 0
-                        ? "border-green-500"
-                        : "border-white/10"
+                      index === 0 ? "border-green-500" : "border-white/10"
                     }`}
                   >
                     <img
@@ -587,8 +614,10 @@ export function CreateTrommerPage() {
                     <Loader2 className="w-5 h-5 animate-spin mr-2" />
                     {isEditMode ? "Gemmer..." : "Opretter..."}
                   </>
+                ) : isEditMode ? (
+                  "Gem ændringer"
                 ) : (
-                  isEditMode ? "Gem ændringer" : "Opret annonce"
+                  "Opret annonce"
                 )}
               </Button>
             </div>
@@ -598,4 +627,3 @@ export function CreateTrommerPage() {
     </div>
   );
 }
-

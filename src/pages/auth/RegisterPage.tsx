@@ -5,6 +5,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import { Button } from "../../components/ui/Button";
 import { supabase } from "../../lib/supabase";
 import { PUSHIABLE_API_KEY } from "../../lib/env";
+import { extractEdgeFunctionError } from "../../lib/edgeFunctionError";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export function RegisterPage() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.functions.invoke("register", {
+      const { data, error } = await supabase.functions.invoke("register", {
         body: {
           email: formData.email,
           password: formData.password,
@@ -46,14 +47,30 @@ export function RegisterPage() {
       });
 
       if (error) {
-        // error.message will contain what the Edge Function returned in most cases
-        throw new Error(error.message || "Der skete en fejl under oprettelsen");
+        // Try to get the actual error message from the response
+        let errorMessage = "Der skete en fejl under oprettelsen";
+
+        // Debug: log the error structure to understand what we're working with
+        console.log("Edge Function error:", error);
+        console.log("Edge Function data:", data);
+        console.log("Error type:", error?.constructor?.name);
+        console.log("Error context:", error?.context);
+
+        // Check if data contains the error (sometimes Supabase returns the error in data even on error)
+        if (data && typeof data === "object" && "error" in data) {
+          errorMessage = (data as { error: string }).error;
+        }
+        // Try to extract from error object (async function)
+        else {
+          errorMessage = await extractEdgeFunctionError(error, data);
+        }
+
+        throw new Error(errorMessage);
       }
 
       navigate("/login", {
         state: {
-          message:
-            "Konto oprettet! Tjek din email for at bekræfte (hvis bekræftelse er slået til).",
+          message: "Konto oprettet! Tjek din email for at bekræfte.",
         },
       });
     } catch (err: any) {
