@@ -12,6 +12,7 @@ import {
   Heart,
   CheckCircle2,
   Clock,
+  XCircle,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -60,6 +61,9 @@ export function MineAnnoncerPage() {
   const [user, setUser] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [markingAsSoldId, setMarkingAsSoldId] = useState<string | null>(null);
+  const [unmarkingAsSoldId, setUnmarkingAsSoldId] = useState<string | null>(
+    null
+  );
   const [favoriteCounts, setFavoriteCounts] = useState<{
     [key: string]: number;
   }>({});
@@ -287,12 +291,6 @@ export function MineAnnoncerPage() {
   const handleMarkAsSold = async (itemId: string) => {
     if (!user) return;
 
-    const confirmed = window.confirm(
-      "Er du sikker på, at du vil markere dette produkt som solgt? Dette vil slette produktet og notificere alle, der har favoriseret det."
-    );
-
-    if (!confirmed) return;
-
     try {
       setMarkingAsSoldId(itemId);
       const { data, error } = await supabase.rpc("mark_product_sold", {
@@ -303,23 +301,38 @@ export function MineAnnoncerPage() {
       if (error) throw error;
 
       if (data?.error) {
-        alert(data.error);
+        console.error("Error marking product as sold:", data.error);
         return;
       }
-
-      alert(
-        `Produktet er markeret som solgt. ${
-          data?.notifications_sent || 0
-        } personer er blevet notificeret.`
-      );
 
       // Refresh items list
       await fetchAllItems();
     } catch (err: any) {
       console.error("Error marking product as sold:", err);
-      alert("Kunne ikke markere produktet som solgt. Prøv igen.");
     } finally {
       setMarkingAsSoldId(null);
+    }
+  };
+
+  const handleUnmarkAsSold = async (itemId: string) => {
+    if (!user) return;
+
+    try {
+      setUnmarkingAsSoldId(itemId);
+      const { error } = await supabase
+        .from("products")
+        .update({ sold: false, sold_at: null })
+        .eq("id", itemId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      // Refresh items list
+      await fetchAllItems();
+    } catch (err: any) {
+      console.error("Error unmarking product as sold:", err);
+    } finally {
+      setUnmarkingAsSoldId(null);
     }
   };
 
@@ -334,7 +347,7 @@ export function MineAnnoncerPage() {
 
   const formatTimeUntilDeletion = (soldAt: string) => {
     const soldDate = new Date(soldAt);
-    const deletionDate = new Date(soldDate.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
+    const deletionDate = new Date(soldDate.getTime() + 3 * 24 * 60 * 60 * 1000); // Add 3 days
     const diff = deletionDate.getTime() - currentTime.getTime();
 
     if (diff <= 0) return "Bliver slettet snart";
@@ -590,17 +603,36 @@ export function MineAnnoncerPage() {
                         </button>
                       )}
 
-                      {/* Countdown for Sold Products */}
+                      {/* Countdown and Unmark Button for Sold Products */}
                       {isProduct &&
                         product &&
                         product.sold &&
                         product.sold_at && (
-                          <div className="mt-3 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 flex items-center gap-2">
-                            <Clock className="w-4 h-4" />
-                            <span className="text-sm font-medium">
-                              {formatTimeUntilDeletion(product.sold_at)}
-                            </span>
-                          </div>
+                          <>
+                            <div className="mt-3 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              <span className="text-sm font-medium">
+                                {formatTimeUntilDeletion(product.sold_at)}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => handleUnmarkAsSold(item.id)}
+                              disabled={unmarkingAsSoldId === item.id}
+                              className="mt-2 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {unmarkingAsSoldId === item.id ? (
+                                <>
+                                  <Loader2 className="w-5 h-5 animate-spin" />
+                                  <span>Annullerer...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="w-5 h-5" />
+                                  <span>Annuller solgt status</span>
+                                </>
+                              )}
+                            </button>
+                          </>
                         )}
                     </div>
                   </motion.div>

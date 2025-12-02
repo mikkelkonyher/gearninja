@@ -39,7 +39,7 @@ END $$;
 -- Create index for sold products
 CREATE INDEX IF NOT EXISTS idx_products_sold ON products(sold, sold_at);
 
--- Function to mark product as sold, notify favoriters (product stays for 1 day)
+-- Function to mark product as sold, notify favoriters (product stays for 3 days)
 CREATE OR REPLACE FUNCTION mark_product_sold(product_uuid UUID, seller_uuid UUID)
 RETURNS JSON AS $$
 DECLARE
@@ -83,7 +83,7 @@ BEGIN
   -- Delete all favorites for this product
   DELETE FROM favorites WHERE product_id = product_uuid;
 
-  -- Mark product as sold and set sold_at timestamp (will be deleted after 1 day)
+  -- Mark product as sold and set sold_at timestamp (will be deleted after 3 days)
   UPDATE products 
   SET sold = TRUE, sold_at = NOW()
   WHERE id = product_uuid;
@@ -101,18 +101,18 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Grant execute permission to authenticated users
 GRANT EXECUTE ON FUNCTION mark_product_sold(UUID, UUID) TO authenticated;
 
--- Function to delete products that have been sold for more than 1 day
+-- Function to delete products that have been sold for more than 3 days
 CREATE OR REPLACE FUNCTION delete_old_sold_products()
 RETURNS INTEGER AS $$
 DECLARE
   deleted_count INTEGER;
 BEGIN
-  -- Delete products that were marked as sold more than 1 day ago
+  -- Delete products that were marked as sold more than 3 days ago
   WITH deleted AS (
     DELETE FROM products
     WHERE sold = TRUE 
       AND sold_at IS NOT NULL
-      AND sold_at < NOW() - INTERVAL '1 day'
+      AND sold_at < NOW() - INTERVAL '3 days'
     RETURNING id
   )
   SELECT COUNT(*) INTO deleted_count FROM deleted;
