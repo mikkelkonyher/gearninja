@@ -96,25 +96,26 @@ serve(async (req) => {
     return badRequest("Brugernavnet er allerede taget");
   }
 
-  // Create user using Admin API (service role)
-  const { data, error } = await supabase.auth.admin.createUser({
+  // Create user using regular signUp (this will send confirmation email if enabled)
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
     email,
     password,
-    email_confirm: false, // or true, depending on your flow
-    user_metadata: {
-      username: trimmedUsername,
+    options: {
+      data: {
+        username: trimmedUsername,
+      },
     },
   });
 
-  if (error) {
-    return badRequest(error.message ?? "Kunne ikke oprette bruger");
+  if (signUpError) {
+    return badRequest(signUpError.message ?? "Kunne ikke oprette bruger");
   }
 
   return jsonResponse(
     {
-      userId: data.user?.id,
+      userId: signUpData.user?.id,
       message:
-        "Bruger oprettet. Tjek din email for bekræftelse (hvis slået til).",
+        "Bruger oprettet. Tjek din email for bekræftelse.",
     },
     { status: 200 },
   );
