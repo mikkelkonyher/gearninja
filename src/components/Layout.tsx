@@ -167,15 +167,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         >
                           Profil
                         </button>
-                        <button
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                          onClick={() => {
-                            setIsUserMenuOpen(false);
-                            navigate('/inbox');
-                          }}
-                        >
-                          Indbakke
-                        </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/chats');
+                        }}
+                      >
+                        Beskeder
+                      </button>
                         <button
                           className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
                           onClick={handleLogout}
@@ -282,10 +282,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         className="w-full justify-start"
                         onClick={() => {
                           setIsMobileMenuOpen(false);
-                          navigate('/inbox');
+                          navigate('/chats');
                         }}
                       >
-                        Indbakke
+                        Beskeder
                       </Button>
                       <Button
                         variant="neon"

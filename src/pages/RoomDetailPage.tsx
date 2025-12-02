@@ -397,7 +397,15 @@ export function RoomDetailPage() {
                         Udlejer
                       </h3>
                     </div>
-                    <p className="text-white">{creatorUsername}</p>
+                    <p className="text-white mb-3">{creatorUsername}</p>
+                    {currentUserId && currentUserId !== room.user_id && (
+                      <button
+                        onClick={() => navigate(`/chat?itemId=${room.id}&itemType=room&sellerId=${room.user_id}`)}
+                        className="w-full px-4 py-2 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors font-medium"
+                      >
+                        Skriv til sælger
+                      </button>
+                    )}
                   </div>
                 )}
                 
