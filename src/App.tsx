@@ -4,6 +4,7 @@ import { Layout } from './components/Layout';
 import { LandingPage } from './pages/LandingPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
 import { LoginPage } from './pages/auth/LoginPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { CreateAnnouncementPage } from './pages/CreateAnnouncementPage';
 import { CreateTrommerPage } from './pages/CreateTrommerPage';
 import { TrommerPage } from './pages/TrommerPage';
@@ -38,6 +39,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/forgot-password" element={<ResetPasswordPage />} />
           <Route path="/create" element={<CreateAnnouncementPage />} />
           <Route path="/create/trommer" element={<CreateTrommerPage />} />
           <Route path="/create/guitar" element={<CreateGuitarPage />} />
