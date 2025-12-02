@@ -573,7 +573,9 @@ export function CreateKeyboardsPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/create")}
+                onClick={() =>
+                  navigate(isEditMode ? "/mine-annoncer" : "/create")
+                }
                 disabled={loading}
               >
                 Annuller
