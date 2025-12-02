@@ -8,8 +8,9 @@ interface Notification {
   id: string;
   type: string;
   item_id: string;
-  item_type: "product" | "room";
+  item_type: "product" | "room" | "chat";
   favoriter_id: string | null;
+  chat_id?: string | null;
   read: boolean;
   created_at: string;
 }
@@ -187,9 +188,12 @@ export function NotificationBell({ userId }: { userId: string | null }) {
       }
     }
 
-    // Navigate to detail page (only if product/room still exists)
+    // Navigate to detail page or chat (only if product/room/chat still exists)
     setIsOpen(false);
-    if (notification.type === "product_sold") {
+    if (notification.type === "new_message" && notification.chat_id) {
+      // Navigate to chat
+      navigate(`/chat/${notification.chat_id}`);
+    } else if (notification.type === "product_sold") {
       // For sold products, check if product still exists before navigating
       try {
         const { data: productData, error } = await supabase
@@ -334,6 +338,10 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                                     notification.product_model ||
                                     "Produkt"}{" "}
                                 er blevet solgt
+                              </>
+                            ) : notification.type === "new_message" ? (
+                              <>
+                                {notification.favoriter_username || "Nogen"} har sendt dig en besked
                               </>
                             ) : (
                               <>
