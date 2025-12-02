@@ -57,7 +57,7 @@ export function ChatPage() {
 
   useEffect(() => {
     if (!currentUserId) return;
-    
+
     if (chatId) {
       fetchChat();
     } else if (itemId && itemType && sellerId) {
@@ -77,7 +77,9 @@ export function ChatPage() {
   }, [messages]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
   };
 
@@ -86,7 +88,7 @@ export function ChatPage() {
 
     try {
       setLoading(true);
-      
+
       // Check if chat already exists
       const { data: existingChat, error: checkError } = await supabase
         .from("chats")
@@ -144,7 +146,8 @@ export function ChatPage() {
       if (error) throw error;
 
       // Determine other user
-      const otherUserId = data.buyer_id === currentUserId ? data.seller_id : data.buyer_id;
+      const otherUserId =
+        data.buyer_id === currentUserId ? data.seller_id : data.buyer_id;
 
       // Fetch other user's username
       let otherUsername: string | null = null;
@@ -178,9 +181,10 @@ export function ChatPage() {
           .single();
 
         if (productData) {
-          itemTitle = productData.brand && productData.model
-            ? `${productData.brand} ${productData.model}`
-            : productData.brand || productData.model || productData.type;
+          itemTitle =
+            productData.brand && productData.model
+              ? `${productData.brand} ${productData.model}`
+              : productData.brand || productData.model || productData.type;
         }
       } else {
         const { data: roomData } = await supabase
@@ -220,26 +224,29 @@ export function ChatPage() {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      
+
       // Add usernames to messages
       const messagesWithUsernames = await Promise.all(
         (data || []).map(async (message) => {
           let senderUsername: string | null = null;
           try {
-            const { data: usernameData } = await supabase.rpc("get_user_username", {
-              user_uuid: message.sender_id,
-            });
+            const { data: usernameData } = await supabase.rpc(
+              "get_user_username",
+              {
+                user_uuid: message.sender_id,
+              }
+            );
             senderUsername = usernameData?.username || null;
           } catch (err) {
             console.error("Error fetching sender username:", err);
           }
           return {
             ...message,
-            sender_username: senderUsername,
+            sender_username: senderUsername || undefined,
           };
         })
       );
-      
+
       setMessages(messagesWithUsernames);
 
       // Mark messages as read
@@ -271,30 +278,49 @@ export function ChatPage() {
         },
         async (payload) => {
           const newMessage = payload.new as Message;
-          
+
           // Fetch username for new message
           let senderUsername: string | null = null;
           try {
-            const { data: usernameData } = await supabase.rpc("get_user_username", {
-              user_uuid: newMessage.sender_id,
-            });
+            const { data: usernameData } = await supabase.rpc(
+              "get_user_username",
+              {
+                user_uuid: newMessage.sender_id,
+              }
+            );
             senderUsername = usernameData?.username || null;
           } catch (err) {
             console.error("Error fetching sender username:", err);
           }
-          
+
           setMessages((prev) => {
             // Don't add if it's already there (optimistic update)
-            if (prev.some(m => m.id === newMessage.id || (m.isOptimistic && m.content === newMessage.content && m.sender_id === newMessage.sender_id))) {
-              return prev.map(m => 
-                m.isOptimistic && m.content === newMessage.content && m.sender_id === newMessage.sender_id
-                  ? { ...newMessage, sender_username: senderUsername }
+            if (
+              prev.some(
+                (m) =>
+                  m.id === newMessage.id ||
+                  (m.isOptimistic &&
+                    m.content === newMessage.content &&
+                    m.sender_id === newMessage.sender_id)
+              )
+            ) {
+              return prev.map((m) =>
+                m.isOptimistic &&
+                m.content === newMessage.content &&
+                m.sender_id === newMessage.sender_id
+                  ? {
+                      ...newMessage,
+                      sender_username: senderUsername || undefined,
+                    }
                   : m
               );
             }
-            return [...prev, { ...newMessage, sender_username: senderUsername }];
+            return [
+              ...prev,
+              { ...newMessage, sender_username: senderUsername || undefined },
+            ];
           });
-          
+
           // Mark as read if it's not from current user
           if (currentUserId && payload.new.sender_id !== currentUserId) {
             supabase
@@ -317,7 +343,7 @@ export function ChatPage() {
 
     const messageContent = newMessage.trim();
     const tempId = `temp-${Date.now()}`;
-    
+
     // Optimistic update - show message immediately
     const optimisticMessage: Message = {
       id: tempId,
@@ -326,36 +352,43 @@ export function ChatPage() {
       content: messageContent,
       read: false,
       created_at: new Date().toISOString(),
-      sender_username: chat.current_user_username || null,
+      sender_username: chat.current_user_username || undefined,
       isOptimistic: true,
     };
-    
+
     setMessages((prev) => [...prev, optimisticMessage]);
     setNewMessage("");
     setSending(true);
     scrollToBottom();
 
     try {
-      const { data, error } = await supabase.from("messages").insert({
-        chat_id: chat.id,
-        sender_id: currentUserId,
-        content: messageContent,
-      }).select().single();
+      const { data, error } = await supabase
+        .from("messages")
+        .insert({
+          chat_id: chat.id,
+          sender_id: currentUserId,
+          content: messageContent,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
-      
+
       // Replace optimistic message with real one
-      setMessages((prev) => 
-        prev.map(m => 
-          m.id === tempId 
-            ? { ...data, sender_username: chat.current_user_username || null }
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === tempId
+            ? {
+                ...data,
+                sender_username: chat.current_user_username || undefined,
+              }
             : m
         )
       );
     } catch (err: any) {
       console.error("Error sending message:", err);
       // Remove optimistic message on error
-      setMessages((prev) => prev.filter(m => m.id !== tempId));
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setNewMessage(messageContent); // Restore message on error
       alert("Kunne ikke sende besked. Prøv igen.");
     } finally {
@@ -373,9 +406,17 @@ export function ChatPage() {
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 24) {
-      return date.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString("da-DK", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
     }
-    return date.toLocaleDateString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleDateString("da-DK", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (loading) {
@@ -431,23 +472,30 @@ export function ChatPage() {
             {messages.map((message, index) => {
               const isOwn = message.sender_id === currentUserId;
               const prevMessage = index > 0 ? messages[index - 1] : null;
-              const showAvatar = !prevMessage || prevMessage.sender_id !== message.sender_id;
+              const showAvatar =
+                !prevMessage || prevMessage.sender_id !== message.sender_id;
               const showUsername = !isOwn && showAvatar;
-              
+
               return (
                 <motion.div
                   key={message.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2 }}
-                  className={`flex items-end gap-2 ${isOwn ? "justify-end" : "justify-start"} ${showAvatar ? "mt-4" : "mt-1"}`}
+                  className={`flex items-end gap-2 ${
+                    isOwn ? "justify-end" : "justify-start"
+                  } ${showAvatar ? "mt-4" : "mt-1"}`}
                 >
                   {!isOwn && (
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-neon-blue/20 border border-neon-blue/30 flex items-center justify-center text-neon-blue text-xs font-semibold">
                       {(message.sender_username || "U")[0].toUpperCase()}
                     </div>
                   )}
-                  <div className={`flex flex-col ${isOwn ? "items-end" : "items-start"} max-w-[70%]`}>
+                  <div
+                    className={`flex flex-col ${
+                      isOwn ? "items-end" : "items-start"
+                    } max-w-[70%]`}
+                  >
                     {showUsername && (
                       <span className="text-xs text-muted-foreground mb-1 px-2">
                         {message.sender_username || "Bruger"}
@@ -516,4 +564,3 @@ export function ChatPage() {
     </div>
   );
 }
-

@@ -41,7 +41,9 @@ export function ChatsListPage() {
   }, [currentUserId]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
   };
 
@@ -61,14 +63,18 @@ export function ChatsListPage() {
       // Fetch details for each chat
       const chatsWithDetails: ChatWithDetails[] = await Promise.all(
         (data || []).map(async (chat) => {
-          const otherUserId = chat.buyer_id === currentUserId ? chat.seller_id : chat.buyer_id;
+          const otherUserId =
+            chat.buyer_id === currentUserId ? chat.seller_id : chat.buyer_id;
 
           // Fetch other user's username
           let otherUsername: string | null = null;
           try {
-            const { data: usernameData } = await supabase.rpc("get_user_username", {
-              user_uuid: otherUserId,
-            });
+            const { data: usernameData } = await supabase.rpc(
+              "get_user_username",
+              {
+                user_uuid: otherUserId,
+              }
+            );
             otherUsername = usernameData?.username || null;
           } catch (err) {
             console.error("Error fetching username:", err);
@@ -84,9 +90,10 @@ export function ChatsListPage() {
               .single();
 
             if (productData) {
-              itemTitle = productData.brand && productData.model
-                ? `${productData.brand} ${productData.model}`
-                : productData.brand || productData.model || productData.type;
+              itemTitle =
+                productData.brand && productData.model
+                  ? `${productData.brand} ${productData.model}`
+                  : productData.brand || productData.model || productData.type;
             }
           } else {
             const { data: roomData } = await supabase
@@ -196,7 +203,9 @@ export function ChatsListPage() {
     const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
 
     if (diffInHours < 1) {
-      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      const diffInMinutes = Math.floor(
+        (now.getTime() - date.getTime()) / (1000 * 60)
+      );
       return diffInMinutes < 1 ? "Lige nu" : `${diffInMinutes} min siden`;
     }
     if (diffInHours < 24) {
@@ -212,7 +221,9 @@ export function ChatsListPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Log ind for at se dine beskeder</p>
+          <p className="text-muted-foreground mb-4">
+            Log ind for at se din indbakke
+          </p>
           <button
             onClick={() => navigate("/login")}
             className="px-4 py-2 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
@@ -227,8 +238,10 @@ export function ChatsListPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Beskeder</h1>
-        <p className="text-muted-foreground">Chat med sælgere om produkter og øvelokaler</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Indbakke</h1>
+        <p className="text-muted-foreground">
+          Chat med sælgere om produkter og øvelokaler
+        </p>
       </div>
 
       {loading ? (
@@ -240,7 +253,8 @@ export function ChatsListPage() {
           <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
           <p className="text-muted-foreground text-lg">Ingen beskeder endnu</p>
           <p className="text-muted-foreground text-sm mt-2">
-            Klik på "Skriv til sælger" på en produkt- eller øvelokale-side for at starte en chat
+            Klik på "Skriv til sælger" på en produkt- eller øvelokale-side for
+            at starte en chat
           </p>
         </div>
       ) : (
@@ -249,18 +263,28 @@ export function ChatsListPage() {
             <motion.button
               key={chat.id}
               onClick={() => navigate(`/chat/${chat.id}`)}
-              className="w-full text-left p-4 rounded-xl border border-white/10 bg-secondary/40 hover:bg-secondary/60 transition-colors"
+              className={`w-full text-left p-4 rounded-xl border transition-colors ${
+                chat.unread_count > 0
+                  ? "border-neon-blue/50 bg-neon-blue/10 hover:bg-neon-blue/15"
+                  : "border-white/10 bg-secondary/40 hover:bg-secondary/60"
+              }`}
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
             >
               <div className="flex items-start gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-white font-semibold truncate">
+                    <h3
+                      className={`truncate ${
+                        chat.unread_count > 0
+                          ? "text-white font-bold"
+                          : "text-white font-semibold"
+                      }`}
+                    >
                       {chat.other_user_username || "Bruger"}
                     </h3>
                     {chat.unread_count > 0 && (
-                      <span className="flex-shrink-0 px-2 py-0.5 rounded-full bg-neon-blue text-white text-xs font-semibold">
+                      <span className="flex-shrink-0 px-2.5 py-1 rounded-full bg-neon-blue text-white text-xs font-bold min-w-[24px] text-center">
                         {chat.unread_count}
                       </span>
                     )}
@@ -269,13 +293,34 @@ export function ChatsListPage() {
                     {chat.item_title}
                   </p>
                   {chat.last_message && (
-                    <p className="text-white/70 text-sm truncate">
-                      {chat.last_message}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p
+                        className={`text-sm truncate ${
+                          chat.unread_count > 0
+                            ? "text-white font-medium"
+                            : "text-white/70"
+                        }`}
+                      >
+                        {chat.last_message}
+                      </p>
+                      {chat.unread_count > 0 && (
+                        <span className="flex-shrink-0 text-xs text-neon-blue font-semibold whitespace-nowrap">
+                          {chat.unread_count === 1
+                            ? "1 ulæst"
+                            : `${chat.unread_count} ulæste`}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
                 {chat.last_message_time && (
-                  <div className="flex-shrink-0 text-xs text-muted-foreground">
+                  <div
+                    className={`flex-shrink-0 text-xs ${
+                      chat.unread_count > 0
+                        ? "text-neon-blue font-semibold"
+                        : "text-muted-foreground"
+                    }`}
+                  >
                     {formatTime(chat.last_message_time)}
                   </div>
                 )}
@@ -287,4 +332,3 @@ export function ChatsListPage() {
     </div>
   );
 }
-
