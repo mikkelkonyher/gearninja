@@ -8,6 +8,7 @@ import {
   X,
   Loader2,
   Maximize2,
+  Heart,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -36,6 +37,7 @@ export function ProductDetailPage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
   const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
+  const [favoriteCount, setFavoriteCount] = useState<number>(0);
 
   useEffect(() => {
     if (id) {
@@ -60,10 +62,29 @@ export function ProductDetailPage() {
       if (data?.user_id) {
         await fetchCreatorUsername(data.user_id);
       }
+      
+      // Fetch favorite count
+      await fetchFavoriteCount(productId);
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente produkt");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFavoriteCount = async (productId: string) => {
+    try {
+      const { count, error } = await supabase
+        .from("favorites")
+        .select("*", { count: "exact", head: true })
+        .eq('product_id', productId);
+      
+      if (!error) {
+        setFavoriteCount(count || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching favorite count:', err);
+      setFavoriteCount(0);
     }
   };
 
@@ -369,6 +390,17 @@ export function ProductDetailPage() {
                         <p className="text-white text-base">{creatorUsername}</p>
                       </div>
                     )}
+                    
+                    {/* Favorite Count */}
+                    <div className="pt-3 border-t border-white/5">
+                      <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
+                        Favoritter
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Heart className="w-4 h-4 fill-red-500 text-red-500" />
+                        <p className="text-white text-base">{favoriteCount} {favoriteCount === 1 ? 'person' : 'personer'} har gemt dette</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

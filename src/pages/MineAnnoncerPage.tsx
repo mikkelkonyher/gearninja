@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ChevronLeft, ChevronRight, Package, Trash2, Edit, ArrowLeft } from "lucide-react";
+import { Loader2, ChevronLeft, ChevronRight, Package, Trash2, Edit, ArrowLeft, Heart } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface Product {
@@ -44,6 +44,7 @@ export function MineAnnoncerPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [favoriteCounts, setFavoriteCounts] = useState<{ [key: string]: number }>({});
   const itemsPerPage = 12;
 
   useEffect(() => {
@@ -109,11 +110,36 @@ export function MineAnnoncerPage() {
 
       setItems(paginatedItems);
       setTotalCount((productsCount || 0) + (roomsCount || 0));
+      
+      // Fetch favorite counts for all items
+      await fetchFavoriteCounts(paginatedItems);
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente annoncer");
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchFavoriteCounts = async (itemsList: AnnouncementItem[]) => {
+    const counts: { [key: string]: number } = {};
+    
+    for (const item of itemsList) {
+      try {
+        const { count, error } = await supabase
+          .from("favorites")
+          .select("*", { count: "exact", head: true })
+          .eq(item.itemType === 'product' ? 'product_id' : 'room_id', item.id);
+        
+        if (!error) {
+          counts[item.id] = count || 0;
+        }
+      } catch (err) {
+        console.error(`Error fetching favorite count for ${item.id}:`, err);
+        counts[item.id] = 0;
+      }
+    }
+    
+    setFavoriteCounts(counts);
   };
 
   const handleDelete = async (itemId: string, itemType: 'product' | 'room') => {
@@ -353,6 +379,12 @@ export function MineAnnoncerPage() {
                       )}
                       <div className="absolute bottom-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
                         {isProduct && product ? product.category : (room?.type || 'Lokale')}
+                      </div>
+                      
+                      {/* Favorite Count */}
+                      <div className="absolute bottom-2 right-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded flex items-center gap-1">
+                        <Heart className="w-3 h-3 fill-red-500 text-red-500" />
+                        <span>{favoriteCounts[item.id] || 0}</span>
                       </div>
                     </div>
 

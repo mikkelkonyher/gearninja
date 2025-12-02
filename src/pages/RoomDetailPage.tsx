@@ -11,6 +11,7 @@ import {
   MapPin,
   Square,
   Clock,
+  Heart,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -39,6 +40,7 @@ export function RoomDetailPage() {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
   const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
+  const [favoriteCount, setFavoriteCount] = useState<number>(0);
 
   useEffect(() => {
     if (id) {
@@ -63,10 +65,29 @@ export function RoomDetailPage() {
       if (data?.user_id) {
         await fetchCreatorUsername(data.user_id);
       }
+      
+      // Fetch favorite count
+      await fetchFavoriteCount(roomId);
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente lokale");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFavoriteCount = async (roomId: string) => {
+    try {
+      const { count, error } = await supabase
+        .from("favorites")
+        .select("*", { count: "exact", head: true })
+        .eq('room_id', roomId);
+      
+      if (!error) {
+        setFavoriteCount(count || 0);
+      }
+    } catch (err) {
+      console.error('Error fetching favorite count:', err);
+      setFavoriteCount(0);
     }
   };
 
@@ -361,6 +382,17 @@ export function RoomDetailPage() {
                     <p className="text-white">{creatorUsername}</p>
                   </div>
                 )}
+                
+                {/* Favorite Count */}
+                <div className="p-4 rounded-xl border border-white/10 bg-secondary/40">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                      Favoritter
+                    </h3>
+                  </div>
+                  <p className="text-white">{favoriteCount} {favoriteCount === 1 ? 'person' : 'personer'} har gemt dette</p>
+                </div>
               </div>
             </motion.div>
           </div>
