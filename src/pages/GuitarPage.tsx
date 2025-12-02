@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { FavoriteButton } from "../components/FavoriteButton";
 
 interface Product {
   id: string;
@@ -26,11 +27,18 @@ export function GuitarPage() {
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const itemsPerPage = 12;
 
   useEffect(() => {
     fetchProducts();
+    checkUser();
   }, [currentPage]);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const fetchProducts = async () => {
     try {
@@ -154,10 +162,20 @@ export function GuitarPage() {
                       </div>
                     )}
                     {product.condition && (
-                      <div className="absolute top-2 right-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded">
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded">
                         {product.condition}
                       </div>
                     )}
+                    
+                    {/* Favorite Button */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <FavoriteButton 
+                        itemId={product.id} 
+                        itemType="product" 
+                        currentUserId={currentUserId}
+                        className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
+                      />
+                    </div>
                   </div>
 
                   {/* Content */}

@@ -4,6 +4,7 @@ import { ArrowRight, Search, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
+import { FavoriteButton } from "../components/FavoriteButton";
 
 interface Product {
   id: string;
@@ -35,11 +36,18 @@ export function LandingPage() {
   const [loading, setLoading] = useState(true);
   const [roomsLoading, setRoomsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNewestProducts();
     fetchRehearsalRooms();
+    checkUser();
   }, []);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const fetchNewestProducts = async () => {
     try {
@@ -246,7 +254,7 @@ export function LandingPage() {
                     onClick={() => navigate(`/product/${product.id}`)}
                     className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
                   >
-                    <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden">
+                    <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
                       {product.image_urls && product.image_urls.length > 0 ? (
                         <img
                           src={product.image_urls[0]}
@@ -258,10 +266,22 @@ export function LandingPage() {
                           Intet billede
                         </div>
                       )}
+                      
+                      {/* Favorite Button */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <FavoriteButton 
+                          itemId={product.id} 
+                          itemType="product" 
+                          currentUserId={currentUserId}
+                          className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
+                        />
+                      </div>
                     </div>
-                    <h3 className="text-sm font-semibold text-white line-clamp-2">
-                      {getProductTitle(product)}
-                    </h3>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-white line-clamp-2 flex-1">
+                        {getProductTitle(product)}
+                      </h3>
+                    </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">
                       {product.location && `${product.location} · `}
                       {formatPrice(product.price)}
@@ -298,7 +318,7 @@ export function LandingPage() {
                     onClick={() => navigate(`/room/${room.id}`)}
                     className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
                   >
-                    <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden">
+                    <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
                       {room.image_urls && room.image_urls.length > 0 ? (
                         <img
                           src={room.image_urls[0]}
@@ -310,10 +330,22 @@ export function LandingPage() {
                           Intet billede
                         </div>
                       )}
+                      
+                      {/* Favorite Button */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <FavoriteButton 
+                          itemId={room.id} 
+                          itemType="room" 
+                          currentUserId={currentUserId}
+                          className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
+                        />
+                      </div>
                     </div>
-                    <h3 className="text-sm font-semibold text-white line-clamp-2">
-                      {room.name || room.type}
-                    </h3>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-white line-clamp-2 flex-1">
+                        {room.name || room.type}
+                      </h3>
+                    </div>
                     {room.location && (
                       <p className="text-xs text-muted-foreground line-clamp-1">
                         {room.location}

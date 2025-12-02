@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { FavoriteButton } from "../components/FavoriteButton";
 
 interface Product {
   id: string;
@@ -24,10 +25,17 @@ export function TrommerPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
+    checkUser();
   }, []);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const fetchProducts = async () => {
     try {
@@ -139,6 +147,16 @@ export function TrommerPage() {
                         {product.condition}
                       </div>
                     )}
+                    
+                    {/* Favorite Button */}
+                    <div className="absolute top-2 right-2 z-10">
+                      <FavoriteButton 
+                        itemId={product.id} 
+                        itemType="product" 
+                        currentUserId={currentUserId}
+                        className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
+                      />
+                    </div>
                   </div>
 
                   {/* Content */}
