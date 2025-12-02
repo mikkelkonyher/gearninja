@@ -71,7 +71,13 @@ export function FavoriteButton({ itemId, itemType, currentUserId, className = ""
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
-    if (!currentUserId) return; // Or show login modal
+    e.preventDefault(); // Prevent default behavior
+    
+    // Strict check - must be logged in
+    if (!currentUserId) {
+      return;
+    }
+    
     if (loading) return;
     if (isOwner) return; // Cannot favorite own item
 
@@ -120,8 +126,11 @@ export function FavoriteButton({ itemId, itemType, currentUserId, className = ""
       disabled={loading || !currentUserId || isOwner}
       className={`flex items-center gap-1 text-xs transition-colors ${className} ${
         isFavorited ? "text-red-500" : "text-muted-foreground hover:text-red-400"
-      } ${isOwner ? "opacity-50 cursor-not-allowed" : ""}`}
+      } ${!currentUserId || isOwner ? "opacity-50 cursor-not-allowed" : ""} ${
+        !currentUserId ? "pointer-events-none" : ""
+      }`}
       title={isOwner ? "Du kan ikke like dit eget opslag" : !currentUserId ? "Log ind for at like" : ""}
+      aria-disabled={!currentUserId || isOwner}
     >
       <motion.div whileTap={{ scale: 0.8 }}>
         <Heart className={`w-4 h-4 ${isFavorited ? "fill-current" : ""}`} />
