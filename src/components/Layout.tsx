@@ -14,6 +14,7 @@ const categories = [
   'Strygere',
   'Studieudstyr',
   'Øvelokaler',
+  'Forum',
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -81,18 +82,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background flex flex-col font-sans text-foreground selection:bg-neon-blue/30">
       <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 h-24 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-24 flex items-center justify-center relative">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" className="absolute left-4 flex items-center gap-2 group">
             <img 
               src="/logo.png" 
               alt="GearNinja" 
-              className="h-20 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
+              className="h-24 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex flex-1 items-center justify-center gap-1">
+          {/* Desktop Navigation - Centered with max-width */}
+          <nav className="hidden lg:flex items-center justify-center gap-2 max-w-3xl mx-auto">
             {categories.map((category) => {
                     let categoryPath = `/category/${category.toLowerCase()}`;
                     if (category === "Trommer") {
@@ -116,7 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <Link
                   key={category}
                   to={categoryPath}
-                  className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-neon-blue transition-colors relative group"
+                  className="px-2.5 py-2 text-sm font-medium text-muted-foreground hover:text-neon-blue transition-colors relative group"
                 >
                   {category}
                   <span className="absolute inset-x-0 -bottom-[1px] h-[1px] bg-neon-blue scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
@@ -126,7 +127,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4 absolute right-4">
             <Link
               to="/create"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
