@@ -26,6 +26,8 @@ interface Product {
   image_urls: string[];
   created_at: string;
   user_id: string;
+  sold?: boolean;
+  sold_at?: string;
 }
 
 export function ProductDetailPage() {
@@ -51,7 +53,9 @@ export function ProductDetailPage() {
   }, [id]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
   };
 
@@ -72,7 +76,7 @@ export function ProductDetailPage() {
       if (data?.user_id) {
         await fetchCreatorUsername(data.user_id);
       }
-      
+
       // Fetch favorite count
       await fetchFavoriteCount(productId);
     } catch (err: any) {
@@ -87,31 +91,34 @@ export function ProductDetailPage() {
       const { count, error } = await supabase
         .from("favorites")
         .select("*", { count: "exact", head: true })
-        .eq('product_id', productId);
-      
+        .eq("product_id", productId);
+
       if (!error) {
         setFavoriteCount(count || 0);
       }
     } catch (err) {
-      console.error('Error fetching favorite count:', err);
+      console.error("Error fetching favorite count:", err);
       setFavoriteCount(0);
     }
   };
 
   const fetchCreatorUsername = async (userId: string) => {
     try {
-      const { data: userData, error: userError } = await supabase
-        .rpc('get_user_username', { user_uuid: userId });
+      const { data: userData, error: userError } = await supabase.rpc(
+        "get_user_username",
+        { user_uuid: userId }
+      );
 
       if (!userError && userData) {
-        const username = userData.username || userData.email?.split('@')[0] || 'Bruger';
+        const username =
+          userData.username || userData.email?.split("@")[0] || "Bruger";
         setCreatorUsername(username);
       } else {
-        setCreatorUsername('Bruger');
+        setCreatorUsername("Bruger");
       }
     } catch (err) {
-      console.error('Error fetching creator username:', err);
-      setCreatorUsername('Bruger');
+      console.error("Error fetching creator username:", err);
+      setCreatorUsername("Bruger");
     }
   };
 
@@ -302,18 +309,25 @@ export function ProductDetailPage() {
             >
               {/* Header Section */}
               <div className="pb-6 border-b border-white/10">
-                <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-                  {product.brand && product.model
-                    ? `${product.brand} ${product.model}`
-                    : product.type}
-                </h1>
+                <div className="flex items-center gap-3 mb-3">
+                  <h1 className="text-3xl md:text-4xl font-bold text-white">
+                    {product.brand && product.model
+                      ? `${product.brand} ${product.model}`
+                      : product.type}
+                  </h1>
+                  {product.sold && (
+                    <span className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-semibold">
+                      SOLGT
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center justify-between gap-4">
                   <p className="text-2xl font-bold text-neon-blue">
                     {formatPrice(product.price)}
                   </p>
-                  <FavoriteButton 
-                    itemId={product.id} 
-                    itemType="product" 
+                  <FavoriteButton
+                    itemId={product.id}
+                    itemType="product"
                     currentUserId={currentUserId}
                     className="text-base"
                   />
@@ -378,12 +392,20 @@ export function ProductDetailPage() {
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Stand
                         </h3>
-                        <p className="text-white text-base">{product.condition}</p>
+                        <p className="text-white text-base">
+                          {product.condition}
+                        </p>
                       </div>
                     )}
 
                     {product.year && (
-                      <div className={product.condition ? "pt-3 border-t border-white/5" : ""}>
+                      <div
+                        className={
+                          product.condition
+                            ? "pt-3 border-t border-white/5"
+                            : ""
+                        }
+                      >
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Produktionsår
                         </h3>
@@ -392,11 +414,19 @@ export function ProductDetailPage() {
                     )}
 
                     {product.location && (
-                      <div className={(product.condition || product.year) ? "pt-3 border-t border-white/5" : ""}>
+                      <div
+                        className={
+                          product.condition || product.year
+                            ? "pt-3 border-t border-white/5"
+                            : ""
+                        }
+                      >
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Lokation
                         </h3>
-                        <p className="text-white text-base">{product.location}</p>
+                        <p className="text-white text-base">
+                          {product.location}
+                        </p>
                       </div>
                     )}
 
@@ -405,10 +435,16 @@ export function ProductDetailPage() {
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Sælger
                         </h3>
-                        <p className="text-white text-base mb-3">{creatorUsername}</p>
+                        <p className="text-white text-base mb-3">
+                          {creatorUsername}
+                        </p>
                         {currentUserId && currentUserId !== product.user_id && (
                           <button
-                            onClick={() => navigate(`/chat?itemId=${product.id}&itemType=product&sellerId=${product.user_id}`)}
+                            onClick={() =>
+                              navigate(
+                                `/chat?itemId=${product.id}&itemType=product&sellerId=${product.user_id}`
+                              )
+                            }
                             className="w-full px-4 py-2 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors font-medium"
                           >
                             Skriv til sælger
@@ -416,7 +452,7 @@ export function ProductDetailPage() {
                         )}
                       </div>
                     )}
-                    
+
                     {/* Favorite Count */}
                     <div className="pt-3 border-t border-white/5">
                       <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
@@ -424,7 +460,11 @@ export function ProductDetailPage() {
                       </h3>
                       <div className="flex items-center gap-2">
                         <Heart className="w-4 h-4 fill-red-500 text-red-500" />
-                        <p className="text-white text-base">{favoriteCount} {favoriteCount === 1 ? 'person' : 'personer'} har gemt dette</p>
+                        <p className="text-white text-base">
+                          {favoriteCount}{" "}
+                          {favoriteCount === 1 ? "person" : "personer"} har gemt
+                          dette
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -501,4 +541,3 @@ export function ProductDetailPage() {
     </>
   );
 }
-

@@ -18,6 +18,8 @@ interface Product {
   image_urls: string[];
   created_at: string;
   category: string;
+  sold?: boolean;
+  sold_at?: string;
 }
 
 interface Room {
@@ -57,7 +59,9 @@ export function FavoritterPage() {
   }, [currentUserId]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
       navigate("/login");
       return;
@@ -70,12 +74,14 @@ export function FavoritterPage() {
       setLoading(true);
       const { data, error } = await supabase
         .from("favorites")
-        .select(`
+        .select(
+          `
           id,
           product_id,
           room_id,
           created_at
-        `)
+        `
+        )
         .eq("user_id", currentUserId)
         .order("created_at", { ascending: false });
 
@@ -83,7 +89,7 @@ export function FavoritterPage() {
 
       // Fetch related products and rooms separately
       const favoriteItems: FavoriteItem[] = [];
-      
+
       for (const fav of data || []) {
         if (fav.product_id) {
           const { data: product } = await supabase
@@ -91,7 +97,7 @@ export function FavoritterPage() {
             .select("*")
             .eq("id", fav.product_id)
             .single();
-          
+
           if (product) {
             favoriteItems.push({
               id: fav.id,
@@ -105,7 +111,7 @@ export function FavoritterPage() {
             .select("*")
             .eq("id", fav.room_id)
             .single();
-          
+
           if (room) {
             favoriteItems.push({
               id: fav.id,
@@ -180,10 +186,12 @@ export function FavoritterPage() {
             {favorites.map((fav, index) => {
               const item = fav.product || fav.room;
               if (!item) return null;
-              
+
               const isProduct = !!fav.product;
               const type = isProduct ? "product" : "room";
-              const link = isProduct ? `/product/${item.id}` : `/room/${item.id}`;
+              const link = isProduct
+                ? `/product/${item.id}`
+                : `/room/${item.id}`;
 
               return (
                 <motion.div
@@ -198,33 +206,53 @@ export function FavoritterPage() {
                   {/* Image */}
                   <div className="relative aspect-square overflow-hidden bg-slate-700">
                     {item.image_urls && item.image_urls.length > 0 ? (
-                      <img
-                        src={item.image_urls[0]}
-                        alt={
-                          isProduct
-                            ? (item as Product).brand && (item as Product).model
-                              ? `${(item as Product).brand} ${(item as Product).model}`
-                              : item.type
-                            : (item as Room).name || item.type
-                        }
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      <>
+                        <img
+                          src={item.image_urls[0]}
+                          alt={
+                            isProduct
+                              ? (item as Product).brand &&
+                                (item as Product).model
+                                ? `${(item as Product).brand} ${
+                                    (item as Product).model
+                                  }`
+                                : item.type
+                              : (item as Room).name || item.type
+                          }
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                            isProduct && (item as Product).sold
+                              ? "opacity-50"
+                              : ""
+                          }`}
+                        />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         Intet billede
                       </div>
                     )}
-                    
+
+                    {/* Sold Badge */}
+                    {isProduct && (item as Product).sold && (
+                      <div className="absolute top-2 left-2 px-3 py-1.5 bg-red-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
+                        SOLGT
+                      </div>
+                    )}
+
                     {/* Type Badge */}
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
-                      {item.type}
-                    </div>
+                    {!isProduct || !(item as Product).sold ? (
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
+                        {isProduct
+                          ? item.type
+                          : (item as Room).type || "Lokale"}
+                      </div>
+                    ) : null}
 
                     {/* Favorite Button */}
                     <div className="absolute top-2 right-2 z-10">
-                      <FavoriteButton 
-                        itemId={item.id} 
-                        itemType={type} 
+                      <FavoriteButton
+                        itemId={item.id}
+                        itemType={type}
                         currentUserId={currentUserId}
                         className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
                       />
@@ -237,7 +265,9 @@ export function FavoritterPage() {
                       <h3 className="text-sm font-semibold text-white line-clamp-2 flex-1">
                         {isProduct
                           ? (item as Product).brand && (item as Product).model
-                            ? `${(item as Product).brand} ${(item as Product).model}`
+                            ? `${(item as Product).brand} ${
+                                (item as Product).model
+                              }`
                             : item.type
                           : (item as Room).name || item.type}
                       </h3>
@@ -263,4 +293,3 @@ export function FavoritterPage() {
     </div>
   );
 }
-

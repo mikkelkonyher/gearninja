@@ -14,6 +14,8 @@ interface Product {
   price: number | null;
   image_urls: string[];
   type?: string;
+  sold?: boolean;
+  sold_at?: string;
 }
 
 interface RehearsalRoom {
@@ -37,7 +39,9 @@ interface ProductWithFavorites extends Product {
 export function LandingPage() {
   const navigate = useNavigate();
   const [newestProducts, setNewestProducts] = useState<Product[]>([]);
-  const [popularProducts, setPopularProducts] = useState<ProductWithFavorites[]>([]);
+  const [popularProducts, setPopularProducts] = useState<
+    ProductWithFavorites[]
+  >([]);
   const [rehearsalRooms, setRehearsalRooms] = useState<RehearsalRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [popularLoading, setPopularLoading] = useState(true);
@@ -53,12 +57,15 @@ export function LandingPage() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
   };
 
   const fetchNewestProducts = async () => {
     try {
+      // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script to filter out sold products
       const { data, error } = await supabase
         .from("products")
         .select("id, brand, model, location, price, image_urls")
@@ -78,6 +85,7 @@ export function LandingPage() {
   const fetchPopularProducts = async () => {
     try {
       // Fetch a larger set of products to find the most favorited ones
+      // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script to filter out sold products
       const { data: products, error: productsError } = await supabase
         .from("products")
         .select("id, brand, model, location, price, image_urls, type")
@@ -105,7 +113,8 @@ export function LandingPage() {
       const favoriteCounts: Record<string, number> = {};
       favorites?.forEach((fav) => {
         if (fav.product_id) {
-          favoriteCounts[fav.product_id] = (favoriteCounts[fav.product_id] || 0) + 1;
+          favoriteCounts[fav.product_id] =
+            (favoriteCounts[fav.product_id] || 0) + 1;
         }
       });
 
@@ -131,7 +140,9 @@ export function LandingPage() {
     try {
       const { data, error } = await supabase
         .from("rehearsal_rooms")
-        .select("id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at")
+        .select(
+          "id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at"
+        )
         .order("created_at", { ascending: false })
         .limit(15);
 
@@ -156,7 +167,6 @@ export function LandingPage() {
     }
     return product.brand || product.model || "Produkt";
   };
-
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -256,22 +266,33 @@ export function LandingPage() {
                   >
                     <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
                       {product.image_urls && product.image_urls.length > 0 ? (
-                        <img
-                          src={product.image_urls[0]}
-                          alt={getProductTitle(product)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        <>
+                          <img
+                            src={product.image_urls[0]}
+                            alt={getProductTitle(product)}
+                            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                              product.sold ? "opacity-50" : ""
+                            }`}
+                          />
+                        </>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                           Intet billede
                         </div>
                       )}
-                      
+
+                      {/* Sold Badge */}
+                      {product.sold && (
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-red-500/95 backdrop-blur-sm text-white text-xs font-bold rounded-lg border border-white/50 z-20">
+                          SOLGT
+                        </div>
+                      )}
+
                       {/* Favorite Button */}
                       <div className="absolute top-2 right-2 z-10">
-                        <FavoriteButton 
-                          itemId={product.id} 
-                          itemType="product" 
+                        <FavoriteButton
+                          itemId={product.id}
+                          itemType="product"
                           currentUserId={currentUserId}
                           className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
                         />
@@ -325,22 +346,33 @@ export function LandingPage() {
                   >
                     <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
                       {product.image_urls && product.image_urls.length > 0 ? (
-                        <img
-                          src={product.image_urls[0]}
-                          alt={getProductTitle(product)}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        <>
+                          <img
+                            src={product.image_urls[0]}
+                            alt={getProductTitle(product)}
+                            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                              product.sold ? "opacity-50" : ""
+                            }`}
+                          />
+                        </>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                           Intet billede
                         </div>
                       )}
-                      
+
+                      {/* Sold Badge */}
+                      {product.sold && (
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-red-500/95 backdrop-blur-sm text-white text-xs font-bold rounded-lg border border-white/50 z-20">
+                          SOLGT
+                        </div>
+                      )}
+
                       {/* Favorite Button */}
                       <div className="absolute top-2 right-2 z-10">
-                        <FavoriteButton 
-                          itemId={product.id} 
-                          itemType="product" 
+                        <FavoriteButton
+                          itemId={product.id}
+                          itemType="product"
                           currentUserId={currentUserId}
                           className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
                         />
@@ -399,12 +431,12 @@ export function LandingPage() {
                           Intet billede
                         </div>
                       )}
-                      
+
                       {/* Favorite Button */}
                       <div className="absolute top-2 right-2 z-10">
-                        <FavoriteButton 
-                          itemId={room.id} 
-                          itemType="room" 
+                        <FavoriteButton
+                          itemId={room.id}
+                          itemType="room"
                           currentUserId={currentUserId}
                           className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
                         />

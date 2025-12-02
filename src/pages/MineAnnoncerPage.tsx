@@ -1,7 +1,18 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Loader2, ChevronLeft, ChevronRight, Package, Trash2, Edit, ArrowLeft, Heart } from "lucide-react";
+import {
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Package,
+  Trash2,
+  Edit,
+  ArrowLeft,
+  Heart,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 interface Product {
@@ -17,6 +28,8 @@ interface Product {
   image_urls: string[];
   created_at: string;
   category: string;
+  sold?: boolean;
+  sold_at?: string;
 }
 
 interface RehearsalRoom {
@@ -33,7 +46,9 @@ interface RehearsalRoom {
   created_at: string;
 }
 
-type AnnouncementItem = (Product & { itemType: 'product' }) | (RehearsalRoom & { itemType: 'room' });
+type AnnouncementItem =
+  | (Product & { itemType: "product" })
+  | (RehearsalRoom & { itemType: "room" });
 
 export function MineAnnoncerPage() {
   const navigate = useNavigate();
@@ -44,7 +59,11 @@ export function MineAnnoncerPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [favoriteCounts, setFavoriteCounts] = useState<{ [key: string]: number }>({});
+  const [markingAsSoldId, setMarkingAsSoldId] = useState<string | null>(null);
+  const [favoriteCounts, setFavoriteCounts] = useState<{
+    [key: string]: number;
+  }>({});
+  const [currentTime, setCurrentTime] = useState(new Date());
   const itemsPerPage = 12;
 
   useEffect(() => {
@@ -57,9 +76,20 @@ export function MineAnnoncerPage() {
     }
   }, [currentPage, user]);
 
+  // Update time every minute for countdown
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, []);
+
   const checkUser = async () => {
     try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
       if (!currentUser) {
         navigate("/login", {
           state: { message: "Du skal være logget ind for at se dine annoncer" },
@@ -80,7 +110,11 @@ export function MineAnnoncerPage() {
       setLoading(true);
 
       // Fetch products
-      const { data: productsData, error: productsError, count: productsCount } = await supabase
+      const {
+        data: productsData,
+        error: productsError,
+        count: productsCount,
+      } = await supabase
         .from("products")
         .select("*", { count: "exact" })
         .eq("user_id", user.id);
@@ -88,7 +122,11 @@ export function MineAnnoncerPage() {
       if (productsError) throw productsError;
 
       // Fetch rehearsal rooms
-      const { data: roomsData, error: roomsError, count: roomsCount } = await supabase
+      const {
+        data: roomsData,
+        error: roomsError,
+        count: roomsCount,
+      } = await supabase
         .from("rehearsal_rooms")
         .select("*", { count: "exact" })
         .eq("user_id", user.id);
@@ -96,11 +134,17 @@ export function MineAnnoncerPage() {
       if (roomsError) throw roomsError;
 
       // Combine and sort by created_at
-      const productsWithType: AnnouncementItem[] = (productsData || []).map(p => ({ ...p, itemType: 'product' as const }));
-      const roomsWithType: AnnouncementItem[] = (roomsData || []).map(r => ({ ...r, itemType: 'room' as const }));
-      
-      const allItems = [...productsWithType, ...roomsWithType].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      const productsWithType: AnnouncementItem[] = (productsData || []).map(
+        (p) => ({ ...p, itemType: "product" as const })
+      );
+      const roomsWithType: AnnouncementItem[] = (roomsData || []).map((r) => ({
+        ...r,
+        itemType: "room" as const,
+      }));
+
+      const allItems = [...productsWithType, ...roomsWithType].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
       // Paginate
@@ -110,7 +154,7 @@ export function MineAnnoncerPage() {
 
       setItems(paginatedItems);
       setTotalCount((productsCount || 0) + (roomsCount || 0));
-      
+
       // Fetch favorite counts for all items
       await fetchFavoriteCounts(paginatedItems);
     } catch (err: any) {
@@ -122,14 +166,14 @@ export function MineAnnoncerPage() {
 
   const fetchFavoriteCounts = async (itemsList: AnnouncementItem[]) => {
     const counts: { [key: string]: number } = {};
-    
+
     for (const item of itemsList) {
       try {
         const { count, error } = await supabase
           .from("favorites")
           .select("*", { count: "exact", head: true })
-          .eq(item.itemType === 'product' ? 'product_id' : 'room_id', item.id);
-        
+          .eq(item.itemType === "product" ? "product_id" : "room_id", item.id);
+
         if (!error) {
           counts[item.id] = count || 0;
         }
@@ -138,11 +182,11 @@ export function MineAnnoncerPage() {
         counts[item.id] = 0;
       }
     }
-    
+
     setFavoriteCounts(counts);
   };
 
-  const handleDelete = async (itemId: string, itemType: 'product' | 'room') => {
+  const handleDelete = async (itemId: string, itemType: "product" | "room") => {
     if (!confirm("Er du sikker på, at du vil slette denne annonce?")) {
       return;
     }
@@ -154,23 +198,25 @@ export function MineAnnoncerPage() {
       const item = items.find((i) => i.id === itemId);
       if (item?.image_urls && item.image_urls.length > 0) {
         const imagePaths: string[] = [];
-        
+
         for (const imageUrl of item.image_urls) {
           try {
             // Extract path from URL - handle different URL formats
             let path: string | null = null;
-            
+
             // Try to extract path after /gearninjaImages/
             const gearninjaImagesIndex = imageUrl.indexOf("/gearninjaImages/");
             if (gearninjaImagesIndex !== -1) {
-              path = imageUrl.substring(gearninjaImagesIndex + "/gearninjaImages/".length);
+              path = imageUrl.substring(
+                gearninjaImagesIndex + "/gearninjaImages/".length
+              );
               // Remove query parameters if any
               const queryIndex = path.indexOf("?");
               if (queryIndex !== -1) {
                 path = path.substring(0, queryIndex);
               }
             }
-            
+
             if (path) {
               imagePaths.push(path);
             }
@@ -184,7 +230,7 @@ export function MineAnnoncerPage() {
           const { error: storageError } = await supabase.storage
             .from("gearninjaImages")
             .remove(imagePaths);
-          
+
           if (storageError) {
             console.error("Error deleting images from storage:", storageError);
             // Continue with deletion even if image deletion fails
@@ -193,7 +239,7 @@ export function MineAnnoncerPage() {
       }
 
       // Delete from appropriate table
-      const tableName = itemType === 'product' ? 'products' : 'rehearsal_rooms';
+      const tableName = itemType === "product" ? "products" : "rehearsal_rooms";
       const { error: deleteError } = await supabase
         .from(tableName)
         .delete()
@@ -211,16 +257,16 @@ export function MineAnnoncerPage() {
     }
   };
 
-  const handleEdit = async (itemId: string, itemType: 'product' | 'room') => {
+  const handleEdit = async (itemId: string, itemType: "product" | "room") => {
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
 
-    if (itemType === 'room') {
+    if (itemType === "room") {
       // Navigate to create rehearsal room page with edit data
       navigate("/create/oevelokaler", { state: { editRoom: item } });
     } else {
       // Navigate to the appropriate create page based on category
-      const product = item as Product & { itemType: 'product' };
+      const product = item as Product & { itemType: "product" };
       const categoryMap: { [key: string]: string } = {
         trommer: "/create/trommer",
         guitar: "/create/guitar",
@@ -238,6 +284,45 @@ export function MineAnnoncerPage() {
     }
   };
 
+  const handleMarkAsSold = async (itemId: string) => {
+    if (!user) return;
+
+    const confirmed = window.confirm(
+      "Er du sikker på, at du vil markere dette produkt som solgt? Dette vil slette produktet og notificere alle, der har favoriseret det."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setMarkingAsSoldId(itemId);
+      const { data, error } = await supabase.rpc("mark_product_sold", {
+        product_uuid: itemId,
+        seller_uuid: user.id,
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        alert(data.error);
+        return;
+      }
+
+      alert(
+        `Produktet er markeret som solgt. ${
+          data?.notifications_sent || 0
+        } personer er blevet notificeret.`
+      );
+
+      // Refresh items list
+      await fetchAllItems();
+    } catch (err: any) {
+      console.error("Error marking product as sold:", err);
+      alert("Kunne ikke markere produktet som solgt. Prøv igen.");
+    } finally {
+      setMarkingAsSoldId(null);
+    }
+  };
+
   const formatPrice = (price: number | null, paymentType?: string | null) => {
     if (!price) return "Pris på anmodning";
     const formattedPrice = `${price.toLocaleString("da-DK")} kr.`;
@@ -245,6 +330,24 @@ export function MineAnnoncerPage() {
       return `${formattedPrice} ${paymentType}`;
     }
     return formattedPrice;
+  };
+
+  const formatTimeUntilDeletion = (soldAt: string) => {
+    const soldDate = new Date(soldAt);
+    const deletionDate = new Date(soldDate.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
+    const diff = deletionDate.getTime() - currentTime.getTime();
+
+    if (diff <= 0) return "Bliver slettet snart";
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+      return `Slettes om ${hours} ${hours === 1 ? "time" : "timer"}${
+        minutes > 0 ? ` og ${minutes} min` : ""
+      }`;
+    }
+    return `Slettes om ${minutes} min`;
   };
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -280,7 +383,9 @@ export function MineAnnoncerPage() {
             </h1>
             <p className="text-lg text-muted-foreground">
               {totalCount > 0
-                ? `${totalCount} ${totalCount === 1 ? "annonce" : "annoncer"} oprettet`
+                ? `${totalCount} ${
+                    totalCount === 1 ? "annonce" : "annoncer"
+                  } oprettet`
                 : "Ingen annoncer endnu"}
             </p>
           </div>
@@ -318,9 +423,13 @@ export function MineAnnoncerPage() {
               </div>
             ) : (
               items.map((item, index) => {
-                const isProduct = item.itemType === 'product';
-                const product = isProduct ? item as Product & { itemType: 'product' } : null;
-                const room = !isProduct ? item as RehearsalRoom & { itemType: 'room' } : null;
+                const isProduct = item.itemType === "product";
+                const product = isProduct
+                  ? (item as Product & { itemType: "product" })
+                  : null;
+                const room = !isProduct
+                  ? (item as RehearsalRoom & { itemType: "room" })
+                  : null;
 
                 return (
                   <motion.div
@@ -356,31 +465,50 @@ export function MineAnnoncerPage() {
 
                     {/* Image */}
                     <div
-                      onClick={() => navigate(isProduct ? `/product/${item.id}` : `/room/${item.id}`)}
+                      onClick={() =>
+                        navigate(
+                          isProduct ? `/product/${item.id}` : `/room/${item.id}`
+                        )
+                      }
                       className="relative aspect-square overflow-hidden bg-slate-700 cursor-pointer"
                     >
                       {item.image_urls && item.image_urls.length > 0 ? (
-                        <img
-                          src={item.image_urls[0]}
-                          alt={isProduct && product 
-                            ? (product.brand && product.model ? `${product.brand} ${product.model}` : product.type)
-                            : (room?.name || room?.type || 'Lokale')}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
+                        <>
+                          <img
+                            src={item.image_urls[0]}
+                            alt={
+                              isProduct && product
+                                ? product.brand && product.model
+                                  ? `${product.brand} ${product.model}`
+                                  : product.type
+                                : room?.name || room?.type || "Lokale"
+                            }
+                            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                              isProduct && product?.sold ? "opacity-50" : ""
+                            }`}
+                          />
+                        </>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                           Intet billede
                         </div>
                       )}
-                      {isProduct && product?.condition && (
+                      {isProduct && product?.sold && (
+                        <div className="absolute top-2 left-2 px-3 py-1.5 bg-red-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
+                          SOLGT
+                        </div>
+                      )}
+                      {isProduct && product?.condition && !product?.sold && (
                         <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded">
                           {product.condition}
                         </div>
                       )}
                       <div className="absolute bottom-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
-                        {isProduct && product ? product.category : (room?.type || 'Lokale')}
+                        {isProduct && product
+                          ? product.category
+                          : room?.type || "Lokale"}
                       </div>
-                      
+
                       {/* Favorite Count */}
                       <div className="absolute bottom-2 right-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded flex items-center gap-1">
                         <Heart className="w-3 h-3 fill-red-500 text-red-500" />
@@ -391,35 +519,48 @@ export function MineAnnoncerPage() {
                     {/* Content */}
                     <div className="p-4 flex flex-col gap-2 flex-1">
                       <div
-                        onClick={() => navigate(isProduct ? `/product/${item.id}` : `/room/${item.id}`)}
+                        onClick={() =>
+                          navigate(
+                            isProduct
+                              ? `/product/${item.id}`
+                              : `/room/${item.id}`
+                          )
+                        }
                         className="flex items-start justify-between gap-2 cursor-pointer"
                       >
                         <h3 className="text-sm font-semibold text-white line-clamp-2 flex-1">
                           {isProduct && product
-                            ? (product.brand && product.model
-                                ? `${product.brand} ${product.model}`
-                                : product.type)
-                            : (room?.name || room?.type || 'Lokale')}
+                            ? product.brand && product.model
+                              ? `${product.brand} ${product.model}`
+                              : product.type
+                            : room?.name || room?.type || "Lokale"}
                         </h3>
                       </div>
 
-                      {isProduct ? null : room?.address && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {room.address}
-                        </p>
-                      )}
+                      {isProduct
+                        ? null
+                        : room?.address && (
+                            <p className="text-xs text-muted-foreground line-clamp-1">
+                              {room.address}
+                            </p>
+                          )}
 
-                      {isProduct ? null : room?.room_size && (
-                        <p className="text-xs text-muted-foreground">
-                          {room.room_size} m²
-                        </p>
-                      )}
+                      {isProduct
+                        ? null
+                        : room?.room_size && (
+                            <p className="text-xs text-muted-foreground">
+                              {room.room_size} m²
+                            </p>
+                          )}
 
                       <div className="mt-auto pt-2 flex items-center justify-between">
                         <span className="text-sm font-bold text-neon-blue">
                           {isProduct && product
                             ? formatPrice(product.price)
-                            : formatPrice(room?.price || null, room?.payment_type || null)}
+                            : formatPrice(
+                                room?.price || null,
+                                room?.payment_type || null
+                              )}
                         </span>
                         {item.location && (
                           <span className="text-xs text-muted-foreground">
@@ -427,6 +568,40 @@ export function MineAnnoncerPage() {
                           </span>
                         )}
                       </div>
+
+                      {/* Mark as Sold Button - Only for Products that aren't already sold */}
+                      {isProduct && product && !product.sold && (
+                        <button
+                          onClick={() => handleMarkAsSold(item.id)}
+                          disabled={markingAsSoldId === item.id}
+                          className="mt-3 w-full px-4 py-3 rounded-lg bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {markingAsSoldId === item.id ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Marker som solgt...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-5 h-5" />
+                              <span>Marker som solgt</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+
+                      {/* Countdown for Sold Products */}
+                      {isProduct &&
+                        product &&
+                        product.sold &&
+                        product.sold_at && (
+                          <div className="mt-3 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            <span className="text-sm font-medium">
+                              {formatTimeUntilDeletion(product.sold_at)}
+                            </span>
+                          </div>
+                        )}
                     </div>
                   </motion.div>
                 );
@@ -446,22 +621,26 @@ export function MineAnnoncerPage() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 rounded-lg border transition-colors ${
-                    currentPage === page
-                      ? "bg-neon-blue border-neon-blue text-white"
-                      : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                      currentPage === page
+                        ? "bg-neon-blue border-neon-blue text-white"
+                        : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
             </div>
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
               disabled={currentPage === totalPages}
               className="p-2 rounded-lg border border-white/10 bg-secondary/40 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary/60 transition-colors"
             >
@@ -473,4 +652,3 @@ export function MineAnnoncerPage() {
     </div>
   );
 }
-

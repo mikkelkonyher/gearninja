@@ -17,6 +17,8 @@ interface Product {
   year: number | null;
   image_urls: string[];
   created_at: string;
+  sold?: boolean;
+  sold_at?: string;
 }
 
 export function GuitarPage() {
@@ -36,7 +38,9 @@ export function GuitarPage() {
   }, [currentPage]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
   };
 
@@ -55,6 +59,7 @@ export function GuitarPage() {
         .from("products")
         .select("*", { count: "exact" })
         .eq("category", "guitar")
+        // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -147,26 +152,37 @@ export function GuitarPage() {
                   {/* Image */}
                   <div className="relative aspect-square overflow-hidden bg-slate-700">
                     {product.image_urls && product.image_urls.length > 0 ? (
-                      <img
-                        src={product.image_urls[0]}
-                        alt={
-                          product.brand && product.model
-                            ? `${product.brand} ${product.model}`
-                            : product.type
-                        }
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      <>
+                        <img
+                          src={product.image_urls[0]}
+                          alt={
+                            product.brand && product.model
+                              ? `${product.brand} ${product.model}`
+                              : product.type
+                          }
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                            product.sold ? "opacity-50" : ""
+                          }`}
+                        />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         Intet billede
                       </div>
                     )}
-                    
+
+                    {/* Sold Badge */}
+                    {product.sold && (
+                      <div className="absolute top-2 left-2 px-3 py-1.5 bg-red-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
+                        SOLGT
+                      </div>
+                    )}
+
                     {/* Favorite Button */}
                     <div className="absolute top-2 right-2 z-10">
-                      <FavoriteButton 
-                        itemId={product.id} 
-                        itemType="product" 
+                      <FavoriteButton
+                        itemId={product.id}
+                        itemType="product"
                         currentUserId={currentUserId}
                         className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
                       />

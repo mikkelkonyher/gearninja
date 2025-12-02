@@ -87,7 +87,7 @@ export function ChatsListPage() {
               .from("products")
               .select("brand, model, type")
               .eq("id", chat.item_id)
-              .single();
+              .maybeSingle();
 
             if (productData) {
               itemTitle =
@@ -100,7 +100,7 @@ export function ChatsListPage() {
               .from("rehearsal_rooms")
               .select("name, type")
               .eq("id", chat.item_id)
-              .single();
+              .maybeSingle();
 
             if (roomData) {
               itemTitle = roomData.name || roomData.type;

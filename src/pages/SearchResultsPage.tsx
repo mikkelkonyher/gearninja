@@ -19,6 +19,8 @@ interface Product {
   image_urls: string[];
   created_at: string;
   category: string;
+  sold?: boolean;
+  sold_at?: string;
 }
 
 export function SearchResultsPage() {
@@ -51,7 +53,9 @@ export function SearchResultsPage() {
   }, [currentPage, query]);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
   };
 
@@ -71,12 +75,17 @@ export function SearchResultsPage() {
       // Search in brand, model, type, description, and category
       const searchTerm = `%${query}%`;
 
-      const { data, error: fetchError, count } = await supabase
+      const {
+        data,
+        error: fetchError,
+        count,
+      } = await supabase
         .from("products")
         .select("*", { count: "exact" })
         .or(
           `brand.ilike."${searchTerm}",model.ilike."${searchTerm}",type.ilike."${searchTerm}",description.ilike."${searchTerm}",category.ilike."${searchTerm}"`
         )
+        // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -122,7 +131,9 @@ export function SearchResultsPage() {
             {query && (
               <p className="text-lg text-muted-foreground">
                 {totalCount > 0
-                  ? `${totalCount} ${totalCount === 1 ? "resultat" : "resultater"} for "${query}"`
+                  ? `${totalCount} ${
+                      totalCount === 1 ? "resultat" : "resultater"
+                    } for "${query}"`
                   : `Ingen resultater fundet for "${query}"`}
               </p>
             )}
@@ -183,25 +194,40 @@ export function SearchResultsPage() {
                   {/* Image */}
                   <div className="relative aspect-square overflow-hidden bg-slate-700">
                     {product.image_urls && product.image_urls.length > 0 ? (
-                      <img
-                        src={product.image_urls[0]}
-                        alt={product.brand && product.model ? `${product.brand} ${product.model}` : product.type}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      <>
+                        <img
+                          src={product.image_urls[0]}
+                          alt={
+                            product.brand && product.model
+                              ? `${product.brand} ${product.model}`
+                              : product.type
+                          }
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                            product.sold ? "opacity-50" : ""
+                          }`}
+                        />
+                      </>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         Intet billede
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
-                      {product.type}
-                    </div>
-                    
+                    {product.sold && (
+                      <div className="absolute top-2 left-2 px-3 py-1.5 bg-red-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
+                        SOLGT
+                      </div>
+                    )}
+                    {!product.sold && (
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
+                        {product.type}
+                      </div>
+                    )}
+
                     {/* Favorite Button */}
                     <div className="absolute top-2 right-2 z-10">
-                      <FavoriteButton 
-                        itemId={product.id} 
-                        itemType="product" 
+                      <FavoriteButton
+                        itemId={product.id}
+                        itemType="product"
                         currentUserId={currentUserId}
                         className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
                       />
@@ -246,22 +272,26 @@ export function SearchResultsPage() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 rounded-lg border transition-colors ${
-                    currentPage === page
-                      ? "bg-neon-blue border-neon-blue text-white"
-                      : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                (page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                      currentPage === page
+                        ? "bg-neon-blue border-neon-blue text-white"
+                        : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
             </div>
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
               disabled={currentPage === totalPages}
               className="p-2 rounded-lg border border-white/10 bg-secondary/40 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary/60 transition-colors"
             >
@@ -273,4 +303,3 @@ export function SearchResultsPage() {
     </div>
   );
 }
-

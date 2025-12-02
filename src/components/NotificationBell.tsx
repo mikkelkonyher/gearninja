@@ -9,7 +9,7 @@ interface Notification {
   type: string;
   item_id: string;
   item_type: "product" | "room";
-  favoriter_id: string;
+  favoriter_id: string | null;
   read: boolean;
   created_at: string;
 }
@@ -22,7 +22,9 @@ interface NotificationWithDetails extends Notification {
 }
 
 export function NotificationBell({ userId }: { userId: string | null }) {
-  const [notifications, setNotifications] = useState<NotificationWithDetails[]>([]);
+  const [notifications, setNotifications] = useState<NotificationWithDetails[]>(
+    []
+  );
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -33,7 +35,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     if (!userId) return;
 
     fetchNotifications();
-    
+
     // Subscribe to new notifications
     const channel = supabase
       .channel("notifications")
@@ -59,7 +61,11 @@ export function NotificationBell({ userId }: { userId: string | null }) {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isOpen && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        isOpen &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
@@ -88,65 +94,76 @@ export function NotificationBell({ userId }: { userId: string | null }) {
       if (error) throw error;
 
       // Fetch additional details for each notification
-      const notificationsWithDetails: NotificationWithDetails[] = await Promise.all(
-        (data || []).map(async (notification) => {
-          const details: NotificationWithDetails = { ...notification };
+      const notificationsWithDetails: NotificationWithDetails[] =
+        await Promise.all(
+          (data || []).map(async (notification) => {
+            const details: NotificationWithDetails = { ...notification };
 
-          // Fetch favoriter username using RPC function
-          try {
-            const { data: usernameData, error: usernameError } = await supabase.rpc(
-              "get_user_username",
-              { user_uuid: notification.favoriter_id }
-            );
+            // Fetch favoriter username using RPC function (only if favoriter_id exists)
+            if (notification.favoriter_id) {
+              try {
+                const { data: usernameData, error: usernameError } =
+                  await supabase.rpc("get_user_username", {
+                    user_uuid: notification.favoriter_id,
+                  });
 
-            if (!usernameError && usernameData) {
-              details.favoriter_username = usernameData.username || "Nogen";
+                if (!usernameError && usernameData) {
+                  details.favoriter_username = usernameData.username || "Nogen";
+                } else {
+                  details.favoriter_username = "Nogen";
+                }
+              } catch (err) {
+                console.error("Error fetching username:", err);
+                details.favoriter_username = "Nogen";
+              }
+            }
+
+            // Fetch product or room details (only if product still exists)
+            // Handle both regular product notifications and product_sold notifications
+            if (
+              notification.item_type === "product" ||
+              notification.type === "product_sold"
+            ) {
+              try {
+                const { data: productData, error: productError } =
+                  await supabase
+                    .from("products")
+                    .select("brand, model")
+                    .eq("id", notification.item_id)
+                    .maybeSingle();
+
+                if (!productError && productData) {
+                  details.product_brand = productData.brand;
+                  details.product_model = productData.model;
+                }
+              } catch (err) {
+                // Product might be deleted (sold), that's okay
+                console.error("Error fetching product details:", err);
+              }
             } else {
-              details.favoriter_username = "Nogen";
-            }
-          } catch (err) {
-            console.error("Error fetching username:", err);
-            details.favoriter_username = "Nogen";
-          }
+              try {
+                const { data: roomData, error: roomError } = await supabase
+                  .from("rehearsal_rooms")
+                  .select("name")
+                  .eq("id", notification.item_id)
+                  .maybeSingle();
 
-          // Fetch product or room details
-          if (notification.item_type === "product") {
-            try {
-              const { data: productData } = await supabase
-                .from("products")
-                .select("brand, model")
-                .eq("id", notification.item_id)
-                .single();
-
-              if (productData) {
-                details.product_brand = productData.brand;
-                details.product_model = productData.model;
+                if (!roomError && roomData) {
+                  details.room_name = roomData.name;
+                }
+              } catch (err) {
+                console.error("Error fetching room details:", err);
               }
-            } catch (err) {
-              console.error("Error fetching product details:", err);
             }
-          } else {
-            try {
-              const { data: roomData } = await supabase
-                .from("rehearsal_rooms")
-                .select("name")
-                .eq("id", notification.item_id)
-                .single();
 
-              if (roomData) {
-                details.room_name = roomData.name;
-              }
-            } catch (err) {
-              console.error("Error fetching room details:", err);
-            }
-          }
-
-          return details;
-        })
-      );
+            return details;
+          })
+        );
 
       setNotifications(notificationsWithDetails);
-      setUnreadCount(notificationsWithDetails.filter((n) => !n.read).length || 0);
+      setUnreadCount(
+        notificationsWithDetails.filter((n) => !n.read).length || 0
+      );
     } catch (err) {
       console.error("Error fetching notifications:", err);
     } finally {
@@ -170,12 +187,74 @@ export function NotificationBell({ userId }: { userId: string | null }) {
       }
     }
 
-    // Navigate to detail page
+    // Navigate to detail page (only if product/room still exists)
     setIsOpen(false);
-    if (notification.item_type === "product") {
-      navigate(`/product/${notification.item_id}`);
+    if (notification.type === "product_sold") {
+      // For sold products, check if product still exists before navigating
+      try {
+        const { data: productData, error } = await supabase
+          .from("products")
+          .select("id")
+          .eq("id", notification.item_id)
+          .maybeSingle();
+
+        if (error || !productData) {
+          // Product has been deleted, show message
+          alert(
+            "Denne annonce er blevet slettet efter at være markeret som solgt."
+          );
+          return;
+        }
+        // Product still exists (marked as sold but not deleted yet), navigate to it
+        navigate(`/product/${notification.item_id}`);
+      } catch (err) {
+        console.error("Error checking product:", err);
+        alert("Denne annonce findes ikke længere.");
+      }
+    } else if (notification.item_type === "product") {
+      try {
+        const { data: productData, error } = await supabase
+          .from("products")
+          .select("id")
+          .eq("id", notification.item_id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error checking product existence:", error);
+        }
+
+        if (!productData) {
+          window.alert("Denne annonce findes ikke længere.");
+          return;
+        }
+
+        navigate(`/product/${notification.item_id}`);
+      } catch (err) {
+        console.error("Error handling product notification click:", err);
+        window.alert("Kunne ikke åbne annoncen. Prøv igen senere.");
+      }
     } else {
-      navigate(`/room/${notification.item_id}`);
+      try {
+        const { data: roomData, error } = await supabase
+          .from("rehearsal_rooms")
+          .select("id")
+          .eq("id", notification.item_id)
+          .maybeSingle();
+
+        if (error) {
+          console.error("Error checking room existence:", error);
+        }
+
+        if (!roomData) {
+          window.alert("Dette øvelokale findes ikke længere.");
+          return;
+        }
+
+        navigate(`/room/${notification.item_id}`);
+      } catch (err) {
+        console.error("Error handling room notification click:", err);
+        window.alert("Kunne ikke åbne øvelokalet. Prøv igen senere.");
+      }
     }
   };
 
@@ -185,9 +264,12 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) return "Lige nu";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min siden`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} timer siden`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} dage siden`;
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)} min siden`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)} timer siden`;
+    if (diffInSeconds < 604800)
+      return `${Math.floor(diffInSeconds / 86400)} dage siden`;
     return date.toLocaleDateString("da-DK");
   };
 
@@ -217,7 +299,9 @@ export function NotificationBell({ userId }: { userId: string | null }) {
             className="absolute right-0 top-11 w-80 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm z-50 max-h-96 overflow-hidden flex flex-col"
           >
             <div className="px-4 py-3 border-b border-white/5">
-              <h3 className="text-sm font-semibold text-white">Notifikationer</h3>
+              <h3 className="text-sm font-semibold text-white">
+                Notifikationer
+              </h3>
             </div>
             <div className="overflow-y-auto flex-1">
               {loading ? (
@@ -241,17 +325,32 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white">
-                            {notification.favoriter_username || "Nogen"} har favoriseret{" "}
-                            {notification.item_type === "product" ? (
+                            {notification.type === "product_sold" ? (
                               <>
-                                din{" "}
-                                {notification.product_brand && notification.product_model
+                                {notification.product_brand &&
+                                notification.product_model
                                   ? `${notification.product_brand} ${notification.product_model}`
-                                  : notification.product_brand || notification.product_model || "produkt"}
+                                  : notification.product_brand ||
+                                    notification.product_model ||
+                                    "Produkt"}{" "}
+                                er blevet solgt
                               </>
                             ) : (
                               <>
-                                dit {notification.room_name || "øvelokale"}
+                                {notification.favoriter_username || "Nogen"} har
+                                favoriseret{" "}
+                                {notification.item_type === "product" ? (
+                                  <>
+                                    {notification.product_brand &&
+                                    notification.product_model
+                                      ? `${notification.product_brand} ${notification.product_model}`
+                                      : notification.product_brand ||
+                                        notification.product_model ||
+                                        "produkt"}
+                                  </>
+                                ) : (
+                                  <>{notification.room_name || "øvelokale"}</>
+                                )}
                               </>
                             )}
                           </p>
@@ -274,4 +373,3 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     </div>
   );
 }
-
