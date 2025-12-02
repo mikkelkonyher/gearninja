@@ -277,7 +277,7 @@ export function CreateTrommerPage() {
       }
 
       // Call Edge Function
-      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+      const { error: functionError } = await supabase.functions.invoke(
         "create-product",
         {
           body: isEditMode && editProduct
