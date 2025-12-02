@@ -11,6 +11,7 @@ import {
   Heart,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { FavoriteButton } from "../components/FavoriteButton";
 
 interface Product {
   id: string;
@@ -38,12 +39,19 @@ export function ProductDetailPage() {
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
   const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
   const [favoriteCount, setFavoriteCount] = useState<number>(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    checkUser();
     if (id) {
       fetchProduct(id);
     }
   }, [id]);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const fetchProduct = async (productId: string) => {
     try {
@@ -297,9 +305,17 @@ export function ProductDetailPage() {
                     ? `${product.brand} ${product.model}`
                     : product.type}
                 </h1>
-                <p className="text-2xl font-bold text-neon-blue">
-                  {formatPrice(product.price)}
-                </p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-2xl font-bold text-neon-blue">
+                    {formatPrice(product.price)}
+                  </p>
+                  <FavoriteButton 
+                    itemId={product.id} 
+                    itemType="product" 
+                    currentUserId={currentUserId}
+                    className="text-base"
+                  />
+                </div>
               </div>
 
               {/* Product Information Cards */}

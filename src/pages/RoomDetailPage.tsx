@@ -14,6 +14,7 @@ import {
   Heart,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { FavoriteButton } from "../components/FavoriteButton";
 
 interface RehearsalRoom {
   id: string;
@@ -41,12 +42,19 @@ export function RoomDetailPage() {
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
   const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
   const [favoriteCount, setFavoriteCount] = useState<number>(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    checkUser();
     if (id) {
       fetchRoom(id);
     }
   }, [id]);
+
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    setCurrentUserId(user?.id || null);
+  };
 
   const fetchRoom = async (roomId: string) => {
     try {
@@ -305,8 +313,16 @@ export function RoomDetailPage() {
                     </div>
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-neon-blue">
-                  {formatPrice(room.price, room.payment_type)}
+                <div className="flex items-center justify-between gap-4">
+                  <div className="text-2xl font-bold text-neon-blue">
+                    {formatPrice(room.price, room.payment_type)}
+                  </div>
+                  <FavoriteButton 
+                    itemId={room.id} 
+                    itemType="room" 
+                    currentUserId={currentUserId}
+                    className="text-base"
+                  />
                 </div>
               </div>
 
