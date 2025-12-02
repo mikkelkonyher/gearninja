@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Bell } from "lucide-react";
+import { Bell, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
@@ -172,6 +172,28 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    if (!userId || unreadCount === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", userId)
+        .eq("read", false);
+
+      if (!error) {
+        // Update all notifications to read
+        setNotifications((prev) =>
+          prev.map((n) => ({ ...n, read: true }))
+        );
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error("Error marking all notifications as read:", err);
+    }
+  };
+
   const handleNotificationClick = async (notification: Notification) => {
     // Mark as read
     if (!notification.read) {
@@ -302,10 +324,19 @@ export function NotificationBell({ userId }: { userId: string | null }) {
             exit={{ opacity: 0, y: -10 }}
             className="absolute right-0 top-11 w-80 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm z-50 max-h-96 overflow-hidden flex flex-col"
           >
-            <div className="px-4 py-3 border-b border-white/5">
+            <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">
                 Notifikationer
               </h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-neon-blue hover:text-neon-blue/80 transition-colors flex items-center gap-1"
+                >
+                  <Check className="w-3 h-3" />
+                  <span>Marker alle som læst</span>
+                </button>
+              )}
             </div>
             <div className="overflow-y-auto flex-1">
               {loading ? (
