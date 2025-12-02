@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
+import { compressImageFile } from "../lib/utils";
 
 const roomTypes = ["Musikstudie", "Øvelokale", "Andet"];
 
@@ -103,7 +104,7 @@ export function CreateOevelokalerPage() {
     }
   }, [editRoom]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     const remainingSlots = 6 - images.length;
 
@@ -112,10 +113,14 @@ export function CreateOevelokalerPage() {
       return;
     }
 
-    const newImages: ImageFile[] = files.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
+    const newImages: ImageFile[] = [];
+    for (const file of files) {
+      const compressed = await compressImageFile(file);
+      newImages.push({
+        file: compressed,
+        preview: URL.createObjectURL(compressed),
+      });
+    }
 
     setImages([...images, ...newImages]);
     setError(null);
