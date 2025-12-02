@@ -13,6 +13,7 @@ interface Product {
   location: string | null;
   price: number | null;
   image_urls: string[];
+  type?: string;
 }
 
 interface RehearsalRoom {
@@ -29,17 +30,24 @@ interface RehearsalRoom {
   created_at: string;
 }
 
+interface ProductWithFavorites extends Product {
+  favoriteCount: number;
+}
+
 export function LandingPage() {
   const navigate = useNavigate();
   const [newestProducts, setNewestProducts] = useState<Product[]>([]);
+  const [popularProducts, setPopularProducts] = useState<ProductWithFavorites[]>([]);
   const [rehearsalRooms, setRehearsalRooms] = useState<RehearsalRoom[]>([]);
   const [loading, setLoading] = useState(true);
+  const [popularLoading, setPopularLoading] = useState(true);
   const [roomsLoading, setRoomsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchNewestProducts();
+    fetchPopularProducts();
     fetchRehearsalRooms();
     checkUser();
   }, []);
@@ -64,6 +72,58 @@ export function LandingPage() {
       console.error("Error fetching newest products:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPopularProducts = async () => {
+    try {
+      // Fetch a larger set of products to find the most favorited ones
+      const { data: products, error: productsError } = await supabase
+        .from("products")
+        .select("id, brand, model, location, price, image_urls, type")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (productsError) throw productsError;
+
+      if (!products || products.length === 0) {
+        setPopularProducts([]);
+        setPopularLoading(false);
+        return;
+      }
+
+      // Get all favorites for these products
+      const productIds = products.map((p) => p.id);
+      const { data: favorites, error: favoritesError } = await supabase
+        .from("favorites")
+        .select("product_id")
+        .in("product_id", productIds);
+
+      if (favoritesError) throw favoritesError;
+
+      // Count favorites per product
+      const favoriteCounts: Record<string, number> = {};
+      favorites?.forEach((fav) => {
+        if (fav.product_id) {
+          favoriteCounts[fav.product_id] = (favoriteCounts[fav.product_id] || 0) + 1;
+        }
+      });
+
+      // Add favorite count to each product and sort
+      const productsWithFavorites: ProductWithFavorites[] = products
+        .map((product) => ({
+          ...product,
+          favoriteCount: favoriteCounts[product.id] || 0,
+        }))
+        .sort((a, b) => b.favoriteCount - a.favoriteCount)
+        .slice(0, 15);
+
+      setPopularProducts(productsWithFavorites);
+    } catch (err) {
+      console.error("Error fetching popular products:", err);
+      setPopularProducts([]);
+    } finally {
+      setPopularLoading(false);
     }
   };
 
@@ -176,57 +236,66 @@ export function LandingPage() {
               Populært gear
             </h2>
           </div>
-          <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
-            {[
-              {
-                title: "Fender Jazz Bass",
-                meta: '34" · 4-strenget · Vintage',
-                likes: 42,
-              },
-              {
-                title: "Nord Stage 3",
-                meta: "88 keys · Stage piano",
-                likes: 35,
-              },
-              { title: "Ludwig Supraphonic", meta: '14x5" · Snare', likes: 28 },
-              {
-                title: "Universal Audio Apollo Twin",
-                meta: "2x6 Thunderbolt",
-                likes: 21,
-              },
-              { title: "Roland Juno-106", meta: "Analog polysynth", likes: 18 },
-              {
-                title: "Mesa Boogie Dual Rectifier",
-                meta: "Guitarforstærker",
-                likes: 16,
-              },
-              { title: "Moog Sub 37", meta: "Monosynth", likes: 14 },
-            ].map((item) => (
-              <motion.div
-                key={item.title}
-                whileHover={{ y: -2 }}
-                className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start"
-              >
-                <div
-                  className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3"
-                  style={{
-                    backgroundImage:
-                      "url(https://images.pexels.com/photos/164745/pexels-photo-164745.jpeg?auto=compress&cs=tinysrgb&w=640)",
-                  }}
-                />
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-white line-clamp-2">
-                    {item.title}
-                  </h3>
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <span>♥</span>
-                    <span>{item.likes}</span>
-                  </span>
+          {popularLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-neon-blue" />
+            </div>
+          ) : (
+            <div className="flex gap-4 overflow-x-auto pb-4 flex-nowrap scroll-smooth snap-x snap-mandatory scroll-px-4">
+              {popularProducts.length === 0 ? (
+                <div className="w-full text-center py-12 text-muted-foreground">
+                  Ingen produkter endnu
                 </div>
-                <p className="text-xs text-muted-foreground">{item.meta}</p>
-              </motion.div>
-            ))}
-          </div>
+              ) : (
+                popularProducts.map((product) => (
+                  <motion.div
+                    key={product.id}
+                    whileHover={{ y: -2 }}
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
+                  >
+                    <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
+                      {product.image_urls && product.image_urls.length > 0 ? (
+                        <img
+                          src={product.image_urls[0]}
+                          alt={getProductTitle(product)}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                          Intet billede
+                        </div>
+                      )}
+                      
+                      {/* Favorite Button */}
+                      <div className="absolute top-2 right-2 z-10">
+                        <FavoriteButton 
+                          itemId={product.id} 
+                          itemType="product" 
+                          currentUserId={currentUserId}
+                          className="bg-black/50 backdrop-blur-sm p-1.5 rounded-full hover:bg-black/70"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-white line-clamp-2 flex-1">
+                        {getProductTitle(product)}
+                      </h3>
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <span>♥</span>
+                        <span>{product.favoriteCount}</span>
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {product.type && `${product.type} · `}
+                      {product.location && `${product.location} · `}
+                      {formatPrice(product.price)}
+                    </p>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
         </div>
 
         {/* Newest uploads */}
