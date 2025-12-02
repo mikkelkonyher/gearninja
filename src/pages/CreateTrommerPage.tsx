@@ -270,28 +270,33 @@ export function CreateTrommerPage() {
         image_urls: imageUrls,
       };
 
-      if (isEditMode && editProduct) {
-        // Update existing product
-        const { error: updateError } = await supabase
-          .from("products")
-          .update(productData)
-          .eq("id", editProduct.id)
-          .eq("user_id", user.id);
+      // Get auth token for Edge Function
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Du skal være logget ind");
+      }
 
-        if (updateError) throw updateError;
+      // Call Edge Function
+      const { data: functionData, error: functionError } = await supabase.functions.invoke(
+        "create-product",
+        {
+          body: isEditMode && editProduct
+            ? { ...productData, id: editProduct.id }
+            : productData,
+          headers: {
+            authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.PUSHIABLE_API_KEY || import.meta.env.VITE_PUSHIABLE_API_KEY || "",
+          },
+        }
+      );
 
+      if (functionError) {
+        throw new Error(functionError.message || "Der skete en fejl");
+      }
+
+      if (isEditMode) {
         navigate("/mine-annoncer", { state: { message: "Annonce opdateret!" } });
       } else {
-        // Create new product
-        const { error: insertError } = await supabase
-          .from("products")
-          .insert({
-            ...productData,
-            user_id: user.id,
-          });
-
-        if (insertError) throw insertError;
-
         navigate("/trommer", { state: { message: "Annonce oprettet!" } });
       }
     } catch (err: any) {
@@ -365,6 +370,7 @@ export function CreateTrommerPage() {
                 </label>
                 <input
                   type="text"
+                  maxLength={100}
                   value={formData.brand}
                   onChange={(e) =>
                     setFormData({ ...formData, brand: e.target.value })
@@ -372,6 +378,9 @@ export function CreateTrommerPage() {
                   className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
                   placeholder="f.eks. Pearl, Yamaha"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {formData.brand.length}/100 tegn
+                </p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
@@ -379,6 +388,7 @@ export function CreateTrommerPage() {
                 </label>
                 <input
                   type="text"
+                  maxLength={100}
                   value={formData.model}
                   onChange={(e) =>
                     setFormData({ ...formData, model: e.target.value })
@@ -386,6 +396,9 @@ export function CreateTrommerPage() {
                   className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
                   placeholder="f.eks. Export Series"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {formData.model.length}/100 tegn
+                </p>
               </div>
             </div>
 
@@ -395,6 +408,7 @@ export function CreateTrommerPage() {
                 Beskrivelse
               </label>
               <textarea
+                maxLength={5000}
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -403,6 +417,9 @@ export function CreateTrommerPage() {
                 className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all resize-none"
                 placeholder="Beskriv produktet..."
               />
+              <p className="text-xs text-muted-foreground">
+                {formData.description.length}/5000 tegn
+              </p>
             </div>
 
             {/* Price, Location, Condition, Year */}
