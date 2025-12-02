@@ -4,6 +4,7 @@ import { Menu, X, Plus } from 'lucide-react';
 import { Button } from './ui/Button';
 import { supabase } from '../lib/supabase';
 import { motion, AnimatePresence } from 'framer-motion';
+import { NotificationBell } from './NotificationBell';
 
 const categories = [
   'Trommer',
@@ -21,6 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
   const [username, setUsername] = React.useState<string | null>(null);
+  const [userId, setUserId] = React.useState<string | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const navigate = useNavigate();
   const userMenuRef = React.useRef<HTMLDivElement>(null);
@@ -32,6 +34,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       if (!isMounted) return;
       const user = data.user;
       setUserEmail(user?.email ?? null);
+      setUserId(user?.id ?? null);
       setUsername(
         (user?.user_metadata as any)?.username ??
           (user?.email ? user.email.split('@')[0] : null)
@@ -42,6 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       (_event, session) => {
         const user = session?.user ?? null;
         setUserEmail(user?.email ?? null);
+        setUserId(user?.id ?? null);
         setUsername(
           (user?.user_metadata as any)?.username ??
             (user?.email ? user.email.split('@')[0] : null)
@@ -126,8 +130,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Actions */}
+          {/* Actions - Desktop */}
           <div className="hidden md:flex items-center gap-4 absolute right-4">
+            {userEmail && <NotificationBell userId={userId} />}
             <Link
               to="/create"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
@@ -136,49 +141,51 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Plus className="w-5 h-5" />
             </Link>
             {userEmail ? (
-              <div className="relative flex items-center gap-3 border-l border-white/10 pl-4" ref={userMenuRef}>
-                <span className="hidden text-sm text-muted-foreground md:inline">
-                  {username ?? userEmail}
-                </span>
-                <button
-                  onClick={() => setIsUserMenuOpen((open) => !open)}
-                  className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
-                >
-                  {(username ?? userEmail).charAt(0).toUpperCase()}
-                </button>
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
-                    <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
-                      {username ?? userEmail}
+              <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
+                <div className="relative" ref={userMenuRef}>
+                  <span className="hidden text-sm text-muted-foreground md:inline">
+                    {username ?? userEmail}
+                  </span>
+                  <button
+                    onClick={() => setIsUserMenuOpen((open) => !open)}
+                    className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
+                  >
+                    {(username ?? userEmail).charAt(0).toUpperCase()}
+                  </button>
+                  {isUserMenuOpen && (
+                    <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
+                      <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
+                        {username ?? userEmail}
+                      </div>
+                      <nav className="py-1">
+                        <button
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            navigate('/profile');
+                          }}
+                        >
+                          Profil
+                        </button>
+                        <button
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            navigate('/inbox');
+                          }}
+                        >
+                          Indbakke
+                        </button>
+                        <button
+                          className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                          onClick={handleLogout}
+                        >
+                          Log ud
+                        </button>
+                      </nav>
                     </div>
-                    <nav className="py-1">
-                      <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                        onClick={() => {
-                          setIsUserMenuOpen(false);
-                          navigate('/profile');
-                        }}
-                      >
-                        Profil
-                      </button>
-                      <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                        onClick={() => {
-                          setIsUserMenuOpen(false);
-                          navigate('/inbox');
-                        }}
-                      >
-                        Indbakke
-                      </button>
-                      <button
-                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
-                        onClick={handleLogout}
-                      >
-                        Log ud
-                      </button>
-                    </nav>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-2 border-l border-white/10 pl-4">
@@ -192,13 +199,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            className="lg:hidden p-2 text-muted-foreground hover:text-white"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X /> : <Menu />}
-          </button>
+          {/* Mobile Actions */}
+          <div className="md:hidden flex items-center gap-3 absolute right-4">
+            {userEmail && <NotificationBell userId={userId} />}
+            <button
+              className="p-2 text-muted-foreground hover:text-white"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -254,6 +264,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="flex flex-col gap-2 pt-4 border-t border-white/10">
                   {userEmail ? (
                     <>
+                      <span className="text-xs text-muted-foreground pl-1">
+                        {username ?? userEmail}
+                      </span>
                       <Button
                         variant="ghost"
                         className="w-full justify-start"
@@ -264,9 +277,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       >
                         Profil
                       </Button>
-                      <span className="text-xs text-muted-foreground pl-1">
-                        {username ?? userEmail}
-                      </span>
                       <Button
                         variant="ghost"
                         className="w-full justify-start"
