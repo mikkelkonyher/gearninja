@@ -42,6 +42,8 @@ export function ProductDetailPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Scroll to top when navigating to detail page
+    window.scrollTo(0, 0);
     checkUser();
     if (id) {
       fetchProduct(id);
