@@ -321,7 +321,7 @@ export function ProductDetailPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-4 mb-4">
                   <p className="text-2xl font-bold text-neon-blue">
                     {formatPrice(product.price)}
                   </p>
@@ -332,6 +332,19 @@ export function ProductDetailPage() {
                     className="text-base"
                   />
                 </div>
+                {/* Contact Seller Button */}
+                {currentUserId && currentUserId !== product.user_id && (
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/chat?itemId=${product.id}&itemType=product&sellerId=${product.user_id}`
+                      )
+                    }
+                    className="w-full px-4 py-3 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors font-medium"
+                  >
+                    Skriv til sælger
+                  </button>
+                )}
               </div>
 
               {/* Product Information Cards */}
@@ -435,21 +448,9 @@ export function ProductDetailPage() {
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Sælger
                         </h3>
-                        <p className="text-white text-base mb-3">
+                        <p className="text-white text-base">
                           {creatorUsername}
                         </p>
-                        {currentUserId && currentUserId !== product.user_id && (
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/chat?itemId=${product.id}&itemType=product&sellerId=${product.user_id}`
-                              )
-                            }
-                            className="w-full px-4 py-2 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors font-medium"
-                          >
-                            Skriv til sælger
-                          </button>
-                        )}
                       </div>
                     )}
 

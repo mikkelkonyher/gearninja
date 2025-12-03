@@ -63,7 +63,8 @@ function App() {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/room/:id" element={<RoomDetailPage />} />
           <Route path="/chat" element={<ChatLayout />}>
-            <Route index element={null} />
+            {/* Used both for creating a new chat via query params and opening existing chats */}
+            <Route index element={<ChatPage />} />
             <Route path=":chatId" element={<ChatPage />} />
           </Route>
           <Route path="/chats" element={<ChatLayout />} />

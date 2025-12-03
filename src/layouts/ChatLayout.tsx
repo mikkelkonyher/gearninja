@@ -1,10 +1,14 @@
-import { Outlet, useParams } from "react-router-dom";
+import { Outlet, useLocation, useParams } from "react-router-dom";
 import { ChatsSidebar } from "../components/chat/ChatsSidebar";
 import { MessageCircle } from "lucide-react";
 
 export function ChatLayout() {
   const { chatId } = useParams();
-  const isChatOpen = !!chatId;
+  const location = useLocation();
+
+  // Consider chat "open" when we're on a specific chat (/chat/:chatId)
+  // or on the main chat route (/chat) which is used to create/open a chat
+  const isChatOpen = !!chatId || location.pathname === "/chat";
 
   return (
     <div className="h-[calc(100vh-64px)] flex bg-background overflow-hidden">

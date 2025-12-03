@@ -88,7 +88,6 @@ export function ChatPage() {
 
     try {
       setLoading(true);
-
       // Check if chat already exists
       const { data: existingChat, error: checkError } = await supabase
         .from("chats")
@@ -104,6 +103,20 @@ export function ChatPage() {
       let chatIdToUse: string;
 
       if (existingChat) {
+        // If chat was soft-deleted for this user, restore it
+        const updateData: Partial<Chat> = {};
+
+        if (existingChat.buyer_id === currentUserId && existingChat.deleted_by_buyer) {
+          updateData.deleted_by_buyer = false;
+        }
+        if (existingChat.seller_id === currentUserId && existingChat.deleted_by_seller) {
+          updateData.deleted_by_seller = false;
+        }
+
+        if (Object.keys(updateData).length > 0) {
+          await supabase.from("chats").update(updateData).eq("id", existingChat.id);
+        }
+
         chatIdToUse = existingChat.id;
       } else {
         // Create new chat
