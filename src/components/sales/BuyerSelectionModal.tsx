@@ -157,9 +157,9 @@ export function BuyerSelectionModal({
                 <button
                   onClick={handleConfirmSale}
                   disabled={!selectedBuyerId || processing}
-                  className="px-4 py-2 rounded-lg bg-neon-blue text-black font-medium hover:bg-neon-blue/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-6 py-3 rounded-lg bg-[#00FFFF] text-black font-bold hover:bg-[#00FFFF]/80 transition-all hover:scale-105 shadow-[0_0_20px_rgba(0,255,255,0.5)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none flex items-center gap-2"
                 >
-                  {processing && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {processing && <Loader2 className="w-5 h-5 animate-spin" />}
                   Bekræft salg
                 </button>
               </div>

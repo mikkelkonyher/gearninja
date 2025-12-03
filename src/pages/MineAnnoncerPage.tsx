@@ -349,6 +349,40 @@ export function MineAnnoncerPage() {
 
     try {
       setUnmarkingAsSoldId(itemId);
+      
+      // First, get the sale record if it exists (only pending or cancelled, not completed)
+      const { data: saleData } = await supabase
+        .from("sales")
+        .select("id")
+        .eq("product_id", itemId)
+        .in("status", ["pending", "cancelled"])
+        .maybeSingle();
+
+      // Delete the sale record if it exists (this will cascade delete reviews if any)
+      if (saleData?.id) {
+        const { error: saleDeleteError } = await supabase
+          .from("sales")
+          .delete()
+          .eq("id", saleData.id);
+
+        if (saleDeleteError) {
+          console.error("Error deleting sale:", saleDeleteError);
+        }
+
+        // Delete related notifications for this sale
+        const { error: notificationDeleteError } = await supabase
+          .from("notifications")
+          .delete()
+          .eq("item_id", itemId)
+          .eq("item_type", "product")
+          .eq("type", "sale_request");
+
+        if (notificationDeleteError) {
+          console.error("Error deleting notifications:", notificationDeleteError);
+        }
+      }
+
+      // Update product to unmark as sold
       const { error } = await supabase
         .from("products")
         .update({ sold: false, sold_at: null })

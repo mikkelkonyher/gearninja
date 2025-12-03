@@ -27,6 +27,12 @@ BEGIN
   IF v_existing_sale_id IS NOT NULL THEN
     -- Delete the existing sale and create a new one
     DELETE FROM sales WHERE id = v_existing_sale_id;
+    
+    -- Also delete existing notifications for this product to avoid duplicates
+    DELETE FROM notifications 
+    WHERE item_id = p_product_id 
+      AND item_type = 'product' 
+      AND type = 'sale_request';
   END IF;
 
   -- Create sale record

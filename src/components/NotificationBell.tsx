@@ -426,12 +426,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                           <p className="text-sm text-white">
                             {notification.type === "review_reminder" ? (
                               <>
-                                {notification.favoriter_id ? (
-                                  <UsernameWithRating userId={notification.favoriter_id} className="inline text-sm" />
-                                ) : (
-                                  <span>{notification.favoriter_username || "Nogen"}</span>
-                                )}{" "}
-                                har skrevet en anmeldelse - skriv også din anmeldelse af{" "}
+                                {notification.favoriter_username || "Nogen"} har skrevet en anmeldelse - skriv også din anmeldelse af{" "}
                                 {notification.product_brand &&
                                 notification.product_model
                                   ? `${notification.product_brand} ${notification.product_model}`
@@ -441,12 +436,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                               </>
                             ) : notification.type === "sale_request" ? (
                               <>
-                                {notification.favoriter_id ? (
-                                  <UsernameWithRating userId={notification.favoriter_id} className="inline text-sm" />
-                                ) : (
-                                  <span>{notification.favoriter_username || "Nogen"}</span>
-                                )}{" "}
-                                har valgt dig som køber til{" "}
+                                {notification.favoriter_username || "Nogen"} har valgt dig som køber til{" "}
                                 {notification.product_brand &&
                                 notification.product_model
                                   ? `${notification.product_brand} ${notification.product_model}`
@@ -471,21 +461,11 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                               </>
                             ) : notification.type === "new_message" ? (
                               <>
-                                {notification.favoriter_id ? (
-                                  <UsernameWithRating userId={notification.favoriter_id} className="inline text-sm" />
-                                ) : (
-                                  <span>{notification.favoriter_username || "Nogen"}</span>
-                                )}{" "}
-                                har sendt dig en besked
+                                {notification.favoriter_username || "Nogen"} har sendt dig en besked
                               </>
                             ) : (
                               <>
-                                {notification.favoriter_id ? (
-                                  <UsernameWithRating userId={notification.favoriter_id} className="inline text-sm" />
-                                ) : (
-                                  <span>{notification.favoriter_username || "Nogen"}</span>
-                                )}{" "}
-                                har
+                                {notification.favoriter_username || "Nogen"} har
                                 favoriseret{" "}
                                 {notification.item_type === "product" ? (
                                   <>
