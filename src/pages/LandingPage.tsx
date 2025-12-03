@@ -30,6 +30,8 @@ interface RehearsalRoom {
   type: string;
   image_urls: string[];
   created_at: string;
+  rented_out?: boolean;
+  rented_out_at?: string;
 }
 
 interface ProductWithFavorites extends Product {
@@ -68,7 +70,7 @@ export function LandingPage() {
       // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script to filter out sold products
       const { data, error } = await supabase
         .from("products")
-        .select("id, brand, model, location, price, image_urls")
+        .select("id, brand, model, location, price, image_urls, sold, sold_at")
         .order("created_at", { ascending: false })
         .limit(15);
 
@@ -88,7 +90,7 @@ export function LandingPage() {
       // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script to filter out sold products
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, brand, model, location, price, image_urls, type")
+        .select("id, brand, model, location, price, image_urls, type, sold, sold_at")
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -141,9 +143,8 @@ export function LandingPage() {
       const { data, error } = await supabase
         .from("rehearsal_rooms")
         .select(
-          "id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at"
+          "id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at, rented_out, rented_out_at"
         )
-        .or("rented_out.is.null,rented_out.eq.false") // Filter out rented rooms
         .order("created_at", { ascending: false })
         .limit(15);
 
@@ -425,11 +426,20 @@ export function LandingPage() {
                         <img
                           src={room.image_urls[0]}
                           alt={room.name || room.type}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                            room.rented_out ? "opacity-50" : ""
+                          }`}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                           Intet billede
+                        </div>
+                      )}
+
+                      {/* Rented Badge */}
+                      {room.rented_out && (
+                        <div className="absolute top-2 left-2 px-2 py-1 bg-orange-500/95 backdrop-blur-sm text-white text-xs font-bold rounded-lg border border-white/50 z-20">
+                          LEJET UD
                         </div>
                       )}
 

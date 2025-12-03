@@ -298,7 +298,7 @@ export function RoomDetailPage() {
               )}
             </motion.div>
 
-            {/* Room Details */}
+              {/* Room Details */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -312,8 +312,15 @@ export function RoomDetailPage() {
                     <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                       {room.name || room.type}
                     </h1>
-                    <div className="inline-block px-3 py-1 rounded-lg bg-neon-blue/20 border border-neon-blue/30 text-neon-blue text-sm font-semibold capitalize">
-                      {room.type}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="inline-block px-3 py-1 rounded-lg bg-neon-blue/20 border border-neon-blue/30 text-neon-blue text-sm font-semibold capitalize">
+                        {room.type}
+                      </div>
+                      {room.rented_out && (
+                        <div className="inline-block px-3 py-1 rounded-lg bg-orange-500/90 border border-orange-400 text-white text-sm font-semibold">
+                          LEJET UD
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

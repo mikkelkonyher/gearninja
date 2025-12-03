@@ -34,6 +34,8 @@ interface Room {
   image_urls: string[];
   created_at: string;
   payment_type: string;
+   rented_out?: boolean;
+   rented_out_at?: string;
 }
 
 interface FavoriteItem {
@@ -110,7 +112,6 @@ export function FavoritterPage() {
             .from("rehearsal_rooms")
             .select("*")
             .eq("id", fav.room_id)
-            .or("rented_out.is.null,rented_out.eq.false") // Filter out rented rooms
             .single();
 
           if (room) {
@@ -223,6 +224,8 @@ export function FavoritterPage() {
                           className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
                             isProduct && (item as Product).sold
                               ? "opacity-50"
+                              : !isProduct && (item as Room).rented_out
+                              ? "opacity-50"
                               : ""
                           }`}
                         />
@@ -233,15 +236,20 @@ export function FavoritterPage() {
                       </div>
                     )}
 
-                    {/* Sold Badge */}
+                    {/* Sold / Rented Badges */}
                     {isProduct && (item as Product).sold && (
                       <div className="absolute top-2 left-2 px-3 py-1.5 bg-red-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
                         SOLGT
                       </div>
                     )}
+                    {!isProduct && (item as Room).rented_out && (
+                      <div className="absolute top-2 left-2 px-3 py-1.5 bg-orange-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
+                        LEJET UD
+                      </div>
+                    )}
 
                     {/* Type Badge */}
-                    {!isProduct || !(item as Product).sold ? (
+                    {(!isProduct || !(item as Product).sold) && !(!isProduct && (item as Room).rented_out) ? (
                       <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
                         {isProduct
                           ? item.type

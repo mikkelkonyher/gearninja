@@ -347,22 +347,28 @@ export function MineAnnoncerPage() {
 
     try {
       setMarkingAsRentedId(itemId);
-      const { data, error } = await supabase.rpc("mark_room_rented", {
-        room_uuid: itemId,
-        owner_uuid: user.id,
-      });
+      // Simpler: update the room directly instead of using RPC
+      const { error } = await supabase
+        .from("rehearsal_rooms")
+        .update({ rented_out: true, rented_out_at: new Date().toISOString() })
+        .eq("id", itemId)
+        .eq("user_id", user.id);
 
-      if (error) throw error;
-
-      if (data?.error) {
-        console.error("Error marking room as rented:", data.error);
-        return;
+      if (error) {
+        console.error("Error marking room as rented:", error);
+        setError(
+          `Fejl ved markering som lejet ud: ${
+            error.message || JSON.stringify(error)
+          }`,
+        );
+        throw error;
       }
 
       // Refresh items list
       await fetchAllItems();
     } catch (err: any) {
       console.error("Error marking room as rented:", err);
+      setError(`Kunne ikke markere som lejet ud: ${err.message || "Ukendt fejl"}`);
     } finally {
       setMarkingAsRentedId(null);
     }
@@ -709,7 +715,7 @@ export function MineAnnoncerPage() {
                           ) : (
                             <>
                               <CheckCircle2 className="w-5 h-5" />
-                              <span>Lejet ud</span>
+                              <span>Marker lejet ud</span>
                             </>
                           )}
                         </button>

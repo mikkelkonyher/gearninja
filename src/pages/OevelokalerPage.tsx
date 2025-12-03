@@ -19,6 +19,8 @@ interface RehearsalRoom {
   type: string;
   image_urls: string[];
   created_at: string;
+  rented_out?: boolean;
+  rented_out_at?: string;
 }
 
 export function OevelokalerPage() {
@@ -65,8 +67,7 @@ export function OevelokalerPage() {
 
       let queryBuilder = supabase
         .from("rehearsal_rooms")
-        .select("*", { count: "exact" })
-        .or("rented_out.is.null,rented_out.eq.false"); // Filter out rented rooms
+        .select("*", { count: "exact" });
 
       // Apply filters
       if (filters.type) {
@@ -191,16 +192,25 @@ export function OevelokalerPage() {
                       <img
                         src={room.image_urls[0]}
                         alt={room.name || room.type}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                          room.rented_out ? "opacity-50" : ""
+                        }`}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                         Intet billede
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
-                      {room.type}
-                    </div>
+                    {room.rented_out && (
+                      <div className="absolute top-2 left-2 px-3 py-1.5 bg-orange-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
+                        LEJET UD
+                      </div>
+                    )}
+                    {!room.rented_out && (
+                      <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-white text-xs font-semibold rounded capitalize">
+                        {room.type}
+                      </div>
+                    )}
                     
                     {/* Favorite Button */}
                     <div className="absolute top-2 right-2 z-10">
