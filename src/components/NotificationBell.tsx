@@ -220,6 +220,42 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     if (notification.type === "new_message" && notification.chat_id) {
       // Navigate to chat
       navigate(`/chat/${notification.chat_id}`);
+    } else if (notification.type === "sale_request") {
+      // For sale requests, navigate to the product detail page
+      try {
+        const { data: productData, error } = await supabase
+          .from("products")
+          .select("id")
+          .eq("id", notification.item_id)
+          .maybeSingle();
+
+        if (error || !productData) {
+          alert("Denne annonce findes ikke længere.");
+          return;
+        }
+        navigate(`/product/${notification.item_id}`);
+      } catch (err) {
+        console.error("Error checking product:", err);
+        alert("Denne annonce findes ikke længere.");
+      }
+    } else if (notification.type === "review_reminder") {
+      // For review reminders, navigate to the product detail page
+      try {
+        const { data: productData, error } = await supabase
+          .from("products")
+          .select("id")
+          .eq("id", notification.item_id)
+          .maybeSingle();
+
+        if (error || !productData) {
+          alert("Denne annonce findes ikke længere.");
+          return;
+        }
+        navigate(`/product/${notification.item_id}`);
+      } catch (err) {
+        console.error("Error checking product:", err);
+        alert("Denne annonce findes ikke længere.");
+      }
     } else if (notification.type === "product_sold") {
       // For sold products, check if product still exists before navigating
       try {
@@ -387,7 +423,27 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                       <div className="flex items-start gap-3">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-white">
-                            {notification.type === "product_sold" ? (
+                            {notification.type === "review_reminder" ? (
+                              <>
+                                {notification.favoriter_username || "Nogen"} har skrevet en anmeldelse - skriv også din anmeldelse af{" "}
+                                {notification.product_brand &&
+                                notification.product_model
+                                  ? `${notification.product_brand} ${notification.product_model}`
+                                  : notification.product_brand ||
+                                    notification.product_model ||
+                                    "handlen"}
+                              </>
+                            ) : notification.type === "sale_request" ? (
+                              <>
+                                {notification.favoriter_username || "Nogen"} har valgt dig som køber til{" "}
+                                {notification.product_brand &&
+                                notification.product_model
+                                  ? `${notification.product_brand} ${notification.product_model}`
+                                  : notification.product_brand ||
+                                    notification.product_model ||
+                                    "et produkt"}
+                              </>
+                            ) : notification.type === "product_sold" ? (
                               <>
                                 {notification.product_brand &&
                                 notification.product_model

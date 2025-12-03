@@ -15,6 +15,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { BuyerSelectionModal } from "../components/sales/BuyerSelectionModal";
 
 interface Product {
   id: string;
@@ -62,7 +63,8 @@ export function MineAnnoncerPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [user, setUser] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [markingAsSoldId, setMarkingAsSoldId] = useState<string | null>(null);
+  const [showBuyerModal, setShowBuyerModal] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [unmarkingAsSoldId, setUnmarkingAsSoldId] = useState<string | null>(
     null
   );
@@ -294,30 +296,9 @@ export function MineAnnoncerPage() {
     }
   };
 
-  const handleMarkAsSold = async (itemId: string) => {
-    if (!user) return;
-
-    try {
-      setMarkingAsSoldId(itemId);
-      const { data, error } = await supabase.rpc("mark_product_sold", {
-        product_uuid: itemId,
-        seller_uuid: user.id,
-      });
-
-      if (error) throw error;
-
-      if (data?.error) {
-        console.error("Error marking product as sold:", data.error);
-        return;
-      }
-
-      // Refresh items list
-      await fetchAllItems();
-    } catch (err: any) {
-      console.error("Error marking product as sold:", err);
-    } finally {
-      setMarkingAsSoldId(null);
-    }
+  const handleMarkAsSold = (itemId: string) => {
+    setSelectedProductId(itemId);
+    setShowBuyerModal(true);
   };
 
   const handleUnmarkAsSold = async (itemId: string) => {
@@ -651,20 +632,10 @@ export function MineAnnoncerPage() {
                       {isProduct && product && !product.sold && (
                         <button
                           onClick={() => handleMarkAsSold(item.id)}
-                          disabled={markingAsSoldId === item.id}
-                          className="mt-3 w-full px-4 py-3 rounded-lg bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="mt-3 w-full px-4 py-3 rounded-lg bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-colors font-medium flex items-center justify-center gap-2"
                         >
-                          {markingAsSoldId === item.id ? (
-                            <>
-                              <Loader2 className="w-5 h-5 animate-spin" />
-                              <span>Marker som solgt...</span>
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="w-5 h-5" />
-                              <span>Marker som solgt</span>
-                            </>
-                          )}
+                          <CheckCircle2 className="w-5 h-5" />
+                          <span>Marker som solgt</span>
                         </button>
                       )}
 
@@ -797,6 +768,21 @@ export function MineAnnoncerPage() {
               <ChevronRight className="w-5 h-5" />
             </button>
           </div>
+        )}
+
+        {/* Buyer Selection Modal */}
+        {selectedProductId && (
+          <BuyerSelectionModal
+            isOpen={showBuyerModal}
+            onClose={() => {
+              setShowBuyerModal(false);
+              setSelectedProductId(null);
+            }}
+            productId={selectedProductId}
+            onSaleCreated={() => {
+              fetchAllItems();
+            }}
+          />
         )}
       </div>
     </div>

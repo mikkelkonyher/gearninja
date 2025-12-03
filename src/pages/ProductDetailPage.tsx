@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { ReviewModal } from "../components/reviews/ReviewModal";
+import { ReviewsList } from "../components/reviews/ReviewsList";
+import { User } from "lucide-react";
 
 interface Product {
   id: string;
@@ -28,6 +31,16 @@ interface Product {
   user_id: string;
   sold?: boolean;
   sold_at?: string;
+  is_soft_deleted?: boolean;
+}
+
+
+
+interface Sale {
+  id: string;
+  status: "pending" | "completed" | "cancelled";
+  buyer_id: string;
+  seller_id: string;
 }
 
 export function ProductDetailPage() {
@@ -42,6 +55,11 @@ export function ProductDetailPage() {
   const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
   const [favoriteCount, setFavoriteCount] = useState<number>(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  
+  // Sales & Reviews State
+  const [sale, setSale] = useState<Sale | null>(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [processingSale, setProcessingSale] = useState(false);
 
   useEffect(() => {
     // Scroll to top when navigating to detail page
@@ -79,6 +97,11 @@ export function ProductDetailPage() {
 
       // Fetch favorite count
       await fetchFavoriteCount(productId);
+
+      // Fetch sale status if sold
+      if (data.sold) {
+        await fetchSaleStatus(productId);
+      }
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente produkt");
     } finally {
@@ -119,6 +142,48 @@ export function ProductDetailPage() {
     } catch (err) {
       console.error("Error fetching creator username:", err);
       setCreatorUsername("Bruger");
+    }
+  };
+
+  const fetchSaleStatus = async (productId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("*")
+        .eq("product_id", productId)
+        .single();
+
+      if (!error && data) {
+        setSale(data);
+      }
+    } catch (err) {
+      console.error("Error fetching sale status:", err);
+    }
+  };
+
+
+
+  const handleConfirmSale = async () => {
+    if (!sale) return;
+
+    try {
+      setProcessingSale(true);
+      const { data, error } = await supabase.rpc("confirm_sale", {
+        p_sale_id: sale.id,
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        setSale({ ...sale, status: "completed" });
+      } else {
+        throw new Error(data.error || "Der skete en fejl");
+      }
+    } catch (err: any) {
+      console.error("Error confirming sale:", err);
+      alert("Fejl ved bekræftelse af salg: " + err.message);
+    } finally {
+      setProcessingSale(false);
     }
   };
 
@@ -316,9 +381,16 @@ export function ProductDetailPage() {
                       : product.type}
                   </h1>
                   {product.sold && (
-                    <span className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-semibold">
-                      SOLGT
-                    </span>
+                    <div className="flex flex-col gap-1">
+                      <span className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-semibold text-center">
+                        SOLGT
+                      </span>
+                      {product.sold_at && (
+                        <span className="text-xs text-muted-foreground">
+                          Slettes automatisk om {Math.max(0, 14 - Math.floor((new Date().getTime() - new Date(product.sold_at).getTime()) / (1000 * 60 * 60 * 24)))} dage
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-4 mb-4">
@@ -344,6 +416,40 @@ export function ProductDetailPage() {
                   >
                     Skriv til sælger
                   </button>
+                )}
+
+
+
+                {/* Confirm Purchase (Buyer) */}
+                {product.sold && sale?.status === "pending" && currentUserId === sale.buyer_id && (
+                  <div className="mt-4 p-4 rounded-lg bg-neon-blue/10 border border-neon-blue/30">
+                    <p className="text-white mb-3 font-medium">Sælger har angivet dig som køber. Bekræft handlen?</p>
+                    <button
+                      onClick={handleConfirmSale}
+                      disabled={processingSale}
+                      className="w-full px-4 py-2 rounded-lg bg-neon-blue text-black font-medium hover:bg-neon-blue/90 transition-colors flex items-center justify-center gap-2"
+                    >
+                      {processingSale && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Bekræft køb
+                    </button>
+                  </div>
+                )}
+
+                {/* Review Section (Both) */}
+                {sale?.status === "completed" && (currentUserId === sale.buyer_id || currentUserId === sale.seller_id) && (
+                  <div className="mt-4 space-y-4">
+                    <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
+                      <p className="text-green-400 font-medium mb-3">Handlen er gennemført!</p>
+                      <button
+                        onClick={() => setShowReviewModal(true)}
+                        className="w-full px-4 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 transition-colors"
+                      >
+                        Skriv anmeldelse
+                      </button>
+                    </div>
+                    
+                    <ReviewsList saleId={sale.id} currentUserId={currentUserId} />
+                  </div>
                 )}
               </div>
 
@@ -539,6 +645,21 @@ export function ProductDetailPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+
+      {/* Review Modal */}
+      {sale && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          saleId={sale.id}
+          onReviewSubmitted={() => {
+            // Refresh reviews or show success message
+            // ReviewsList will auto-fetch when mounted/updated
+          }}
+        />
+      )}
     </>
   );
 }
+
