@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { RoomFiltersComponent } from "../components/RoomFilters";
+import type { RoomFilters } from "../components/RoomFilters";
 
 interface RehearsalRoom {
   id: string;
@@ -28,11 +30,26 @@ export function OevelokalerPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<RoomFilters>({
+    type: null,
+    minPrice: null,
+    maxPrice: null,
+    location: null,
+    paymentType: null,
+  });
   const itemsPerPage = 12;
 
   useEffect(() => {
-    fetchRooms();
     checkUser();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchRooms();
+  }, [filters]);
+
+  useEffect(() => {
+    fetchRooms();
   }, [currentPage]);
 
   const checkUser = async () => {
@@ -46,10 +63,28 @@ export function OevelokalerPage() {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
-      // Fetch rooms with pagination
-      const { data, error: fetchError, count } = await supabase
+      let queryBuilder = supabase
         .from("rehearsal_rooms")
-        .select("*", { count: "exact" })
+        .select("*", { count: "exact" });
+
+      // Apply filters
+      if (filters.type) {
+        queryBuilder = queryBuilder.eq("type", filters.type);
+      }
+      if (filters.location) {
+        queryBuilder = queryBuilder.eq("location", filters.location);
+      }
+      if (filters.paymentType) {
+        queryBuilder = queryBuilder.eq("payment_type", filters.paymentType);
+      }
+      if (filters.minPrice !== null) {
+        queryBuilder = queryBuilder.gte("price", filters.minPrice);
+      }
+      if (filters.maxPrice !== null) {
+        queryBuilder = queryBuilder.lte("price", filters.maxPrice);
+      }
+
+      const { data, error: fetchError, count } = await queryBuilder
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -122,6 +157,12 @@ export function OevelokalerPage() {
             {error}
           </div>
         )}
+
+        {/* Filters */}
+        <RoomFiltersComponent
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
 
         {/* Rooms Grid */}
         {!loading && !error && (
