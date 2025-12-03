@@ -212,6 +212,56 @@ export function Layout({ children }: { children: React.ReactNode }) {
           {/* Mobile Actions */}
           <div className="md:hidden flex items-center gap-3 absolute right-4">
             {userEmail && <NotificationBell userId={userId} />}
+            <Link
+              to="/create"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
+              aria-label="Opret annonce"
+            >
+              <Plus className="w-5 h-5" />
+            </Link>
+            {userEmail && (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setIsUserMenuOpen((open) => !open)}
+                  className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
+                >
+                  {(username ?? userEmail).charAt(0).toUpperCase()}
+                </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
+                    <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
+                      {username ?? userEmail}
+                    </div>
+                    <nav className="py-1">
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate("/profile");
+                        }}
+                      >
+                        Profil
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate("/chats");
+                        }}
+                      >
+                        Indbakke
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                        onClick={handleLogout}
+                      >
+                        Log ud
+                      </button>
+                    </nav>
+                  </div>
+                )}
+              </div>
+            )}
             <button
               className="p-2 text-muted-foreground hover:text-white"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -231,14 +281,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
               className="lg:hidden border-b border-white/10 bg-background"
             >
               <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-                <Link
-                  to="/create"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
-                >
-                  <Plus className="w-5 h-5" />
-                  <span className="font-medium">Opret annonce</span>
-                </Link>
                 <nav className="flex flex-col gap-2">
                   {categories.map((category) => {
                     let categoryPath = `/category/${category.toLowerCase()}`;
@@ -272,43 +314,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   })}
                 </nav>
                 <div className="flex flex-col gap-2 pt-4 border-t border-white/10">
-                  {userEmail ? (
-                    <>
-                      <span className="text-xs text-muted-foreground pl-1">
-                        {username ?? userEmail}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          navigate("/profile");
-                        }}
-                      >
-                        Profil
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          navigate("/chats");
-                        }}
-                      >
-                        Indbakke
-                      </Button>
-                      <Button
-                        variant="neon"
-                        className="w-full justify-start"
-                        onClick={() => {
-                          setIsMobileMenuOpen(false);
-                          handleLogout();
-                        }}
-                      >
-                        Log ud
-                      </Button>
-                    </>
-                  ) : (
+                  {userEmail ? null : (
                     <>
                       <Link
                         to="/login"
