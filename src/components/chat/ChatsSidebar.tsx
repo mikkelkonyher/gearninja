@@ -343,10 +343,10 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
                   )}
                 </div>
 
-                {/* Delete Button - Visible on hover */}
+                {/* Delete Button - Always visible on mobile, hover on desktop */}
                 <button
                   onClick={(e) => deleteChat(e, chat)}
-                  className="absolute right-2 bottom-2 p-2 rounded-full bg-background/80 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute right-2 bottom-2 p-2 rounded-full bg-background/80 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
                   title="Slet samtale"
                 >
                   <Trash2 className="w-4 h-4" />
