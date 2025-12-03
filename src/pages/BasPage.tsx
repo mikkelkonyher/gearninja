@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { ProductFiltersComponent } from "../components/ProductFilters";
+import type { ProductFilters } from "../components/ProductFilters";
 
 interface Product {
   id: string;
@@ -30,11 +32,28 @@ export function BasPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>({
+    type: null,
+    brand: null,
+    minPrice: null,
+    maxPrice: null,
+    location: null,
+    minYear: null,
+    maxYear: null,
+  });
   const itemsPerPage = 12;
 
   useEffect(() => {
-    fetchProducts();
     checkUser();
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchProducts();
+  }, [filters]);
+
+  useEffect(() => {
+    fetchProducts();
   }, [currentPage]);
 
   const checkUser = async () => {
@@ -50,16 +69,39 @@ export function BasPage() {
       const from = (currentPage - 1) * itemsPerPage;
       const to = from + itemsPerPage - 1;
 
-      // Fetch products with pagination
+      let queryBuilder = supabase
+        .from("products")
+        .select("*", { count: "exact" })
+        .eq("category", "bas");
+
+      // Apply filters
+      if (filters.type) {
+        queryBuilder = queryBuilder.eq("type", filters.type);
+      }
+      if (filters.brand) {
+        queryBuilder = queryBuilder.eq("brand", filters.brand);
+      }
+      if (filters.location) {
+        queryBuilder = queryBuilder.eq("location", filters.location);
+      }
+      if (filters.minPrice !== null) {
+        queryBuilder = queryBuilder.gte("price", filters.minPrice);
+      }
+      if (filters.maxPrice !== null) {
+        queryBuilder = queryBuilder.lte("price", filters.maxPrice);
+      }
+      if (filters.minYear !== null) {
+        queryBuilder = queryBuilder.gte("year", filters.minYear);
+      }
+      if (filters.maxYear !== null) {
+        queryBuilder = queryBuilder.lte("year", filters.maxYear);
+      }
+
       const {
         data,
         error: fetchError,
         count,
-      } = await supabase
-        .from("products")
-        .select("*", { count: "exact" })
-        .eq("category", "bas")
-        // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script
+      } = await queryBuilder
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -126,6 +168,13 @@ export function BasPage() {
             {error}
           </div>
         )}
+
+        {/* Filters */}
+        <ProductFiltersComponent
+          filters={filters}
+          onFiltersChange={setFilters}
+          category="bas"
+        />
 
         {/* Products Grid */}
         {!loading && !error && (

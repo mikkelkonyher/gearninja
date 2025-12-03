@@ -4,6 +4,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Loader2, Plus } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { ProductFiltersComponent } from "../components/ProductFilters";
+import type { ProductFilters } from "../components/ProductFilters";
 
 interface Product {
   id: string;
@@ -28,11 +30,20 @@ export function TrommerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>({
+    type: null,
+    brand: null,
+    minPrice: null,
+    maxPrice: null,
+    location: null,
+    minYear: null,
+    maxYear: null,
+  });
 
   useEffect(() => {
     fetchProducts();
     checkUser();
-  }, []);
+  }, [filters]);
 
   const checkUser = async () => {
     const {
@@ -44,11 +55,35 @@ export function TrommerPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script to filter out sold products
-      const { data, error: fetchError } = await supabase
+      let queryBuilder = supabase
         .from("products")
         .select("*")
-        .eq("category", "trommer")
+        .eq("category", "trommer");
+
+      // Apply filters
+      if (filters.type) {
+        queryBuilder = queryBuilder.eq("type", filters.type);
+      }
+      if (filters.brand) {
+        queryBuilder = queryBuilder.eq("brand", filters.brand);
+      }
+      if (filters.location) {
+        queryBuilder = queryBuilder.eq("location", filters.location);
+      }
+      if (filters.minPrice !== null) {
+        queryBuilder = queryBuilder.gte("price", filters.minPrice);
+      }
+      if (filters.maxPrice !== null) {
+        queryBuilder = queryBuilder.lte("price", filters.maxPrice);
+      }
+      if (filters.minYear !== null) {
+        queryBuilder = queryBuilder.gte("year", filters.minYear);
+      }
+      if (filters.maxYear !== null) {
+        queryBuilder = queryBuilder.lte("year", filters.maxYear);
+      }
+
+      const { data, error: fetchError } = await queryBuilder
         .order("created_at", { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -113,6 +148,13 @@ export function TrommerPage() {
             {error}
           </div>
         )}
+
+        {/* Filters */}
+        <ProductFiltersComponent
+          filters={filters}
+          onFiltersChange={setFilters}
+          category="trommer"
+        />
 
         {/* Products Grid */}
         {!loading && !error && (

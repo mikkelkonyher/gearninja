@@ -5,6 +5,8 @@ import { Loader2, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { ArrowLeft } from "lucide-react";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { ProductFiltersComponent } from "../components/ProductFilters";
+import type { ProductFilters } from "../components/ProductFilters";
 
 interface Product {
   id: string;
@@ -29,34 +31,79 @@ export function SearchResultsPage() {
   const query = searchParams.get("q") || "";
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [allSearchResults, setAllSearchResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<ProductFilters>({
+    type: null,
+    brand: null,
+    minPrice: null,
+    maxPrice: null,
+    location: null,
+    minYear: null,
+    maxYear: null,
+  });
   const itemsPerPage = 12;
 
   useEffect(() => {
     if (query) {
       setCurrentPage(1);
+      fetchAllSearchResults();
       fetchProducts();
     } else {
       setLoading(false);
+      setAllSearchResults([]);
     }
     checkUser();
   }, [query]);
 
   useEffect(() => {
     if (query) {
+      setCurrentPage(1);
       fetchProducts();
     }
-  }, [currentPage, query]);
+  }, [filters]);
+
+  useEffect(() => {
+    if (query) {
+      fetchProducts();
+    }
+  }, [currentPage]);
 
   const checkUser = async () => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
     setCurrentUserId(user?.id || null);
+  };
+
+  const fetchAllSearchResults = async () => {
+    if (!query.trim()) {
+      setAllSearchResults([]);
+      return;
+    }
+
+    try {
+      // Search in brand, model, type, description, and category
+      const searchTerm = `%${query}%`;
+
+      const { data, error: fetchError } = await supabase
+        .from("products")
+        .select("type, brand, location")
+        .or(
+          `brand.ilike."${searchTerm}",model.ilike."${searchTerm}",type.ilike."${searchTerm}",description.ilike."${searchTerm}",category.ilike."${searchTerm}"`
+        );
+
+      if (fetchError) throw fetchError;
+
+      setAllSearchResults(data || []);
+    } catch (err) {
+      console.error("Error fetching all search results:", err);
+      setAllSearchResults([]);
+    }
   };
 
   const fetchProducts = async () => {
@@ -75,17 +122,41 @@ export function SearchResultsPage() {
       // Search in brand, model, type, description, and category
       const searchTerm = `%${query}%`;
 
-      const {
-        data,
-        error: fetchError,
-        count,
-      } = await supabase
+      let queryBuilder = supabase
         .from("products")
         .select("*", { count: "exact" })
         .or(
           `brand.ilike."${searchTerm}",model.ilike."${searchTerm}",type.ilike."${searchTerm}",description.ilike."${searchTerm}",category.ilike."${searchTerm}"`
-        )
-        // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script
+        );
+
+      // Apply filters
+      if (filters.type) {
+        queryBuilder = queryBuilder.eq("type", filters.type);
+      }
+      if (filters.brand) {
+        queryBuilder = queryBuilder.eq("brand", filters.brand);
+      }
+      if (filters.location) {
+        queryBuilder = queryBuilder.eq("location", filters.location);
+      }
+      if (filters.minPrice !== null) {
+        queryBuilder = queryBuilder.gte("price", filters.minPrice);
+      }
+      if (filters.maxPrice !== null) {
+        queryBuilder = queryBuilder.lte("price", filters.maxPrice);
+      }
+      if (filters.minYear !== null) {
+        queryBuilder = queryBuilder.gte("year", filters.minYear);
+      }
+      if (filters.maxYear !== null) {
+        queryBuilder = queryBuilder.lte("year", filters.maxYear);
+      }
+
+      const {
+        data,
+        error: fetchError,
+        count,
+      } = await queryBuilder
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -152,6 +223,15 @@ export function SearchResultsPage() {
           <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
             {error}
           </div>
+        )}
+
+        {/* Filters */}
+        {query && (
+          <ProductFiltersComponent
+            filters={filters}
+            onFiltersChange={setFilters}
+            products={allSearchResults}
+          />
         )}
 
         {/* No Query State */}
