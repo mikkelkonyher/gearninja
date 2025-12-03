@@ -47,7 +47,16 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
     }
   }, [currentUserId]);
 
-  // Listen for local "messages read" events from ChatPage to clear unread count immediately
+  // Ensure chats are refreshed when navigating into a specific chat
+  useEffect(() => {
+    if (currentUserId && currentChatId) {
+      fetchChats();
+    }
+  }, [currentUserId, currentChatId]);
+
+  // Listen for local events from ChatPage:
+  // - "chat:messagesRead" to clear unread count immediately
+  // - "chat:createdOrRestored" to refetch list when a chat is created/restored
   useEffect(() => {
     const handleMessagesRead = (event: Event) => {
       const customEvent = event as CustomEvent<{ chatId: string }>;
@@ -61,11 +70,23 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
       );
     };
 
+    const handleChatCreatedOrRestored = () => {
+      fetchChats();
+    };
+
     window.addEventListener("chat:messagesRead", handleMessagesRead as EventListener);
+    window.addEventListener(
+      "chat:createdOrRestored",
+      handleChatCreatedOrRestored as EventListener
+    );
     return () => {
       window.removeEventListener(
         "chat:messagesRead",
         handleMessagesRead as EventListener
+      );
+      window.removeEventListener(
+        "chat:createdOrRestored",
+        handleChatCreatedOrRestored as EventListener
       );
     };
   }, []);

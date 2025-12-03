@@ -137,6 +137,13 @@ export function ChatPage() {
         chatIdToUse = newChat.id;
       }
 
+      // Inform sidebar to refresh chat list so the chat appears immediately
+      window.dispatchEvent(
+        new CustomEvent("chat:createdOrRestored", {
+          detail: { chatId: chatIdToUse },
+        })
+      );
+
       // Navigate to chat page
       navigate(`/chat/${chatIdToUse}`, { replace: true });
     } catch (err: any) {
