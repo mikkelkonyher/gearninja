@@ -272,6 +272,13 @@ export function ChatPage() {
           .eq("chat_id", chat.id)
           .neq("sender_id", currentUserId)
           .eq("read", false);
+
+        // Immediately inform sidebar to clear unread badge for this chat
+        window.dispatchEvent(
+          new CustomEvent("chat:messagesRead", {
+            detail: { chatId: chat.id },
+          })
+        );
       }
     } catch (err) {
       console.error("Error fetching messages:", err);

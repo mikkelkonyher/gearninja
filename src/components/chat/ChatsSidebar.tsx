@@ -47,6 +47,29 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
     }
   }, [currentUserId]);
 
+  // Listen for local "messages read" events from ChatPage to clear unread count immediately
+  useEffect(() => {
+    const handleMessagesRead = (event: Event) => {
+      const customEvent = event as CustomEvent<{ chatId: string }>;
+      const chatId = customEvent.detail?.chatId;
+      if (!chatId) return;
+
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === chatId ? { ...chat, unread_count: 0 } : chat
+        )
+      );
+    };
+
+    window.addEventListener("chat:messagesRead", handleMessagesRead as EventListener);
+    return () => {
+      window.removeEventListener(
+        "chat:messagesRead",
+        handleMessagesRead as EventListener
+      );
+    };
+  }, []);
+
   const checkUser = async () => {
     const {
       data: { user },
@@ -168,6 +191,7 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
 
     const channel = supabase
       .channel("chats_list")
+      // Listen for any changes to chats where the user is buyer
       .on(
         "postgres_changes",
         {
@@ -192,10 +216,11 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
           fetchChats();
         }
       )
+      // Listen for new messages and read-status updates so unread counts stay in sync
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "messages",
         },
@@ -337,8 +362,9 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
                     {chat.last_message || "Ingen beskeder"}
                   </p>
                   {chat.unread_count > 0 && (
-                    <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-neon-blue text-white text-[10px] font-bold flex items-center justify-center">
-                      {chat.unread_count}
+                    <span className="flex-shrink-0 min-w-[40px] h-[18px] px-2 rounded-full bg-neon-blue text-white text-[10px] font-bold flex items-center justify-center">
+                      {chat.unread_count}{" "}
+                      {chat.unread_count === 1 ? "ulæst" : "ulæste"}
                     </span>
                   )}
                 </div>
