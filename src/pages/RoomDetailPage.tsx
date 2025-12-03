@@ -29,6 +29,8 @@ interface RehearsalRoom {
   image_urls: string[];
   created_at: string;
   user_id: string;
+  rented_out?: boolean;
+  rented_out_at?: string;
 }
 
 export function RoomDetailPage() {

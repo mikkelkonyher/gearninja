@@ -110,6 +110,7 @@ export function FavoritterPage() {
             .from("rehearsal_rooms")
             .select("*")
             .eq("id", fav.room_id)
+            .or("rented_out.is.null,rented_out.eq.false") // Filter out rented rooms
             .single();
 
           if (room) {

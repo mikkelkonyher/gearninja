@@ -45,6 +45,8 @@ interface RehearsalRoom {
   type: string;
   image_urls: string[];
   created_at: string;
+  rented_out?: boolean;
+  rented_out_at?: string;
 }
 
 type AnnouncementItem =
@@ -62,6 +64,10 @@ export function MineAnnoncerPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [markingAsSoldId, setMarkingAsSoldId] = useState<string | null>(null);
   const [unmarkingAsSoldId, setUnmarkingAsSoldId] = useState<string | null>(
+    null
+  );
+  const [markingAsRentedId, setMarkingAsRentedId] = useState<string | null>(null);
+  const [unmarkingAsRentedId, setUnmarkingAsRentedId] = useState<string | null>(
     null
   );
   const [favoriteCounts, setFavoriteCounts] = useState<{
@@ -336,6 +342,54 @@ export function MineAnnoncerPage() {
     }
   };
 
+  const handleMarkAsRented = async (itemId: string) => {
+    if (!user) return;
+
+    try {
+      setMarkingAsRentedId(itemId);
+      const { data, error } = await supabase.rpc("mark_room_rented", {
+        room_uuid: itemId,
+        owner_uuid: user.id,
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        console.error("Error marking room as rented:", data.error);
+        return;
+      }
+
+      // Refresh items list
+      await fetchAllItems();
+    } catch (err: any) {
+      console.error("Error marking room as rented:", err);
+    } finally {
+      setMarkingAsRentedId(null);
+    }
+  };
+
+  const handleUnmarkAsRented = async (itemId: string) => {
+    if (!user) return;
+
+    try {
+      setUnmarkingAsRentedId(itemId);
+      const { error } = await supabase
+        .from("rehearsal_rooms")
+        .update({ rented_out: false, rented_out_at: null })
+        .eq("id", itemId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      // Refresh items list
+      await fetchAllItems();
+    } catch (err: any) {
+      console.error("Error unmarking room as rented:", err);
+    } finally {
+      setUnmarkingAsRentedId(null);
+    }
+  };
+
   const formatPrice = (price: number | null, paymentType?: string | null) => {
     if (!price) return "Pris på anmodning";
     const formattedPrice = `${price.toLocaleString("da-DK")} kr.`;
@@ -345,9 +399,9 @@ export function MineAnnoncerPage() {
     return formattedPrice;
   };
 
-  const formatTimeUntilDeletion = (soldAt: string) => {
-    const soldDate = new Date(soldAt);
-    const deletionDate = new Date(soldDate.getTime() + 3 * 24 * 60 * 60 * 1000); // Add 3 days
+  const formatTimeUntilDeletion = (markedAt: string) => {
+    const markedDate = new Date(markedAt);
+    const deletionDate = new Date(markedDate.getTime() + 3 * 24 * 60 * 60 * 1000); // Add 3 days
     const diff = deletionDate.getTime() - currentTime.getTime();
 
     if (diff <= 0) return "Bliver slettet snart";
@@ -497,7 +551,7 @@ export function MineAnnoncerPage() {
                                 : room?.name || room?.type || "Lokale"
                             }
                             className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-                              isProduct && product?.sold ? "opacity-50" : ""
+                              (isProduct && product?.sold) || (!isProduct && room?.rented_out) ? "opacity-50" : ""
                             }`}
                           />
                         </>
@@ -509,6 +563,11 @@ export function MineAnnoncerPage() {
                       {isProduct && product?.sold && (
                         <div className="absolute top-2 left-2 px-3 py-1.5 bg-red-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
                           SOLGT
+                        </div>
+                      )}
+                      {!isProduct && room?.rented_out && (
+                        <div className="absolute top-2 left-2 px-3 py-1.5 bg-orange-500/95 backdrop-blur-sm text-white text-sm font-bold rounded-lg border-2 border-white/50 z-20">
+                          LEJET UD
                         </div>
                       )}
                       {isProduct && product?.condition && !product?.sold && (
@@ -629,6 +688,59 @@ export function MineAnnoncerPage() {
                                 <>
                                   <XCircle className="w-5 h-5" />
                                   <span>Annuller solgt status</span>
+                                </>
+                              )}
+                            </button>
+                          </>
+                        )}
+
+                      {/* Mark as Rented Button - Only for Rooms that aren't already rented */}
+                      {!isProduct && room && !room.rented_out && (
+                        <button
+                          onClick={() => handleMarkAsRented(item.id)}
+                          disabled={markingAsRentedId === item.id}
+                          className="mt-3 w-full px-4 py-3 rounded-lg bg-green-500/20 border border-green-500/50 text-green-400 hover:bg-green-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {markingAsRentedId === item.id ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              <span>Marker som lejet ud...</span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-5 h-5" />
+                              <span>Lejet ud</span>
+                            </>
+                          )}
+                        </button>
+                      )}
+
+                      {/* Countdown and Unmark Button for Rented Rooms */}
+                      {!isProduct &&
+                        room &&
+                        room.rented_out &&
+                        room.rented_out_at && (
+                          <>
+                            <div className="mt-3 px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-500/50 text-orange-400 flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              <span className="text-sm font-medium">
+                                {formatTimeUntilDeletion(room.rented_out_at)}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => handleUnmarkAsRented(item.id)}
+                              disabled={unmarkingAsRentedId === item.id}
+                              className="mt-2 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {unmarkingAsRentedId === item.id ? (
+                                <>
+                                  <Loader2 className="w-5 h-5 animate-spin" />
+                                  <span>Annullerer...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="w-5 h-5" />
+                                  <span>Marker som ledigt</span>
                                 </>
                               )}
                             </button>

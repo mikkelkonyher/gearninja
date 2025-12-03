@@ -65,7 +65,8 @@ export function OevelokalerPage() {
 
       let queryBuilder = supabase
         .from("rehearsal_rooms")
-        .select("*", { count: "exact" });
+        .select("*", { count: "exact" })
+        .or("rented_out.is.null,rented_out.eq.false"); // Filter out rented rooms
 
       // Apply filters
       if (filters.type) {

@@ -121,6 +121,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
 
             // Fetch product or room details (only if product still exists)
             // Handle both regular product notifications and product_sold notifications
+            // Handle both regular room notifications and room_rented notifications
             if (
               notification.item_type === "product" ||
               notification.type === "product_sold"
@@ -141,7 +142,10 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                 // Product might be deleted (sold), that's okay
                 console.error("Error fetching product details:", err);
               }
-            } else {
+            } else if (
+              notification.item_type === "room" ||
+              notification.type === "room_rented"
+            ) {
               try {
                 const { data: roomData, error: roomError } = await supabase
                   .from("rehearsal_rooms")
@@ -153,6 +157,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                   details.room_name = roomData.name;
                 }
               } catch (err) {
+                // Room might be deleted (rented), that's okay
                 console.error("Error fetching room details:", err);
               }
             }
@@ -236,6 +241,28 @@ export function NotificationBell({ userId }: { userId: string | null }) {
       } catch (err) {
         console.error("Error checking product:", err);
         alert("Denne annonce findes ikke længere.");
+      }
+    } else if (notification.type === "room_rented") {
+      // For rented rooms, check if room still exists before navigating
+      try {
+        const { data: roomData, error } = await supabase
+          .from("rehearsal_rooms")
+          .select("id")
+          .eq("id", notification.item_id)
+          .maybeSingle();
+
+        if (error || !roomData) {
+          // Room has been deleted, show message
+          alert(
+            "Dette øvelokale er blevet slettet efter at være markeret som lejet ud."
+          );
+          return;
+        }
+        // Room still exists (marked as rented but not deleted yet), navigate to it
+        navigate(`/room/${notification.item_id}`);
+      } catch (err) {
+        console.error("Error checking room:", err);
+        alert("Dette øvelokale findes ikke længere.");
       }
     } else if (notification.item_type === "product") {
       try {
@@ -369,6 +396,11 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                                     notification.product_model ||
                                     "Produkt"}{" "}
                                 er blevet solgt
+                              </>
+                            ) : notification.type === "room_rented" ? (
+                              <>
+                                {notification.room_name || "Øvelokale"}{" "}
+                                er blevet lejet ud
                               </>
                             ) : notification.type === "new_message" ? (
                               <>

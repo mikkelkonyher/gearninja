@@ -143,6 +143,7 @@ export function LandingPage() {
         .select(
           "id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at"
         )
+        .or("rented_out.is.null,rented_out.eq.false") // Filter out rented rooms
         .order("created_at", { ascending: false })
         .limit(15);
 
