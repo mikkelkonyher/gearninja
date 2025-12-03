@@ -273,7 +273,7 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
   if (!currentUserId) return null;
 
   return (
-    <div className="flex flex-col h-full bg-background/50 backdrop-blur-sm border-r border-white/10">
+    <div className="flex flex-col h-full w-full bg-background/50 backdrop-blur-sm">
       <div className="p-4 border-b border-white/10">
         <h2 className="text-xl font-bold text-white mb-4">Indbakke</h2>
         <div className="relative">

@@ -1,15 +1,14 @@
-import { Outlet, useParams, useLocation } from "react-router-dom";
+import { Outlet, useParams } from "react-router-dom";
 import { ChatsSidebar } from "../components/chat/ChatsSidebar";
 import { MessageCircle } from "lucide-react";
 
 export function ChatLayout() {
   const { chatId } = useParams();
-  const location = useLocation();
-  const isChatOpen = !!chatId || location.pathname.includes('/chat/');
+  const isChatOpen = !!chatId;
 
   return (
     <div className="h-[calc(100vh-64px)] flex bg-background overflow-hidden">
-      {/* Sidebar - Hidden on mobile when chat is open */}
+      {/* Sidebar */}
       <div className={`w-full md:w-80 lg:w-96 flex-shrink-0 border-r border-white/10 ${
         isChatOpen ? "hidden md:flex" : "flex"
       }`}>
@@ -20,7 +19,7 @@ export function ChatLayout() {
       <div className={`flex-1 flex flex-col min-w-0 bg-background/95 ${
         !isChatOpen ? "hidden md:flex" : "flex"
       }`}>
-        {chatId ? (
+        {isChatOpen ? (
           <Outlet />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-muted-foreground">
