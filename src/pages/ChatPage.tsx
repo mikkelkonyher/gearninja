@@ -421,7 +421,7 @@ export function ChatPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-neon-blue" />
       </div>
     );
@@ -429,24 +429,24 @@ export function ChatPage() {
 
   if (!chat) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Chat ikke fundet</p>
-          <Button onClick={() => navigate(-1)}>Tilbage</Button>
+          <Button onClick={() => navigate("/chat")}>Tilbage til oversigt</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 border-b border-white/10 bg-background/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 py-4">
+      <div className="flex-shrink-0 border-b border-white/10 bg-background/80 backdrop-blur-md">
+        <div className="px-4 py-3">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate(-1)}
-              className="p-2 rounded-lg hover:bg-white/5 transition-colors"
+              onClick={() => navigate("/chat")}
+              className="md:hidden p-2 rounded-lg hover:bg-white/5 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -467,7 +467,7 @@ export function ChatPage() {
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto bg-background"
       >
-        <div className="container mx-auto px-4 py-4 max-w-3xl">
+        <div className="px-4 py-4 max-w-3xl mx-auto">
           <div className="space-y-1">
             {messages.map((message, index) => {
               const isOwn = message.sender_id === currentUserId;
@@ -534,8 +534,8 @@ export function ChatPage() {
       </div>
 
       {/* Message Input */}
-      <div className="sticky bottom-0 border-t border-white/10 bg-background/95 backdrop-blur-md">
-        <div className="container mx-auto px-4 py-3 max-w-3xl">
+      <div className="flex-shrink-0 border-t border-white/10 bg-background/95 backdrop-blur-md">
+        <div className="px-4 py-3 max-w-3xl mx-auto">
           <form onSubmit={sendMessage} className="flex items-end gap-2">
             <div className="flex-1 rounded-2xl bg-secondary/60 border border-white/10 focus-within:border-neon-blue/50 transition-colors">
               <input

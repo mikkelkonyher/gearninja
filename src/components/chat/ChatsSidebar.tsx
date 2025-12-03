@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, MessageCircle } from "lucide-react";
-import { motion } from "framer-motion";
-import { supabase } from "../lib/supabase";
+import { Loader2, MessageCircle, Search } from "lucide-react";
+import { supabase } from "../../lib/supabase";
 
 interface Chat {
   id: string;
@@ -23,11 +22,17 @@ interface ChatWithDetails extends Chat {
   unread_count: number;
 }
 
-export function ChatsListPage() {
+interface ChatsSidebarProps {
+  currentChatId?: string;
+  onChatSelect?: () => void; // For mobile to close sidebar
+}
+
+export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps) {
   const navigate = useNavigate();
   const [chats, setChats] = useState<ChatWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     checkUser();
@@ -206,129 +211,103 @@ export function ChatsListPage() {
       const diffInMinutes = Math.floor(
         (now.getTime() - date.getTime()) / (1000 * 60)
       );
-      return diffInMinutes < 1 ? "Lige nu" : `${diffInMinutes} min siden`;
+      return diffInMinutes < 1 ? "Lige nu" : `${diffInMinutes}m`;
     }
     if (diffInHours < 24) {
-      return `${Math.floor(diffInHours)} timer siden`;
+      return date.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
     }
     if (diffInHours < 168) {
-      return `${Math.floor(diffInHours / 24)} dage siden`;
+      return date.toLocaleDateString("da-DK", { weekday: "short" });
     }
     return date.toLocaleDateString("da-DK", { day: "numeric", month: "short" });
   };
 
-  if (!currentUserId) {
+  const filteredChats = chats.filter((chat) => {
+    const searchLower = searchTerm.toLowerCase();
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">
-            Log ind for at se din indbakke
-          </p>
-          <button
-            onClick={() => navigate("/login")}
-            className="px-4 py-2 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
-          >
-            Log ind
-          </button>
-        </div>
-      </div>
+      chat.other_user_username?.toLowerCase().includes(searchLower) ||
+      chat.item_title?.toLowerCase().includes(searchLower) ||
+      chat.last_message?.toLowerCase().includes(searchLower)
     );
-  }
+  });
+
+  if (!currentUserId) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Indbakke</h1>
-        <p className="text-muted-foreground">
-          Chat med sælgere om produkter og øvelokaler
-        </p>
+    <div className="flex flex-col h-full bg-background/50 backdrop-blur-sm border-r border-white/10">
+      <div className="p-4 border-b border-white/10">
+        <h2 className="text-xl font-bold text-white mb-4">Indbakke</h2>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Søg i samtaler..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-secondary/40 border border-white/10 rounded-lg text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue/50 transition-colors"
+          />
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-neon-blue" />
-        </div>
-      ) : chats.length === 0 ? (
-        <div className="text-center py-20">
-          <MessageCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <p className="text-muted-foreground text-lg">Ingen beskeder endnu</p>
-          <p className="text-muted-foreground text-sm mt-2">
-            Klik på "Skriv til sælger" på en produkt- eller øvelokale-side for
-            at starte en chat
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {chats.map((chat) => (
-            <motion.button
-              key={chat.id}
-              onClick={() => navigate(`/chat/${chat.id}`)}
-              className={`w-full text-left p-4 rounded-xl border transition-colors ${
-                chat.unread_count > 0
-                  ? "border-neon-blue/50 bg-neon-blue/10 hover:bg-neon-blue/15"
-                  : "border-white/10 bg-secondary/40 hover:bg-secondary/60"
-              }`}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3
-                      className={`truncate ${
-                        chat.unread_count > 0
-                          ? "text-white font-bold"
-                          : "text-white font-semibold"
-                      }`}
-                    >
-                      {chat.other_user_username || "Bruger"}
-                    </h3>
-                    {chat.unread_count > 0 && (
-                      <span className="flex-shrink-0 px-2.5 py-1 rounded-full bg-neon-blue text-white text-xs font-bold min-w-[24px] text-center">
-                        {chat.unread_count}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-muted-foreground text-sm truncate mb-1">
-                    {chat.item_title}
-                  </p>
-                  {chat.last_message && (
-                    <div className="flex items-center gap-2">
-                      <p
-                        className={`text-sm truncate ${
-                          chat.unread_count > 0
-                            ? "text-white font-medium"
-                            : "text-white/70"
-                        }`}
-                      >
-                        {chat.last_message}
-                      </p>
-                      {chat.unread_count > 0 && (
-                        <span className="flex-shrink-0 text-xs text-neon-blue font-semibold whitespace-nowrap">
-                          {chat.unread_count === 1
-                            ? "1 ulæst"
-                            : `${chat.unread_count} ulæste`}
-                        </span>
-                      )}
-                    </div>
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-neon-blue" />
+          </div>
+        ) : filteredChats.length === 0 ? (
+          <div className="text-center py-8 px-4">
+            <MessageCircle className="w-10 h-10 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <p className="text-muted-foreground text-sm">Ingen samtaler fundet</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-white/5">
+            {filteredChats.map((chat) => (
+              <button
+                key={chat.id}
+                onClick={() => {
+                  navigate(`/chat/${chat.id}`);
+                  onChatSelect?.();
+                }}
+                className={`w-full text-left p-4 hover:bg-white/5 transition-colors ${
+                  currentChatId === chat.id ? "bg-white/5 border-l-2 border-neon-blue" : "border-l-2 border-transparent"
+                }`}
+              >
+                <div className="flex justify-between items-start mb-1">
+                  <span className={`text-sm font-medium truncate pr-2 ${
+                    chat.unread_count > 0 ? "text-white" : "text-white/90"
+                  }`}>
+                    {chat.other_user_username || "Bruger"}
+                  </span>
+                  {chat.last_message_time && (
+                    <span className={`text-xs whitespace-nowrap ${
+                      chat.unread_count > 0 ? "text-neon-blue font-medium" : "text-muted-foreground"
+                    }`}>
+                      {formatTime(chat.last_message_time)}
+                    </span>
                   )}
                 </div>
-                {chat.last_message_time && (
-                  <div
-                    className={`flex-shrink-0 text-xs ${
-                      chat.unread_count > 0
-                        ? "text-neon-blue font-semibold"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {formatTime(chat.last_message_time)}
-                  </div>
-                )}
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      )}
+                
+                <div className="text-xs text-muted-foreground mb-1 truncate">
+                  {chat.item_title}
+                </div>
+
+                <div className="flex justify-between items-center gap-2">
+                  <p className={`text-sm truncate ${
+                    chat.unread_count > 0 ? "text-white font-medium" : "text-muted-foreground"
+                  }`}>
+                    {chat.last_message || "Ingen beskeder"}
+                  </p>
+                  {chat.unread_count > 0 && (
+                    <span className="flex-shrink-0 min-w-[18px] h-[18px] px-1 rounded-full bg-neon-blue text-white text-[10px] font-bold flex items-center justify-center">
+                      {chat.unread_count}
+                    </span>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

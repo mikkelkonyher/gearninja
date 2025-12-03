@@ -31,7 +31,7 @@ import { CreateOevelokalerPage } from './pages/CreateOevelokalerPage';
 import { OevelokalerPage } from './pages/OevelokalerPage';
 import { RoomDetailPage } from './pages/RoomDetailPage';
 import { ChatPage } from './pages/ChatPage';
-import { ChatsListPage } from './pages/ChatsListPage';
+import { ChatLayout } from './layouts/ChatLayout';
 
 function App() {
   return (
@@ -62,8 +62,11 @@ function App() {
           <Route path="/oevelokaler" element={<OevelokalerPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/room/:id" element={<RoomDetailPage />} />
-          <Route path="/chat/:chatId?" element={<ChatPage />} />
-          <Route path="/chats" element={<ChatsListPage />} />
+          <Route path="/chat" element={<ChatLayout />}>
+            <Route index element={null} />
+            <Route path=":chatId" element={<ChatPage />} />
+          </Route>
+          <Route path="/chats" element={<ChatLayout />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/mine-annoncer" element={<MineAnnoncerPage />} />
           <Route path="/favoritter" element={<FavoritterPage />} />
