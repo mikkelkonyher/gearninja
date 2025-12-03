@@ -26,6 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const navigate = useNavigate();
   const userMenuRef = React.useRef<HTMLDivElement>(null);
+  const userMenuDropdownRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -68,21 +69,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // Close user menu when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         isUserMenuOpen &&
         userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
+        !userMenuRef.current.contains(target) &&
+        userMenuDropdownRef.current &&
+        !userMenuDropdownRef.current.contains(target)
       ) {
         setIsUserMenuOpen(false);
       }
     };
 
     if (isUserMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      // Use click instead of mousedown to allow button clicks to fire first
+      document.addEventListener("click", handleClickOutside, true);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("click", handleClickOutside, true);
     };
   }, [isUserMenuOpen]);
 
@@ -159,7 +164,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {(username ?? userEmail).charAt(0).toUpperCase()}
                   </button>
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
+                    <div 
+                      ref={userMenuDropdownRef}
+                      className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50"
+                      onMouseDown={(e) => e.stopPropagation()}
+                    >
                       <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
                         {username ?? userEmail}
                       </div>
@@ -184,7 +193,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         </button>
                         <button
                           className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
-                          onClick={handleLogout}
+                          onClick={() => {
+                            handleLogout();
+                          }}
                         >
                           Log ud
                         </button>
@@ -234,7 +245,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     <nav className="py-1">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setIsUserMenuOpen(false);
                           navigate("/profile");
                         }}
@@ -243,7 +255,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       </button>
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           setIsUserMenuOpen(false);
                           navigate("/chats");
                         }}
@@ -252,7 +265,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       </button>
                       <button
                         className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
-                        onClick={handleLogout}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLogout();
+                        }}
                       >
                         Log ud
                       </button>
