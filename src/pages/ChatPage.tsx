@@ -24,6 +24,8 @@ interface Chat {
   item_type: "product" | "room";
   created_at: string;
   updated_at: string;
+  deleted_by_buyer: boolean;
+  deleted_by_seller: boolean;
 }
 
 interface ChatWithDetails extends Chat {
