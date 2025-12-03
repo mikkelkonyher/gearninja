@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, MessageCircle, Search } from "lucide-react";
+import { Loader2, MessageCircle, Search, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 
 interface Chat {
@@ -11,6 +11,8 @@ interface Chat {
   item_type: "product" | "room";
   created_at: string;
   updated_at: string;
+  deleted_by_buyer: boolean;
+  deleted_by_seller: boolean;
 }
 
 interface ChatWithDetails extends Chat {
@@ -65,9 +67,16 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
 
       if (error) throw error;
 
+      // Filter out deleted chats
+      const activeChats = (data || []).filter((chat: Chat) => {
+        if (chat.buyer_id === currentUserId) return !chat.deleted_by_buyer;
+        if (chat.seller_id === currentUserId) return !chat.deleted_by_seller;
+        return true;
+      });
+
       // Fetch details for each chat
       const chatsWithDetails: ChatWithDetails[] = await Promise.all(
-        (data || []).map(async (chat) => {
+        activeChats.map(async (chat: Chat) => {
           const otherUserId =
             chat.buyer_id === currentUserId ? chat.seller_id : chat.buyer_id;
 
@@ -201,6 +210,36 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
     };
   };
 
+  const deleteChat = async (e: React.MouseEvent, chat: ChatWithDetails) => {
+    e.stopPropagation(); // Prevent navigation
+    if (!confirm("Er du sikker på, at du vil slette denne samtale?")) return;
+
+    try {
+      const updateData =
+        chat.buyer_id === currentUserId
+          ? { deleted_by_buyer: true }
+          : { deleted_by_seller: true };
+
+      const { error } = await supabase
+        .from("chats")
+        .update(updateData)
+        .eq("id", chat.id);
+
+      if (error) throw error;
+
+      // Optimistic update
+      setChats((prev) => prev.filter((c) => c.id !== chat.id));
+      
+      // If currently viewing this chat, navigate away
+      if (currentChatId === chat.id) {
+        navigate("/chat");
+      }
+    } catch (err) {
+      console.error("Error deleting chat:", err);
+      alert("Kunne ikke slette samtale.");
+    }
+  };
+
   const formatTime = (dateString?: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -262,15 +301,15 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
         ) : (
           <div className="divide-y divide-white/5">
             {filteredChats.map((chat) => (
-              <button
+              <div
                 key={chat.id}
+                className={`group relative w-full text-left p-4 hover:bg-white/5 transition-colors cursor-pointer ${
+                  currentChatId === chat.id ? "bg-white/5 border-l-2 border-neon-blue" : "border-l-2 border-transparent"
+                }`}
                 onClick={() => {
                   navigate(`/chat/${chat.id}`);
                   onChatSelect?.();
                 }}
-                className={`w-full text-left p-4 hover:bg-white/5 transition-colors ${
-                  currentChatId === chat.id ? "bg-white/5 border-l-2 border-neon-blue" : "border-l-2 border-transparent"
-                }`}
               >
                 <div className="flex justify-between items-start mb-1">
                   <span className={`text-sm font-medium truncate pr-2 ${
@@ -303,7 +342,16 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
                     </span>
                   )}
                 </div>
-              </button>
+
+                {/* Delete Button - Visible on hover */}
+                <button
+                  onClick={(e) => deleteChat(e, chat)}
+                  className="absolute right-2 bottom-2 p-2 rounded-full bg-background/80 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all"
+                  title="Slet samtale"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
             ))}
           </div>
         )}
