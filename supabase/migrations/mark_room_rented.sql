@@ -35,6 +35,8 @@ AS $$
 DECLARE
   room_name VARCHAR(255);
   room_type VARCHAR(100);
+  favoriter_record RECORD;
+  notification_count INTEGER := 0;
 BEGIN
   -- Verify the user owns the room
   IF NOT EXISTS (
@@ -49,6 +51,24 @@ BEGIN
   FROM rehearsal_rooms
   WHERE id = room_uuid;
 
+  -- Create notifications for all users who favorited this room
+  FOR favoriter_record IN
+    SELECT DISTINCT f.user_id
+    FROM favorites f
+    WHERE f.room_id = room_uuid
+      AND f.user_id != owner_uuid
+  LOOP
+    INSERT INTO notifications (user_id, favoriter_id, type, item_id, item_type)
+    VALUES (
+      favoriter_record.user_id,
+      NULL, -- No favoriter for rented notifications
+      'room_rented',
+      room_uuid,
+      'room'
+    );
+    notification_count := notification_count + 1;
+  END LOOP;
+
   -- Mark room as rented and set rented_out_at timestamp (will be deleted after 3 days)
   UPDATE rehearsal_rooms 
   SET rented_out = TRUE, rented_out_at = NOW()
@@ -56,6 +76,7 @@ BEGIN
 
   RETURN json_build_object(
     'success', true,
+    'notifications_sent', notification_count,
     'room_name', room_name,
     'room_type', room_type
   );

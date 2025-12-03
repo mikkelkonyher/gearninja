@@ -347,21 +347,21 @@ export function MineAnnoncerPage() {
 
     try {
       setMarkingAsRentedId(itemId);
-      // Simpler: update the room directly instead of using RPC
-      const { error } = await supabase
-        .from("rehearsal_rooms")
-        .update({ rented_out: true, rented_out_at: new Date().toISOString() })
-        .eq("id", itemId)
-        .eq("user_id", user.id);
+      const { data, error } = await supabase.rpc("mark_room_rented", {
+        room_uuid: itemId,
+        owner_uuid: user.id,
+      });
 
       if (error) {
-        console.error("Error marking room as rented:", error);
-        setError(
-          `Fejl ved markering som lejet ud: ${
-            error.message || JSON.stringify(error)
-          }`,
-        );
+        console.error("RPC error:", error);
+        setError(`Fejl ved markering som lejet ud: ${error.message || JSON.stringify(error)}`);
         throw error;
+      }
+
+      if (data?.error) {
+        console.error("Error marking room as rented:", data.error);
+        setError(`Fejl: ${data.error}`);
+        return;
       }
 
       // Refresh items list
