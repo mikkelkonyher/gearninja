@@ -7,8 +7,10 @@ export function ChatLayout() {
   const location = useLocation();
 
   // Consider chat "open" when we're on a specific chat (/chat/:chatId)
-  // or on the main chat route (/chat) which is used to create/open a chat
-  const isChatOpen = !!chatId || location.pathname === "/chat";
+  // or on the main chat route (/chat) with query params (creating/opening a chat)
+  // If on /chat without query params, show the sidebar (chat list)
+  const hasQueryParams = location.search && location.search.length > 0;
+  const isChatOpen = !!chatId || (location.pathname === "/chat" && hasQueryParams);
 
   return (
     <div className="h-[calc(100vh-64px)] flex bg-background overflow-hidden">

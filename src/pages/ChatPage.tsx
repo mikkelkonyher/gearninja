@@ -470,14 +470,37 @@ export function ChatPage() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 border-b border-white/10 bg-background/80 backdrop-blur-md">
+      <div className="flex-shrink-0 border-b border-white/10 bg-background/80 backdrop-blur-md relative z-10">
         <div className="px-4 py-3">
           <div className="flex items-center gap-4">
             <button
-              onClick={() => navigate("/chat")}
-              className="md:hidden p-2 rounded-lg hover:bg-white/5 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // Navigate to chat list, clearing any query params and chatId
+                navigate("/chat", { replace: false });
+              }}
+              onTouchStart={(e) => {
+                e.stopPropagation();
+                e.currentTarget.style.opacity = "0.7";
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.currentTarget.style.opacity = "1";
+              }}
+              className="md:hidden p-2 -ml-2 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors touch-manipulation cursor-pointer relative z-20"
+              style={{ 
+                WebkitTapHighlightColor: "transparent", 
+                touchAction: "manipulation",
+                WebkitTouchCallout: "none",
+                userSelect: "none",
+                minWidth: "44px",
+                minHeight: "44px"
+              }}
+              type="button"
+              aria-label="Tilbage til chat liste"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-5 h-5 text-white pointer-events-none" />
             </button>
             <div className="flex-1 min-w-0">
               <h1 className="text-lg font-semibold text-white truncate">
