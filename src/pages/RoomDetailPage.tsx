@@ -336,7 +336,7 @@ export function RoomDetailPage() {
                     }
                     className="w-full px-4 py-3 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors font-medium"
                   >
-                    Skriv til sælger
+                    Skriv til udlejer
                   </button>
                 )}
               </div>
