@@ -17,16 +17,17 @@ interface Review {
 
 interface ReviewsListProps {
   saleId: string;
+  refreshTrigger?: number;
 }
 
-export function ReviewsList({ saleId }: ReviewsListProps) {
+export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [canView, setCanView] = useState(false);
 
   useEffect(() => {
     fetchReviews();
-  }, [saleId]);
+  }, [saleId, refreshTrigger]);
 
   const fetchReviews = async () => {
     try {

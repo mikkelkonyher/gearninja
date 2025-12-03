@@ -62,6 +62,7 @@ export function ProductDetailPage() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [processingSale, setProcessingSale] = useState(false);
   const [userReview, setUserReview] = useState<any>(null);
+  const [reviewsRefreshTrigger, setReviewsRefreshTrigger] = useState(0);
 
   useEffect(() => {
     // Scroll to top when navigating to detail page
@@ -484,7 +485,7 @@ export function ProductDetailPage() {
                       )}
                     </div>
                     
-                    <ReviewsList saleId={sale.id} />
+                    <ReviewsList saleId={sale.id} refreshTrigger={reviewsRefreshTrigger} />
                   </div>
                 )}
               </div>
@@ -692,6 +693,8 @@ export function ProductDetailPage() {
             if (sale) {
               fetchUserReview(sale.id);
             }
+            // Trigger reviews list refresh to check if both parties have reviewed
+            setReviewsRefreshTrigger(prev => prev + 1);
           }}
         />
       )}
