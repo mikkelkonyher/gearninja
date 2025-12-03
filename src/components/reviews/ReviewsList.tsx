@@ -17,10 +17,9 @@ interface Review {
 
 interface ReviewsListProps {
   saleId: string;
-  currentUserId: string;
 }
 
-export function ReviewsList({ saleId, currentUserId }: ReviewsListProps) {
+export function ReviewsList({ saleId }: ReviewsListProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [canView, setCanView] = useState(false);

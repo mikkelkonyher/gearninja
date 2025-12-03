@@ -484,7 +484,7 @@ export function ProductDetailPage() {
                       )}
                     </div>
                     
-                    <ReviewsList saleId={sale.id} currentUserId={currentUserId} />
+                    <ReviewsList saleId={sale.id} />
                   </div>
                 )}
               </div>

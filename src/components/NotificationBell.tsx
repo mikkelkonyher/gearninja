@@ -3,7 +3,6 @@ import { Bell, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { motion, AnimatePresence } from "framer-motion";
-import { UsernameWithRating } from "./UsernameWithRating";
 
 interface Notification {
   id: string;
