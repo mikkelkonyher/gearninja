@@ -9,12 +9,13 @@ import {
   Loader2,
   Maximize2,
   Heart,
+  Star,
+  CheckCircle2,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { FavoriteButton } from "../components/FavoriteButton";
 import { ReviewModal } from "../components/reviews/ReviewModal";
 import { ReviewsList } from "../components/reviews/ReviewsList";
-import { User } from "lucide-react";
 
 interface Product {
   id: string;
@@ -60,6 +61,7 @@ export function ProductDetailPage() {
   const [sale, setSale] = useState<Sale | null>(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [processingSale, setProcessingSale] = useState(false);
+  const [userReview, setUserReview] = useState<any>(null);
 
   useEffect(() => {
     // Scroll to top when navigating to detail page
@@ -69,6 +71,13 @@ export function ProductDetailPage() {
       fetchProduct(id);
     }
   }, [id]);
+
+  // Fetch user's review when sale and currentUserId are both available
+  useEffect(() => {
+    if (sale?.status === 'completed' && currentUserId) {
+      fetchUserReview(sale.id);
+    }
+  }, [sale, currentUserId]);
 
   const checkUser = async () => {
     const {
@@ -158,6 +167,23 @@ export function ProductDetailPage() {
       }
     } catch (err) {
       console.error("Error fetching sale status:", err);
+    }
+  };
+
+  const fetchUserReview = async (saleId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .eq("sale_id", saleId)
+        .eq("reviewer_id", currentUserId)
+        .maybeSingle();
+
+      if (!error && data) {
+        setUserReview(data);
+      }
+    } catch (err) {
+      console.error("Error fetching user review:", err);
     }
   };
 
@@ -387,7 +413,7 @@ export function ProductDetailPage() {
                       </span>
                       {product.sold_at && (
                         <span className="text-xs text-muted-foreground">
-                          Slettes automatisk om {Math.max(0, 14 - Math.floor((new Date().getTime() - new Date(product.sold_at).getTime()) / (1000 * 60 * 60 * 24)))} dage
+                          Slettes automatisk om {Math.max(0, 3 - Math.floor((new Date().getTime() - new Date(product.sold_at).getTime()) / (1000 * 60 * 60 * 24)))} dage
                         </span>
                       )}
                     </div>
@@ -422,15 +448,23 @@ export function ProductDetailPage() {
 
                 {/* Confirm Purchase (Buyer) */}
                 {product.sold && sale?.status === "pending" && currentUserId === sale.buyer_id && (
-                  <div className="mt-4 p-4 rounded-lg bg-neon-blue/10 border border-neon-blue/30">
-                    <p className="text-white mb-3 font-medium">Sælger har angivet dig som køber. Bekræft handlen?</p>
+                  <div className="mt-4 p-6 rounded-xl bg-gradient-to-r from-neon-blue/20 to-blue-500/20 border-2 border-neon-blue/50 shadow-lg">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-full bg-neon-blue/30 flex items-center justify-center">
+                        <CheckCircle2 className="w-6 h-6 text-neon-blue" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-white">Bekræft køb</h3>
+                        <p className="text-sm text-muted-foreground">Sælger har valgt dig som køber</p>
+                      </div>
+                    </div>
                     <button
                       onClick={handleConfirmSale}
                       disabled={processingSale}
-                      className="w-full px-4 py-2 rounded-lg bg-neon-blue text-black font-medium hover:bg-neon-blue/90 transition-colors flex items-center justify-center gap-2"
+                      className="w-full px-6 py-4 rounded-lg bg-[#00FFFF] text-black font-bold text-lg hover:bg-[#00FFFF]/80 transition-all hover:scale-105 shadow-[0_0_20px_rgba(0,255,255,0.5)] flex items-center justify-center gap-2"
                     >
-                      {processingSale && <Loader2 className="w-4 h-4 animate-spin" />}
-                      Bekræft køb
+                      {processingSale && <Loader2 className="w-5 h-5 animate-spin" />}
+                      Bekræft køb nu
                     </button>
                   </div>
                 )}
@@ -439,13 +473,38 @@ export function ProductDetailPage() {
                 {sale?.status === "completed" && (currentUserId === sale.buyer_id || currentUserId === sale.seller_id) && (
                   <div className="mt-4 space-y-4">
                     <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-                      <p className="text-green-400 font-medium mb-3">Handlen er gennemført!</p>
-                      <button
-                        onClick={() => setShowReviewModal(true)}
-                        className="w-full px-4 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 transition-colors"
-                      >
-                        Skriv anmeldelse
-                      </button>
+                      <p className="text-green-400 font-medium mb-3">
+                        {userReview ? "Handlen er gennemført! Du har skrevet en anmeldelse." : "Handlen er gennemført!"}
+                      </p>
+                      {userReview ? (
+                        <div className="p-4 rounded-lg bg-secondary/50 border border-white/10">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-medium text-green-400">✓ Anmeldelse skrevet</span>
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= userReview.rating
+                                      ? "fill-yellow-500 text-yellow-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          {userReview.content && (
+                            <p className="text-white text-sm mt-2">{userReview.content}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setShowReviewModal(true)}
+                          className="w-full px-4 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 transition-colors"
+                        >
+                          Skriv anmeldelse
+                        </button>
+                      )}
                     </div>
                     
                     <ReviewsList saleId={sale.id} currentUserId={currentUserId} />
@@ -654,12 +713,13 @@ export function ProductDetailPage() {
           onClose={() => setShowReviewModal(false)}
           saleId={sale.id}
           onReviewSubmitted={() => {
-            // Refresh reviews or show success message
-            // ReviewsList will auto-fetch when mounted/updated
+            // Refresh user's review
+            if (sale) {
+              fetchUserReview(sale.id);
+            }
           }}
         />
       )}
     </>
   );
 }
-
