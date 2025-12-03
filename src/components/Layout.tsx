@@ -211,7 +211,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Mobile Actions */}
           <div className="md:hidden flex items-center gap-3 absolute right-4">
-            {userEmail && <NotificationBell userId={userId} />}
             <Link
               to="/create"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
@@ -261,6 +260,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </div>
                 )}
               </div>
+            )}
+            {userEmail && <NotificationBell userId={userId} />}
+            {!userEmail && (
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  Log ind
+                </Button>
+              </Link>
             )}
             <button
               className="p-2 text-muted-foreground hover:text-white"
@@ -313,31 +320,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     );
                   })}
                 </nav>
-                <div className="flex flex-col gap-2 pt-4 border-t border-white/10">
-                  {userEmail ? null : (
-                    <>
-                      <Link
-                        to="/login"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start"
-                        >
-                          Log ind
-                        </Button>
-                      </Link>
-                      <Link
-                        to="/register"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        <Button variant="neon" className="w-full">
-                          Opret bruger
-                        </Button>
-                      </Link>
-                    </>
-                  )}
-                </div>
               </div>
             </motion.div>
           )}
