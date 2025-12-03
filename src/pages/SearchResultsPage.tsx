@@ -31,7 +31,7 @@ export function SearchResultsPage() {
   const query = searchParams.get("q") || "";
 
   const [products, setProducts] = useState<Product[]>([]);
-  const [allSearchResults, setAllSearchResults] = useState<Product[]>([]);
+  const [allSearchResults, setAllSearchResults] = useState<Array<{ type: string | null; brand: string | null; location: string | null }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);

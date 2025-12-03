@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Filter } from "lucide-react";
+import { Filter } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export type ProductFilters = {
