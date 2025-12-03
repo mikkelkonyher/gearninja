@@ -16,6 +16,7 @@ import { supabase } from "../lib/supabase";
 import { FavoriteButton } from "../components/FavoriteButton";
 import { ReviewModal } from "../components/reviews/ReviewModal";
 import { ReviewsList } from "../components/reviews/ReviewsList";
+import { UsernameWithRating } from "../components/UsernameWithRating";
 
 interface Product {
   id: string;
@@ -53,7 +54,6 @@ export function ProductDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
-  const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
   const [favoriteCount, setFavoriteCount] = useState<number>(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
@@ -99,10 +99,6 @@ export function ProductDetailPage() {
 
       setProduct(data);
 
-      // Fetch creator username
-      if (data?.user_id) {
-        await fetchCreatorUsername(data.user_id);
-      }
 
       // Fetch favorite count
       await fetchFavoriteCount(productId);
@@ -134,25 +130,6 @@ export function ProductDetailPage() {
     }
   };
 
-  const fetchCreatorUsername = async (userId: string) => {
-    try {
-      const { data: userData, error: userError } = await supabase.rpc(
-        "get_user_username",
-        { user_uuid: userId }
-      );
-
-      if (!userError && userData) {
-        const username =
-          userData.username || userData.email?.split("@")[0] || "Bruger";
-        setCreatorUsername(username);
-      } else {
-        setCreatorUsername("Bruger");
-      }
-    } catch (err) {
-      console.error("Error fetching creator username:", err);
-      setCreatorUsername("Bruger");
-    }
-  };
 
   const fetchSaleStatus = async (productId: string) => {
     try {
@@ -608,14 +585,12 @@ export function ProductDetailPage() {
                       </div>
                     )}
 
-                    {creatorUsername && (
+                    {product.user_id && (
                       <div className="pt-3 border-t border-white/5">
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Sælger
                         </h3>
-                        <p className="text-white text-base">
-                          {creatorUsername}
-                        </p>
+                        <UsernameWithRating userId={product.user_id} className="text-base" />
                       </div>
                     )}
 

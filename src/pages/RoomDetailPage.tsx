@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { FavoriteButton } from "../components/FavoriteButton";
+import { UsernameWithRating } from "../components/UsernameWithRating";
 
 interface RehearsalRoom {
   id: string;
@@ -42,7 +43,6 @@ export function RoomDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [lightboxImageIndex, setLightboxImageIndex] = useState(0);
-  const [creatorUsername, setCreatorUsername] = useState<string | null>(null);
   const [favoriteCount, setFavoriteCount] = useState<number>(0);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -73,10 +73,6 @@ export function RoomDetailPage() {
 
       setRoom(data);
 
-      // Fetch creator username
-      if (data?.user_id) {
-        await fetchCreatorUsername(data.user_id);
-      }
       
       // Fetch favorite count
       await fetchFavoriteCount(roomId);
@@ -103,22 +99,6 @@ export function RoomDetailPage() {
     }
   };
 
-  const fetchCreatorUsername = async (userId: string) => {
-    try {
-      const { data: userData, error: userError } = await supabase
-        .rpc('get_user_username', { user_uuid: userId });
-
-      if (!userError && userData) {
-        const username = userData.username || userData.email?.split('@')[0] || 'Bruger';
-        setCreatorUsername(username);
-      } else {
-        setCreatorUsername('Bruger');
-      }
-    } catch (err) {
-      console.error('Error fetching creator username:', err);
-      setCreatorUsername('Bruger');
-    }
-  };
 
   const nextImage = () => {
     if (!room || !room.image_urls) return;
@@ -411,7 +391,7 @@ export function RoomDetailPage() {
                   </div>
                 )}
 
-                {creatorUsername && (
+                {room.user_id && (
                   <div className="p-4 rounded-xl border border-white/10 bg-secondary/40">
                     <div className="flex items-center gap-3 mb-2">
                       <MapPin className="w-5 h-5 text-neon-blue" />
@@ -419,7 +399,7 @@ export function RoomDetailPage() {
                         Udlejer
                       </h3>
                     </div>
-                    <p className="text-white mb-3">{creatorUsername}</p>
+                    <UsernameWithRating userId={room.user_id} className="mb-3" />
                   </div>
                 )}
                 

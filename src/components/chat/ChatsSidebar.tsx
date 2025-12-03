@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, MessageCircle, Search, Trash2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { UsernameWithRating } from "../UsernameWithRating";
 
 interface Chat {
   id: string;

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Star, User } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { UsernameWithRating } from "../UsernameWithRating";
 
 interface Review {
   id: string;
   rating: number;
   content: string;
   created_at: string;
+  reviewer_id: string;
   reviewer: {
     username: string;
     avatar_url: string | null;
@@ -120,9 +122,10 @@ export function ReviewsList({ saleId, currentUserId }: ReviewsListProps) {
                     <User className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
-                <span className="font-medium text-white">
-                  {review.reviewer.username}
-                </span>
+                <UsernameWithRating 
+                  userId={review.reviewer_id} 
+                  className="font-medium" 
+                />
               </div>
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (

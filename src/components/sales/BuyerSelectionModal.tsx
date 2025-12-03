@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, User, Loader2 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
+import { UsernameWithRating } from "../UsernameWithRating";
 
 interface Buyer {
   user_id: string;
@@ -137,7 +138,7 @@ export function BuyerSelectionModal({
                           <User className="w-5 h-5 text-muted-foreground" />
                         )}
                       </div>
-                      <span className="font-medium text-white">{buyer.username}</span>
+                      <UsernameWithRating userId={buyer.user_id} className="font-medium" />
                       {selectedBuyerId === buyer.user_id && (
                         <div className="ml-auto w-3 h-3 rounded-full bg-neon-blue shadow-[0_0_10px_rgba(0,255,255,0.5)]" />
                       )}

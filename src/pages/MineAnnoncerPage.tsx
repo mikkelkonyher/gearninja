@@ -54,6 +54,14 @@ type AnnouncementItem =
   | (Product & { itemType: "product" })
   | (RehearsalRoom & { itemType: "room" });
 
+interface Sale {
+  id: string;
+  product_id: string;
+  status: "pending" | "completed" | "cancelled";
+  buyer_id: string;
+  seller_id: string;
+}
+
 export function MineAnnoncerPage() {
   const navigate = useNavigate();
   const [items, setItems] = useState<AnnouncementItem[]>([]);
@@ -75,6 +83,7 @@ export function MineAnnoncerPage() {
   const [favoriteCounts, setFavoriteCounts] = useState<{
     [key: string]: number;
   }>({});
+  const [sales, setSales] = useState<{ [key: string]: Sale }>({});
   const [currentTime, setCurrentTime] = useState(new Date());
   const itemsPerPage = 12;
 
@@ -169,6 +178,9 @@ export function MineAnnoncerPage() {
 
       // Fetch favorite counts for all items
       await fetchFavoriteCounts(paginatedItems);
+
+      // Fetch sales for sold products
+      await fetchSalesForProducts(paginatedItems);
     } catch (err: any) {
       setError(err.message || "Kunne ikke hente annoncer");
     } finally {
@@ -196,6 +208,37 @@ export function MineAnnoncerPage() {
     }
 
     setFavoriteCounts(counts);
+  };
+
+  const fetchSalesForProducts = async (itemsList: AnnouncementItem[]) => {
+    const salesMap: { [key: string]: Sale } = {};
+
+    // Get all sold product IDs
+    const soldProductIds = itemsList
+      .filter((item) => item.itemType === "product" && (item as Product & { itemType: "product" }).sold)
+      .map((item) => item.id);
+
+    if (soldProductIds.length === 0) {
+      setSales(salesMap);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("sales")
+        .select("*")
+        .in("product_id", soldProductIds);
+
+      if (!error && data) {
+        for (const sale of data) {
+          salesMap[sale.product_id] = sale;
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching sales:", err);
+    }
+
+    setSales(salesMap);
   };
 
   const handleDelete = async (itemId: string, itemType: "product" | "room") => {
@@ -651,23 +694,26 @@ export function MineAnnoncerPage() {
                                 {formatTimeUntilDeletion(product.sold_at)}
                               </span>
                             </div>
-                            <button
-                              onClick={() => handleUnmarkAsSold(item.id)}
-                              disabled={unmarkingAsSoldId === item.id}
-                              className="mt-2 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {unmarkingAsSoldId === item.id ? (
-                                <>
-                                  <Loader2 className="w-5 h-5 animate-spin" />
-                                  <span>Annullerer...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle className="w-5 h-5" />
-                                  <span>Annuller solgt status</span>
-                                </>
-                              )}
-                            </button>
+                            {/* Only show cancel button if sale is not completed */}
+                            {sales[item.id]?.status !== "completed" && (
+                              <button
+                                onClick={() => handleUnmarkAsSold(item.id)}
+                                disabled={unmarkingAsSoldId === item.id}
+                                className="mt-2 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {unmarkingAsSoldId === item.id ? (
+                                  <>
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    <span>Annullerer...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle className="w-5 h-5" />
+                                    <span>Annuller solgt status</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </>
                         )}
 
