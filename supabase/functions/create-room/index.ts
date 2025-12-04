@@ -1,5 +1,3 @@
-// @ts-nocheck
-// supabase/functions/create-room/index.ts
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.48.0";
 
@@ -12,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, PUT, OPTIONS",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 function jsonResponse(body: unknown, init?: ResponseInit) {
@@ -37,200 +35,169 @@ function unauthorized(message: string) {
 // Validation constants
 const MAX_LENGTHS = {
   name: 200,
-  address: 500,
-  location: 200,
+  address: 300,
   description: 5000,
-  payment_type: 50,
-  type: 50,
 };
 
-function validateRoom(data: any, isUpdate: boolean = false) {
-  // Required fields for creation
-  if (!isUpdate) {
-    if (!data.type) {
-      return "Type er påkrævet";
-    }
-    if (!data.image_urls || !Array.isArray(data.image_urls) || data.image_urls.length === 0) {
-      return "Mindst ét billede er påkrævet";
-    }
-  }
-
-  // Validate lengths
-  if (data.name && data.name.length > MAX_LENGTHS.name) {
-    return `Navn må højst være ${MAX_LENGTHS.name} tegn`;
-  }
-  if (data.address && data.address.length > MAX_LENGTHS.address) {
-    return `Adresse må højst være ${MAX_LENGTHS.address} tegn`;
-  }
-  if (data.location && data.location.length > MAX_LENGTHS.location) {
-    return `Lokation må højst være ${MAX_LENGTHS.location} tegn`;
-  }
-  if (data.description && data.description.length > MAX_LENGTHS.description) {
-    return `Beskrivelse må højst være ${MAX_LENGTHS.description} tegn`;
-  }
-  if (data.payment_type && data.payment_type.length > MAX_LENGTHS.payment_type) {
-    return `Betalingstype må højst være ${MAX_LENGTHS.payment_type} tegn`;
-  }
-  if (data.type && data.type.length > MAX_LENGTHS.type) {
-    return `Type må højst være ${MAX_LENGTHS.type} tegn`;
-  }
-
-  // Validate price
-  if (data.price !== null && data.price !== undefined) {
-    const price = parseFloat(data.price);
-    if (isNaN(price) || price < 0) {
-      return "Pris skal være et positivt tal";
-    }
-    if (price > 99999999.99) {
-      return "Pris er for høj";
-    }
-  }
-
-  // Validate room_size
-  if (data.room_size !== null && data.room_size !== undefined) {
-    const size = parseFloat(data.room_size);
-    if (isNaN(size) || size < 0) {
-      return "Størrelse skal være et positivt tal";
-    }
-    if (size > 10000) {
-      return "Størrelse er for stor";
-    }
-  }
-
-  // Validate type
-  const validTypes = ["Musikstudie", "Øvelokale", "Andet"];
-  if (data.type && !validTypes.includes(data.type)) {
-    return "Ugyldig type. Vælg mellem Musikstudie, Øvelokale eller Andet";
-  }
-
-  // Validate payment_type
-  const validPaymentTypes = ["pr/time", "pr måned"];
-  if (data.payment_type && !validPaymentTypes.includes(data.payment_type)) {
-    return "Ugyldig betalingstype";
-  }
-
-  // Validate image_urls
-  if (data.image_urls) {
-    if (!Array.isArray(data.image_urls)) {
-      return "image_urls skal være en array";
-    }
-    if (data.image_urls.length > 10) {
-      return "Maksimalt 10 billeder tilladt";
-    }
-    for (const url of data.image_urls) {
-      if (typeof url !== "string" || url.length > 500) {
-        return "Ugyldig billede URL";
-      }
-    }
-  }
-
-  return null;
-}
+const VALID_TYPES = ["Musikstudie", "Øvelokale", "Andet"];
+const VALID_PAYMENT_TYPES = ["pr/time", "pr måned"];
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  if (req.method !== "POST") {
-    return jsonResponse("Method not allowed", { status: 405 });
-  }
-
-  // Get auth token
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader) {
-    return unauthorized("Manglende autorisation");
-  }
-
-  const token = authHeader.replace("Bearer ", "");
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser(token);
-
-  if (authError || !user) {
-    return unauthorized("Ugyldig eller manglende bruger");
-  }
-
-  let body: any;
   try {
-    body = await req.json();
-  } catch {
-    return badRequest("Ugyldigt JSON-body");
-  }
+    // Get user from authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return unauthorized("Ingen authorization header");
+    }
 
-  const isUpdate = !!body.id;
-  const validationError = validateRoom(body, isUpdate);
-  if (validationError) {
-    return badRequest(validationError);
-  }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
-  // Prepare room data
-  const roomData: any = {
-    name: body.name?.trim() || null,
-    address: body.address?.trim() || null,
-    location: body.location?.trim() || null,
-    description: body.description?.trim() || null,
-    payment_type: body.payment_type?.trim() || null,
-    price: body.price ? parseFloat(body.price) : null,
-    room_size: body.room_size ? parseFloat(body.room_size) : null,
-    type: body.type?.trim(),
-    image_urls: body.image_urls || [],
-  };
+    if (authError || !user) {
+      return unauthorized("Unauthorized");
+    }
 
-  try {
-    if (isUpdate && body.id) {
+    const {
+      id,
+      type,
+      name,
+      address,
+      location,
+      description,
+      payment_type,
+      price,
+      room_size,
+      image_urls,
+    } = await req.json();
+
+    // Validate required fields
+    if (!type) {
+      return badRequest("Type er påkrævet");
+    }
+
+    if (!VALID_TYPES.includes(type)) {
+      return badRequest(`Type skal være en af: ${VALID_TYPES.join(", ")}`);
+    }
+
+    if (!payment_type) {
+      return badRequest("Betalingstype er påkrævet");
+    }
+
+    if (!VALID_PAYMENT_TYPES.includes(payment_type)) {
+      return badRequest(`Betalingstype skal være en af: ${VALID_PAYMENT_TYPES.join(", ")}`);
+    }
+
+    // Validate string lengths
+    if (name && name.length > MAX_LENGTHS.name) {
+      return badRequest(`Navn må maks være ${MAX_LENGTHS.name} tegn`);
+    }
+
+    if (address && address.length > MAX_LENGTHS.address) {
+      return badRequest(`Adresse må maks være ${MAX_LENGTHS.address} tegn`);
+    }
+
+    if (description && description.length > MAX_LENGTHS.description) {
+      return badRequest(`Beskrivelse må maks være ${MAX_LENGTHS.description} tegn`);
+    }
+
+    // Validate numbers
+    if (price !== null && price !== undefined) {
+      const priceNum = parseFloat(price);
+      if (isNaN(priceNum) || priceNum < 0) {
+        return badRequest("Pris skal være et positivt tal");
+      }
+    }
+
+    if (room_size !== null && room_size !== undefined) {
+      const sizeNum = parseFloat(room_size);
+      if (isNaN(sizeNum) || sizeNum < 0) {
+        return badRequest("Størrelse skal være et positivt tal");
+      }
+    }
+
+    // Validate image URLs
+    if (image_urls) {
+      if (!Array.isArray(image_urls)) {
+        return badRequest("image_urls skal være en array");
+      }
+      if (image_urls.length > 6) {
+        return badRequest("Maks 6 billeder tilladt");
+      }
+      // Validate each URL
+      for (const url of image_urls) {
+        if (typeof url !== "string" || !url.startsWith("http")) {
+          return badRequest("Ugyldigt billede URL");
+        }
+      }
+    }
+
+    const roomData = {
+      type,
+      name: name || null,
+      address: address || null,
+      location: location || null,
+      description: description || null,
+      payment_type,
+      price: price !== null && price !== undefined ? parseFloat(price) : null,
+      room_size: room_size !== null && room_size !== undefined ? parseFloat(room_size) : null,
+      image_urls: image_urls || [],
+    };
+
+    if (id) {
       // Update existing room
+      // Verify ownership
       const { data: existingRoom, error: fetchError } = await supabase
         .from("rehearsal_rooms")
         .select("user_id")
-        .eq("id", body.id)
+        .eq("id", id)
         .single();
 
       if (fetchError || !existingRoom) {
-        return badRequest("Lokale ikke fundet");
+        return jsonResponse({ error: "Lokale ikke fundet" }, { status: 404 });
       }
 
       if (existingRoom.user_id !== user.id) {
-        return unauthorized("Du har ikke tilladelse til at opdatere dette lokale");
+        return jsonResponse({ error: "Du har ikke tilladelse til at redigere dette lokale" }, { status: 403 });
       }
 
-      const { error: updateError } = await supabase
+      const { data: room, error: updateError } = await supabase
         .from("rehearsal_rooms")
         .update(roomData)
-        .eq("id", body.id)
-        .eq("user_id", user.id);
+        .eq("id", id)
+        .eq("user_id", user.id)
+        .select()
+        .single();
 
       if (updateError) {
-        return badRequest(updateError.message || "Kunne ikke opdatere lokale");
+        console.error("Error updating room:", updateError);
+        return jsonResponse({ error: "Kunne ikke opdatere lokale" }, { status: 500 });
       }
 
-      return jsonResponse(
-        { message: "Lokale opdateret", id: body.id },
-        { status: 200 }
-      );
+      return jsonResponse({ room }, { status: 200 });
     } else {
       // Create new room
-      roomData.user_id = user.id;
-
-      const { data, error: insertError } = await supabase
+      const { data: room, error: insertError } = await supabase
         .from("rehearsal_rooms")
-        .insert(roomData)
-        .select("id")
+        .insert({
+          ...roomData,
+          user_id: user.id,
+        })
+        .select()
         .single();
 
       if (insertError) {
-        return badRequest(insertError.message || "Kunne ikke oprette lokale");
+        console.error("Error creating room:", insertError);
+        return jsonResponse({ error: "Kunne ikke oprette lokale" }, { status: 500 });
       }
 
-      return jsonResponse(
-        { message: "Lokale oprettet", id: data.id },
-        { status: 201 }
-      );
+      return jsonResponse({ room }, { status: 201 });
     }
-  } catch (err: any) {
-    return badRequest(err.message || "Der skete en fejl");
+  } catch (error) {
+    console.error("Error in create-room function:", error);
+    return jsonResponse({ error: "Der skete en intern fejl" }, { status: 500 });
   }
 });
-

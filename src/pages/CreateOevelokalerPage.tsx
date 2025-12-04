@@ -254,44 +254,46 @@ export function CreateOevelokalerPage() {
       // Upload new images and get all image URLs
       const imageUrls = await uploadImages();
 
-      const roomData = {
+      const payload = {
+        id: isEditMode && editRoom ? editRoom.id : undefined,
+        type: formData.type,
         name: formData.name || null,
         address: formData.address || null,
         location: formData.location || null,
         description: formData.description || null,
-        payment_type: formData.paymentType || null,
+        payment_type: formData.paymentType,
         price: formData.price ? parseFloat(formData.price) : null,
         room_size: formData.roomSize ? parseFloat(formData.roomSize) : null,
-        type: formData.type,
         image_urls: imageUrls,
       };
 
-      if (isEditMode && editRoom) {
-        // Update existing room
-        const { error: updateError } = await supabase
-          .from("rehearsal_rooms")
-          .update(roomData)
-          .eq("id", editRoom.id)
-          .eq("user_id", user.id);
+      const { error: functionError } = await supabase.functions.invoke(
+        "create-room",
+        {
+          body: payload,
+        }
+      );
 
-        if (updateError) throw updateError;
+      if (functionError) throw functionError;
 
+      if (isEditMode) {
         navigate("/mine-annoncer", { state: { message: "Annonce opdateret!" } });
       } else {
-        // Create new room
-        const { error: insertError } = await supabase
-          .from("rehearsal_rooms")
-          .insert({
-            ...roomData,
-            user_id: user.id,
-          });
-
-        if (insertError) throw insertError;
-
         navigate("/oevelokaler", { state: { message: "Annonce oprettet!" } });
       }
     } catch (err: any) {
-      setError(err.message || "Der skete en fejl");
+      console.error("Error submitting room:", err);
+      // Try to parse error message if it's a JSON string from edge function
+      let errorMessage = "Der skete en fejl";
+      if (err.message) {
+        try {
+          const errorObj = JSON.parse(err.message);
+          errorMessage = errorObj.error || errorMessage;
+        } catch {
+          errorMessage = err.message;
+        }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -358,6 +360,7 @@ export function CreateOevelokalerPage() {
               <label className="text-sm font-medium text-gray-300">Navn</label>
               <input
                 type="text"
+                maxLength={200}
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -365,6 +368,9 @@ export function CreateOevelokalerPage() {
                 placeholder="F.eks. Musikstudie i København"
                 className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
               />
+              <p className="text-xs text-muted-foreground">
+                {formData.name.length}/200 tegn
+              </p>
             </div>
 
             {/* Address */}
@@ -372,6 +378,7 @@ export function CreateOevelokalerPage() {
               <label className="text-sm font-medium text-gray-300">Adresse</label>
               <input
                 type="text"
+                maxLength={300}
                 value={formData.address}
                 onChange={(e) =>
                   setFormData({ ...formData, address: e.target.value })
@@ -379,6 +386,9 @@ export function CreateOevelokalerPage() {
                 placeholder="F.eks. Nørregade 12, 1. sal"
                 className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
               />
+              <p className="text-xs text-muted-foreground">
+                {formData.address.length}/300 tegn
+              </p>
             </div>
 
             {/* Location */}
@@ -406,6 +416,7 @@ export function CreateOevelokalerPage() {
                 Beskrivelse
               </label>
               <textarea
+                maxLength={5000}
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -414,6 +425,9 @@ export function CreateOevelokalerPage() {
                 rows={4}
                 className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all resize-none"
               />
+              <p className="text-xs text-muted-foreground">
+                {formData.description.length}/5000 tegn
+              </p>
             </div>
 
             {/* Payment Type and Price */}
