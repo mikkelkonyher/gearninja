@@ -371,6 +371,13 @@ export function ChatPage() {
     if (!newMessage.trim() || !chat?.id || !currentUserId || sending) return;
 
     const messageContent = newMessage.trim();
+    
+    // Client-side validation
+    if (messageContent.length > 1000) {
+      alert("Beskeden er for lang (maks 1000 tegn).");
+      return;
+    }
+
     const tempId = `temp-${Date.now()}`;
 
     // Optimistic update - show message immediately
@@ -391,15 +398,12 @@ export function ChatPage() {
     scrollToBottom();
 
     try {
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
+      const { data, error } = await supabase.functions.invoke("send-chat-message", {
+        body: {
           chat_id: chat.id,
-          sender_id: currentUserId,
           content: messageContent,
-        })
-        .select()
-        .single();
+        },
+      });
 
       if (error) throw error;
 
@@ -419,7 +423,19 @@ export function ChatPage() {
       // Remove optimistic message on error
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setNewMessage(messageContent); // Restore message on error
-      alert("Kunne ikke sende besked. Prøv igen.");
+      
+      // Show specific error message if available
+      if (err.message) {
+         // Try to parse error message if it's a JSON string
+         try {
+            const errorObj = JSON.parse(err.message);
+            alert(errorObj.error || "Kunne ikke sende besked.");
+         } catch {
+            alert(err.message || "Kunne ikke sende besked. Prøv igen.");
+         }
+      } else {
+        alert("Kunne ikke sende besked. Prøv igen.");
+      }
     } finally {
       setSending(false);
     }
