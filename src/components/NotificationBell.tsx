@@ -220,8 +220,8 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     if (notification.type === "new_message" && notification.chat_id) {
       // Navigate to chat
       navigate(`/chat/${notification.chat_id}`);
-    } else if (notification.type === "sale_request") {
-      // For sale requests, navigate to the product detail page
+    } else if (notification.type === "sale_request" || notification.type === "sale_declined") {
+      // For sale requests and declines, navigate to the product detail page
       try {
         const { data: productData, error } = await supabase
           .from("products")
@@ -442,6 +442,16 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                                   : notification.product_brand ||
                                     notification.product_model ||
                                     "et produkt"}
+                              </>
+                            ) : notification.type === "sale_declined" ? (
+                              <>
+                                {notification.favoriter_username || "Nogen"} har afvist købet af{" "}
+                                {notification.product_brand &&
+                                notification.product_model
+                                  ? `${notification.product_brand} ${notification.product_model}`
+                                  : notification.product_brand ||
+                                    notification.product_model ||
+                                    "dit produkt"}
                               </>
                             ) : notification.type === "product_sold" ? (
                               <>

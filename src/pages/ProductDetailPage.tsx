@@ -191,6 +191,40 @@ export function ProductDetailPage() {
     }
   };
 
+  const handleDeclineSale = async () => {
+    if (!sale) return;
+
+    const confirmed = window.confirm(
+      "Er du sikker på, at du vil afvise dette køb? Sælger vil kunne vælge en anden køber."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setProcessingSale(true);
+      const { data, error } = await supabase.rpc("decline_sale", {
+        p_sale_id: sale.id,
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        // Refresh the product to show it's no longer sold
+        if (id) {
+          await fetchProduct(id);
+        }
+        setSale(null);
+      } else {
+        throw new Error(data.error || "Der skete en fejl");
+      }
+    } catch (err: any) {
+      console.error("Error declining sale:", err);
+      alert("Fejl ved afvisning af salg: " + err.message);
+    } finally {
+      setProcessingSale(false);
+    }
+  };
+
   const nextImage = () => {
     if (!product || !product.image_urls) return;
     setCurrentImageIndex((prev) =>
@@ -436,14 +470,23 @@ export function ProductDetailPage() {
                         <p className="text-sm text-muted-foreground">Sælger har valgt dig som køber</p>
                       </div>
                     </div>
-                    <button
-                      onClick={handleConfirmSale}
-                      disabled={processingSale}
-                      className="w-full px-6 py-4 rounded-lg bg-[#00FFFF] text-black font-bold text-lg hover:bg-[#00FFFF]/80 transition-all hover:scale-105 shadow-[0_0_20px_rgba(0,255,255,0.5)] flex items-center justify-center gap-2"
-                    >
-                      {processingSale && <Loader2 className="w-5 h-5 animate-spin" />}
-                      Bekræft køb nu
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleDeclineSale}
+                        disabled={processingSale}
+                        className="flex-1 px-6 py-4 rounded-lg bg-secondary/50 border border-white/20 text-white font-medium hover:bg-secondary/70 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Afvis
+                      </button>
+                      <button
+                        onClick={handleConfirmSale}
+                        disabled={processingSale}
+                        className="flex-1 px-6 py-4 rounded-lg bg-[#00FFFF] text-black font-bold text-lg hover:bg-[#00FFFF]/80 transition-all hover:scale-105 shadow-[0_0_20px_rgba(0,255,255,0.5)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none"
+                      >
+                        {processingSale && <Loader2 className="w-5 h-5 animate-spin" />}
+                        Bekræft køb
+                      </button>
+                    </div>
                   </div>
                 )}
 
