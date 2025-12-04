@@ -60,6 +60,7 @@ interface Sale {
   status: "pending" | "completed" | "cancelled";
   buyer_id: string;
   seller_id: string;
+  buyer_username?: string;
 }
 
 export function MineAnnoncerPage() {
@@ -230,8 +231,24 @@ export function MineAnnoncerPage() {
         .in("product_id", soldProductIds);
 
       if (!error && data) {
+        // Fetch buyer usernames for all sales
         for (const sale of data) {
-          salesMap[sale.product_id] = sale;
+          try {
+            const { data: usernameData } = await supabase.rpc(
+              "get_user_username",
+              { user_uuid: sale.buyer_id }
+            );
+            salesMap[sale.product_id] = {
+              ...sale,
+              buyer_username: usernameData?.username || "Køber",
+            };
+          } catch (err) {
+            console.error("Error fetching buyer username:", err);
+            salesMap[sale.product_id] = {
+              ...sale,
+              buyer_username: "Køber",
+            };
+          }
         }
       }
     } catch (err) {
@@ -716,7 +733,7 @@ export function MineAnnoncerPage() {
                         </button>
                       )}
 
-                      {/* Countdown and Unmark Button for Sold Products */}
+                      {/* Status Display for Sold Products */}
                       {isProduct &&
                         product &&
                         product.sold &&
@@ -728,6 +745,12 @@ export function MineAnnoncerPage() {
                                 {formatTimeUntilDeletion(product.sold_at)}
                               </span>
                             </div>
+                            {/* Show buyer username if sale is completed */}
+                            {sales[item.id]?.status === "completed" && (
+                              <p className="mt-1 text-xs text-muted-foreground text-center">
+                                Solgt til {sales[item.id]?.buyer_username || "køber"}
+                              </p>
+                            )}
                             {/* Only show cancel button if sale is not completed */}
                             {sales[item.id]?.status !== "completed" && (
                               <button
