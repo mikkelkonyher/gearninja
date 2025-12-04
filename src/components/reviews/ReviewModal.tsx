@@ -38,39 +38,34 @@ export function ReviewModal({
 
       if (!user) throw new Error("Du skal være logget ind");
 
-      // Get sale details to determine reviewee
-      const { data: sale, error: saleError } = await supabase
-        .from("sales")
-        .select("seller_id, buyer_id")
-        .eq("id", saleId)
-        .single();
-
-      if (saleError) throw saleError;
-
-      const revieweeId =
-        user.id === sale.seller_id ? sale.buyer_id : sale.seller_id;
-
-      const { error: reviewError } = await supabase.from("reviews").insert({
-        sale_id: saleId,
-        reviewer_id: user.id,
-        reviewee_id: revieweeId,
-        rating,
-        content,
-      });
-
-      if (reviewError) {
-        // Check if it's a duplicate review error
-        if (reviewError.code === '23505') {
-          throw new Error('Du har allerede skrevet en anmeldelse for dette salg');
+      const { error: functionError } = await supabase.functions.invoke(
+        "create-review",
+        {
+          body: {
+            sale_id: saleId,
+            rating,
+            content: content || null,
+          },
         }
-        throw reviewError;
-      }
+      );
+
+      if (functionError) throw functionError;
 
       onReviewSubmitted();
       onClose();
     } catch (err: any) {
       console.error("Error submitting review:", err);
-      setError(err.message || "Der skete en fejl");
+      // Try to parse error message if it's a JSON string from edge function
+      let errorMessage = "Der skete en fejl";
+      if (err.message) {
+        try {
+          const errorObj = JSON.parse(err.message);
+          errorMessage = errorObj.error || errorMessage;
+        } catch {
+          errorMessage = err.message;
+        }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -134,9 +129,13 @@ export function ReviewModal({
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
+                  maxLength={1000}
                   placeholder="Skriv din oplevelse af handlen..."
                   className="w-full h-32 px-4 py-3 rounded-lg bg-secondary/50 border border-white/10 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue resize-none"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {content.length}/1000 tegn
+                </p>
               </div>
 
               <div className="flex justify-end gap-3">

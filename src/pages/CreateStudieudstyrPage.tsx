@@ -267,62 +267,55 @@ export function CreateStudieudstyrPage() {
         await deleteRemovedImages();
       }
 
-      // Upload images and get all image URLs (existing + new)
+      // Upload new images and get all image URLs
       const imageUrls = await uploadImages();
 
-      if (isEditMode && editProduct) {
-        // Update existing product
-        const { error: updateError } = await supabase
-          .from("products")
-          .update({
-            type: formData.type,
-            brand: formData.brand || null,
-            model: formData.model || null,
-            description: formData.description || null,
-            price: formData.price ? parseFloat(formData.price) : null,
-            location: formData.location || null,
-            condition: formData.condition || null,
-            year:
-              formData.year && formData.year !== "Ved ikke"
-                ? parseInt(formData.year)
-                : null,
-            image_urls: imageUrls,
-          })
-          .eq("id", editProduct.id)
-          .eq("user_id", user.id);
+      const payload = {
+        id: isEditMode && editProduct ? editProduct.id : undefined,
+        category: "studieudstyr",
+        type: formData.type,
+        brand: formData.brand || null,
+        model: formData.model || null,
+        description: formData.description || null,
+        price: formData.price ? parseFloat(formData.price) : null,
+        location: formData.location || null,
+        condition: formData.condition || null,
+        year:
+          formData.year && formData.year !== "Ved ikke"
+            ? parseInt(formData.year)
+            : null,
+        image_urls: imageUrls,
+      };
 
-        if (updateError) throw updateError;
+      const { error: functionError } = await supabase.functions.invoke(
+        "create-product",
+        {
+          body: payload,
+        }
+      );
 
+      if (functionError) throw functionError;
+
+      if (isEditMode) {
         navigate("/mine-annoncer", {
           state: { message: "Annonce opdateret!" },
         });
       } else {
-        // Create product
-        const { error: insertError } = await supabase
-          .from("products")
-          .insert({
-            user_id: user.id,
-            category: "studieudstyr",
-            type: formData.type,
-            brand: formData.brand || null,
-            model: formData.model || null,
-            description: formData.description || null,
-            price: formData.price ? parseFloat(formData.price) : null,
-            location: formData.location || null,
-            condition: formData.condition || null,
-            year:
-              formData.year && formData.year !== "Ved ikke"
-                ? parseInt(formData.year)
-                : null,
-            image_urls: imageUrls,
-          });
-
-        if (insertError) throw insertError;
-
         navigate("/studieudstyr", { state: { message: "Annonce oprettet!" } });
       }
     } catch (err: any) {
-      setError(err.message || "Der skete en fejl under oprettelsen");
+      console.error("Error submitting product:", err);
+      // Try to parse error message if it's a JSON string from edge function
+      let errorMessage = "Der skete en fejl under oprettelsen";
+      if (err.message) {
+         try {
+            const errorObj = JSON.parse(err.message);
+            errorMessage = errorObj.error || errorMessage;
+         } catch {
+            errorMessage = err.message;
+         }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -396,6 +389,7 @@ export function CreateStudieudstyrPage() {
                 </label>
                 <input
                   type="text"
+                  maxLength={100}
                   value={formData.brand}
                   onChange={(e) =>
                     setFormData({ ...formData, brand: e.target.value })
@@ -403,6 +397,9 @@ export function CreateStudieudstyrPage() {
                   className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
                   placeholder="f.eks. Shure, Universal Audio"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {formData.brand.length}/100 tegn
+                </p>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
@@ -410,6 +407,7 @@ export function CreateStudieudstyrPage() {
                 </label>
                 <input
                   type="text"
+                  maxLength={100}
                   value={formData.model}
                   onChange={(e) =>
                     setFormData({ ...formData, model: e.target.value })
@@ -417,6 +415,9 @@ export function CreateStudieudstyrPage() {
                   className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
                   placeholder="f.eks. SM7B"
                 />
+                <p className="text-xs text-muted-foreground">
+                  {formData.model.length}/100 tegn
+                </p>
               </div>
             </div>
 
@@ -426,6 +427,7 @@ export function CreateStudieudstyrPage() {
                 Beskrivelse
               </label>
               <textarea
+                maxLength={5000}
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -434,6 +436,9 @@ export function CreateStudieudstyrPage() {
                 className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all resize-none"
                 placeholder="Beskriv produktet..."
               />
+              <p className="text-xs text-muted-foreground">
+                {formData.description.length}/5000 tegn
+              </p>
             </div>
 
             {/* Price, Location, Condition, Year */}

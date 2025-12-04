@@ -5,7 +5,6 @@ import { ArrowLeft, Upload, X, GripVertical, Loader2 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
 import { compressImageFile } from "../lib/utils";
-import { extractEdgeFunctionError } from "../lib/edgeFunctionError";
 
 const drumTypes = [
   "Akustiske trommer",
@@ -270,7 +269,8 @@ export function CreateTrommerPage() {
       // Upload new images and get all image URLs
       const imageUrls = await uploadImages();
 
-      const productData = {
+      const payload = {
+        id: isEditMode && editProduct ? editProduct.id : undefined,
         category: "trommer",
         type: formData.type,
         brand: formData.brand || null,
@@ -286,39 +286,14 @@ export function CreateTrommerPage() {
         image_urls: imageUrls,
       };
 
-      // Get auth token for Edge Function
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Du skal være logget ind");
-      }
-
-      // Call Edge Function
-      const { data, error: functionError } = await supabase.functions.invoke(
+      const { error: functionError } = await supabase.functions.invoke(
         "create-product",
         {
-          body:
-            isEditMode && editProduct
-              ? { ...productData, id: editProduct.id }
-              : productData,
-          headers: {
-            authorization: `Bearer ${session.access_token}`,
-            apikey:
-              import.meta.env.PUSHIABLE_API_KEY ||
-              import.meta.env.VITE_PUSHIABLE_API_KEY ||
-              "",
-          },
+          body: payload,
         }
       );
 
-      if (functionError) {
-        const errorMessage = await extractEdgeFunctionError(
-          functionError,
-          data
-        );
-        throw new Error(errorMessage);
-      }
+      if (functionError) throw functionError;
 
       if (isEditMode) {
         navigate("/mine-annoncer", {
@@ -328,7 +303,18 @@ export function CreateTrommerPage() {
         navigate("/trommer", { state: { message: "Annonce oprettet!" } });
       }
     } catch (err: any) {
-      setError(err.message || "Der skete en fejl");
+      console.error("Error submitting product:", err);
+      // Try to parse error message if it's a JSON string from edge function
+      let errorMessage = "Der skete en fejl";
+      if (err.message) {
+         try {
+            const errorObj = JSON.parse(err.message);
+            errorMessage = errorObj.error || errorMessage;
+         } catch {
+            errorMessage = err.message;
+         }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
