@@ -82,7 +82,15 @@ export function ChatPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    setCurrentUserId(user?.id || null);
+    
+    if (!user) {
+      // User not logged in
+      alert("Du skal være logget ind for at se beskeder. Du bliver nu omdirigeret til login-siden.");
+      navigate("/login", { state: { from: `/chat/${chatId}` } });
+      return;
+    }
+    
+    setCurrentUserId(user.id);
   };
 
   const createOrGetChat = async () => {
@@ -165,7 +173,19 @@ export function ChatPage() {
         .eq("id", chatId)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching chat:", error);
+        alert("Denne chat findes ikke eller du har ikke adgang til den.");
+        navigate("/chat");
+        return;
+      }
+
+      // Check if user is part of this chat
+      if (data.buyer_id !== currentUserId && data.seller_id !== currentUserId) {
+        alert("Du har ikke adgang til denne chat. Du er ikke en del af denne samtale.");
+        navigate("/chat");
+        return;
+      }
 
       // Determine other user
       const otherUserId =
