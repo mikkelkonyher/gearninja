@@ -24,7 +24,7 @@ import { StrygerePage } from './pages/StrygerePage';
 import { ProfilePage } from './pages/ProfilePage';
 import { MineAnnoncerPage } from './pages/MineAnnoncerPage';
 import { FavoritterPage } from './pages/FavoritterPage';
-import { FoelgerePage } from './pages/FoelgerePage';
+
 import { IndstillingerPage } from './pages/IndstillingerPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { CreateOevelokalerPage } from './pages/CreateOevelokalerPage';
@@ -71,7 +71,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/mine-annoncer" element={<MineAnnoncerPage />} />
           <Route path="/favoritter" element={<FavoritterPage />} />
-          <Route path="/foelgere" element={<FoelgerePage />} />
+
           <Route path="/indstillinger" element={<IndstillingerPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           {/* Placeholder for category routes */}
