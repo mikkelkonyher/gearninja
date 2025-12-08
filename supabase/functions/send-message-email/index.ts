@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
 
     const senderName = senderUsername?.username || "En bruger";
     const messagePreview = content.length > 100 ? content.substring(0, 100) + "..." : content;
-    const chatUrl = `https://gearninja.vercel.app/chat/${chat_id}`;
+    const chatUrl = `https://gearninja.dk/chat/${chat_id}`;
 
     // Create email HTML
     const emailHtml = `
