@@ -104,8 +104,8 @@ Deno.serve(async (req) => {
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f4f4f4; }
           .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
-          .header { background-color: #ffffff; padding: 30px 20px; text-align: center; border-bottom: 3px solid #4A90E2; }
-          .logo { max-width: 180px; height: auto; }
+          .header { background-color: #4A90E2; padding: 30px 20px; text-align: center; }
+          .header h1 { margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: 0.5px; }
           .content { padding: 40px 30px; background-color: #ffffff; }
           .greeting { color: #333333; font-size: 18px; margin-bottom: 20px; }
           .message-box { background-color: #f8f9fa; padding: 20px; border-left: 4px solid #4A90E2; margin: 25px 0; border-radius: 4px; }
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
       <body>
         <div class="container">
           <div class="header">
-            <img src="https://gearninja.vercel.app/logo.png" alt="Gearninja" class="logo">
+            <h1>Gearninja</h1>
           </div>
           <div class="content">
             <p class="greeting">Hej,</p>
