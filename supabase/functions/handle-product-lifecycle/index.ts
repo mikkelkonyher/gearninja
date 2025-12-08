@@ -8,8 +8,8 @@ Deno.serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Call the handle_product_lifecycle function
-    const { data, error } = await supabase.rpc('handle_product_lifecycle')
+    // Call the handle_soft_deletions function
+    const { data, error } = await supabase.rpc('handle_soft_deletions')
 
     if (error) {
       console.error('Error calling handle_product_lifecycle:', error)
