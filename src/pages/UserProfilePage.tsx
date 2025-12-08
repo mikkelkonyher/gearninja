@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Star, Package, MapPin, Calendar, UserX } from "lucide-react";
+import { ArrowLeft, Star, Package, UserX } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Loader2 } from "lucide-react";
 
