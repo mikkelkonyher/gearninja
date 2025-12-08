@@ -100,33 +100,46 @@ Deno.serve(async (req) => {
       <html>
       <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background: #00FFFF; color: #000; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-          .content { background: #f9f9f9; padding: 30px; margin: 0; border-radius: 0 0 8px 8px; }
-          .message-box { background: white; padding: 20px; border-left: 4px solid #00FFFF; margin: 20px 0; border-radius: 4px; }
-          .button { display: inline-block; padding: 14px 28px; background: #00FFFF; color: #000; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
-          .footer { text-align: center; color: #666; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; }
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 0; background-color: #f4f4f4; }
+          .container { max-width: 600px; margin: 0 auto; background-color: #ffffff; }
+          .header { background-color: #ffffff; padding: 30px 20px; text-align: center; border-bottom: 3px solid #4A90E2; }
+          .logo { max-width: 180px; height: auto; }
+          .content { padding: 40px 30px; background-color: #ffffff; }
+          .greeting { color: #333333; font-size: 18px; margin-bottom: 20px; }
+          .message-box { background-color: #f8f9fa; padding: 20px; border-left: 4px solid #4A90E2; margin: 25px 0; border-radius: 4px; }
+          .message-text { margin: 0; color: #555555; font-style: italic; }
+          .button-container { text-align: center; margin: 30px 0; }
+          .button { display: inline-block; padding: 14px 32px; background-color: #4A90E2; color: #ffffff; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 16px; }
+          .button:hover { background-color: #357ABD; }
+          .footer { background-color: #f8f9fa; padding: 20px 30px; text-align: center; color: #666666; font-size: 13px; border-top: 1px solid #e0e0e0; }
+          .footer p { margin: 5px 0; }
+          @media only screen and (max-width: 600px) {
+            .content { padding: 30px 20px; }
+            .button { display: block; margin: 20px auto; }
+          }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
-            <h1 style="margin: 0;">Gearninja</h1>
+            <img src="https://gearninja.vercel.app/logo.png" alt="Gearninja" class="logo">
           </div>
           <div class="content">
-            <h2 style="color: #333; margin-top: 0;">Ny besked fra ${senderName}</h2>
-            <p style="color: #666;">Du har modtaget en ny besked om <strong>${itemName}</strong>:</p>
+            <p class="greeting">Hej,</p>
+            <p style="color: #555555; margin-bottom: 20px;">Du har modtaget en ny besked fra <strong>${senderName}</strong> vedrørende <strong>${itemName}</strong>:</p>
             <div class="message-box">
-              <p style="margin: 0; color: #333;">"${messagePreview}"</p>
+              <p class="message-text">"${messagePreview}"</p>
             </div>
-            <div style="text-align: center;">
+            <div class="button-container">
               <a href="${chatUrl}" class="button">Læs og svar på beskeden</a>
             </div>
-            <div class="footer">
-              <p>Dette er en automatisk besked fra Gearninja</p>
-            </div>
+            <p style="color: #666666; font-size: 14px; margin-top: 30px;">Klik på knappen ovenfor for at se hele beskeden og svare.</p>
+          </div>
+          <div class="footer">
+            <p>Dette er en automatisk besked fra Gearninja</p>
+            <p style="margin-top: 10px;">© ${new Date().getFullYear()} Gearninja. Alle rettigheder forbeholdes.</p>
           </div>
         </div>
       </body>
