@@ -795,36 +795,27 @@ export function MineAnnoncerPage() {
                         </button>
                       )}
 
-                      {/* Countdown and Unmark Button for Rented Rooms */}
+                      {/* Unmark Button for Rented Rooms */}
                       {!isProduct &&
                         room &&
-                        room.rented_out &&
-                        room.rented_out_at && (
-                          <>
-                            <div className="mt-3 px-4 py-2 rounded-lg bg-orange-500/20 border border-orange-500/50 text-orange-400 flex items-center gap-2">
-                              <Clock className="w-4 h-4" />
-                              <span className="text-sm font-medium">
-                                {formatTimeUntilDeletion(room.rented_out_at)}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => handleUnmarkAsRented(item.id)}
-                              disabled={unmarkingAsRentedId === item.id}
-                              className="mt-2 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {unmarkingAsRentedId === item.id ? (
-                                <>
-                                  <Loader2 className="w-5 h-5 animate-spin" />
-                                  <span>Annullerer...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle className="w-5 h-5" />
-                                  <span>Marker som ledigt</span>
-                                </>
-                              )}
-                            </button>
-                          </>
+                        room.rented_out && (
+                          <button
+                            onClick={() => handleUnmarkAsRented(item.id)}
+                            disabled={unmarkingAsRentedId === item.id}
+                            className="mt-3 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {unmarkingAsRentedId === item.id ? (
+                              <>
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <span>Annullerer...</span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle className="w-5 h-5" />
+                                <span>Marker som ledigt</span>
+                              </>
+                            )}
+                          </button>
                         )}
                     </div>
                   </motion.div>
