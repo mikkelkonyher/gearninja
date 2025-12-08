@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 interface UsernameWithRatingProps {
@@ -78,7 +79,11 @@ export function UsernameWithRating({
 
   if (isInline) {
     return (
-      <span className={containerClassName}>
+      <Link 
+        to={`/user/${userId}`} 
+        className={`${containerClassName} hover:opacity-80 transition-opacity`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <span>{username || "Bruger"}</span>
         {showRating && (
           <>
@@ -107,13 +112,19 @@ export function UsernameWithRating({
             )}
           </>
         )}
-      </span>
+      </Link>
     );
   }
 
   return (
     <div className={containerClassName}>
-      <span className="text-white">{username || "Bruger"}</span>
+      <Link 
+        to={`/user/${userId}`} 
+        className="text-white hover:text-neon-blue transition-colors hover:underline"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {username || "Bruger"}
+      </Link>
       {showRating && (
         <>
           {averageRating !== null ? (

@@ -23,6 +23,7 @@ import { CreateStrygerePage } from './pages/CreateStrygerePage';
 import { StrygerePage } from './pages/StrygerePage';
 import { ProfilePage } from './pages/ProfilePage';
 import { MineAnnoncerPage } from './pages/MineAnnoncerPage';
+import { UserProfilePage } from './pages/UserProfilePage';
 import { FavoritterPage } from './pages/FavoritterPage';
 
 import { IndstillingerPage } from './pages/IndstillingerPage';
@@ -71,6 +72,7 @@ function App() {
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/mine-annoncer" element={<MineAnnoncerPage />} />
           <Route path="/favoritter" element={<FavoritterPage />} />
+          <Route path="/user/:userId" element={<UserProfilePage />} />
 
           <Route path="/indstillinger" element={<IndstillingerPage />} />
           <Route path="/search" element={<SearchResultsPage />} />

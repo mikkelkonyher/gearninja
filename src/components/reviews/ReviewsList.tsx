@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Star, User } from "lucide-react";
+import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 
 interface Review {
@@ -109,7 +110,10 @@ export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
             className="p-4 rounded-lg bg-secondary/20 border border-white/10"
           >
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
+              <Link 
+                to={`/user/${review.reviewer_id}`}
+                className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              >
                 <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center overflow-hidden">
                   {review.reviewer.avatar_url ? (
                     <img
@@ -121,10 +125,10 @@ export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
                     <User className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
-                <span className="font-medium text-white">
+                <span className="font-medium text-white hover:text-neon-blue transition-colors">
                   {review.reviewer.username}
                 </span>
-              </div>
+              </Link>
               <div className="flex gap-0.5">
                 {[...Array(5)].map((_, i) => (
                   <Star
