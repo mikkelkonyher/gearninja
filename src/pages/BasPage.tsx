@@ -247,7 +247,7 @@ export function BasPage() {
                     </div>
 
                     <div className="mt-auto pt-2 flex items-center justify-between">
-                      <span className="text-sm font-bold text-neon-blue">
+                      <span className="text-sm font-bold text-white">
                         {formatPrice(product.price)}
                       </span>
                       {product.location && (

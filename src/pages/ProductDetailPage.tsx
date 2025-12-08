@@ -432,7 +432,7 @@ export function ProductDetailPage() {
                   )}
                 </div>
                 <div className="flex items-center justify-between gap-4 mb-4">
-                  <p className="text-2xl font-bold text-neon-blue">
+                  <p className="text-2xl font-bold text-white">
                     {formatPrice(product.price)}
                   </p>
                   <FavoriteButton

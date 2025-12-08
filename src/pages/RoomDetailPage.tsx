@@ -305,7 +305,7 @@ export function RoomDetailPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between gap-4 mb-4">
-                  <div className="text-2xl font-bold text-neon-blue">
+                  <div className="text-2xl font-bold text-white">
                     {formatPrice(room.price, room.payment_type)}
                   </div>
                   <FavoriteButton

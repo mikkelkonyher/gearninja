@@ -707,7 +707,7 @@ export function MineAnnoncerPage() {
                           )}
 
                       <div className="mt-auto pt-2 flex items-center justify-between">
-                        <span className="text-sm font-bold text-neon-blue">
+                        <span className="text-sm font-bold text-white">
                           {isProduct && product
                             ? formatPrice(product.price)
                             : formatPrice(
