@@ -5,14 +5,24 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "https://www.gearninja.dk"
+];
+
+function getCorsHeaders(origin: string | null) {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(origin) });
   }
 
   try {
@@ -31,7 +41,7 @@ Deno.serve(async (req) => {
     if (!queueItems || queueItems.length === 0) {
       return new Response(JSON.stringify({ message: "No emails to process" }), {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
       });
     }
 
@@ -176,7 +186,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ processed: results.length, results }), {
       status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("Error in process-email-queue function:", error);

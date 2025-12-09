@@ -8,30 +8,38 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, PUT, OPTIONS",
-};
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "https://www.gearninja.dk"
+];
 
-function jsonResponse(body: unknown, init?: ResponseInit) {
+function getCorsHeaders(origin: string | null) {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, PUT, OPTIONS",
+  };
+}
+
+function jsonResponse(body: unknown, origin: string | null, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {
     ...init,
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers || {}),
-      ...corsHeaders,
+      ...getCorsHeaders(origin),
     },
   });
 }
 
-function badRequest(message: string) {
-  return jsonResponse({ error: message }, { status: 400 });
+function badRequest(message: string, origin: string | null) {
+  return jsonResponse({ error: message }, origin, { status: 400 });
 }
 
-function unauthorized(message: string) {
-  return jsonResponse({ error: message }, { status: 401 });
+function unauthorized(message: string, origin: string | null) {
+  return jsonResponse({ error: message }, origin, { status: 401 });
 }
 
 // Validation constants
@@ -130,19 +138,21 @@ function validateProduct(data: any, isUpdate: boolean = false) {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(origin) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse("Method not allowed", { status: 405 });
+    return jsonResponse("Method not allowed", origin, { status: 405 });
   }
 
   // Get auth token
   const authHeader = req.headers.get("authorization");
   if (!authHeader) {
-    return unauthorized("Manglende autorisation");
+    return unauthorized("Manglende autorisation", origin);
   }
 
   const token = authHeader.replace("Bearer ", "");
@@ -152,20 +162,20 @@ serve(async (req) => {
   } = await supabase.auth.getUser(token);
 
   if (authError || !user) {
-    return unauthorized("Ugyldig eller manglende bruger");
+    return unauthorized("Ugyldig eller manglende bruger", origin);
   }
 
   let body: any;
   try {
     body = await req.json();
   } catch {
-    return badRequest("Ugyldigt JSON-body");
+    return badRequest("Ugyldigt JSON-body", origin);
   }
 
   const isUpdate = !!body.id;
   const validationError = validateProduct(body, isUpdate);
   if (validationError) {
-    return badRequest(validationError);
+    return badRequest(validationError, origin);
   }
 
   // Prepare product data
@@ -195,11 +205,11 @@ serve(async (req) => {
         .single();
 
       if (fetchError || !existingProduct) {
-        return badRequest("Produkt ikke fundet");
+        return badRequest("Produkt ikke fundet", origin);
       }
 
       if (existingProduct.user_id !== user.id) {
-        return unauthorized("Du har ikke tilladelse til at opdatere dette produkt");
+        return unauthorized("Du har ikke tilladelse til at opdatere dette produkt", origin);
       }
 
       const { error: updateError } = await supabase
@@ -209,11 +219,12 @@ serve(async (req) => {
         .eq("user_id", user.id);
 
       if (updateError) {
-        return badRequest(updateError.message || "Kunne ikke opdatere produkt");
+        return badRequest(updateError.message || "Kunne ikke opdatere produkt", origin);
       }
 
       return jsonResponse(
         { message: "Produkt opdateret", id: body.id },
+        origin,
         { status: 200 }
       );
     } else {
@@ -227,16 +238,17 @@ serve(async (req) => {
         .single();
 
       if (insertError) {
-        return badRequest(insertError.message || "Kunne ikke oprette produkt");
+        return badRequest(insertError.message || "Kunne ikke oprette produkt", origin);
       }
 
       return jsonResponse(
         { message: "Produkt oprettet", id: data.id },
+        origin,
         { status: 201 }
       );
     }
   } catch (err: any) {
-    return badRequest(err.message || "Der skete en fejl");
+    return badRequest(err.message || "Der skete en fejl", origin);
   }
 });
 

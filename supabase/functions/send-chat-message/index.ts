@@ -1,16 +1,26 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "https://www.gearninja.dk"
+];
+
+function getCorsHeaders(origin: string | null) {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  
   // Handle CORS preflight request
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(origin) });
   }
 
   try {
@@ -31,7 +41,7 @@ serve(async (req) => {
     if (!user) {
       return new Response("Unauthorized", {
         status: 401,
-        headers: corsHeaders,
+        headers: getCorsHeaders(origin),
       });
     }
 
@@ -41,7 +51,7 @@ serve(async (req) => {
     if (!content || typeof content !== "string") {
       return new Response(JSON.stringify({ error: "Message content is required" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
       });
     }
 
@@ -50,7 +60,7 @@ serve(async (req) => {
         JSON.stringify({ error: "Message exceeds 1000 characters limit" }),
         {
           status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
         }
       );
     }
@@ -58,7 +68,7 @@ serve(async (req) => {
     if (!chat_id) {
       return new Response(JSON.stringify({ error: "Chat ID is required" }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
       });
     }
 
@@ -83,7 +93,7 @@ serve(async (req) => {
         JSON.stringify({ error: "Failed to check rate limit" }),
         {
           status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
         }
       );
     }
@@ -95,7 +105,7 @@ serve(async (req) => {
         }),
         {
           status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
         }
       );
     }
@@ -115,12 +125,12 @@ serve(async (req) => {
       console.error("Error inserting message:", error);
       return new Response(JSON.stringify({ error: error.message }), {
         status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
       });
     }
 
     return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {

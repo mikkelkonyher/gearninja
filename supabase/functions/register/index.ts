@@ -10,37 +10,47 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // CORS + JSON helpers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "https://www.gearninja.dk"
+];
 
-function jsonResponse(body: unknown, init?: ResponseInit) {
+function getCorsHeaders(origin: string | null) {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
+}
+
+function jsonResponse(body: unknown, origin: string | null, init?: ResponseInit) {
   return new Response(JSON.stringify(body), {
     ...init,
     headers: {
       "Content-Type": "application/json",
       ...(init?.headers || {}),
-      ...corsHeaders,
+      ...getCorsHeaders(origin),
     },
   });
 }
 
 // Simple helpers
-function badRequest(message: string) {
-  return jsonResponse({ error: message }, { status: 400 });
+function badRequest(message: string, origin: string | null) {
+  return jsonResponse({ error: message }, origin, { status: 400 });
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(origin) });
   }
 
   if (req.method !== "POST") {
-    return jsonResponse("Method not allowed", { status: 405 });
+    return jsonResponse("Method not allowed", origin, { status: 405 });
   }
 
   let body: { email?: string; password?: string; username?: string };
@@ -48,24 +58,24 @@ serve(async (req) => {
   try {
     body = await req.json();
   } catch {
-    return badRequest("Ugyldigt JSON-body");
+    return badRequest("Ugyldigt JSON-body", origin);
   }
 
   const { email, password, username } = body;
 
   // Basic presence validation
   if (!email || !password || !username) {
-    return badRequest("Email, brugernavn og adgangskode er påkrævet");
+    return badRequest("Email, brugernavn og adgangskode er påkrævet", origin);
   }
 
   const trimmedUsername = username.trim();
 
   // Username: max 20 chars
   if (trimmedUsername.length === 0) {
-    return badRequest("Brugernavn må ikke være tomt");
+    return badRequest("Brugernavn må ikke være tomt", origin);
   }
   if (trimmedUsername.length > 20) {
-    return badRequest("Brugernavn må højst være 20 tegn");
+    return badRequest("Brugernavn må højst være 20 tegn", origin);
   }
 
   // Password: at least 8 chars AND at least one digit or special char
@@ -75,12 +85,13 @@ serve(async (req) => {
   );
 
   if (!hasMinLength) {
-    return badRequest("Adgangskoden skal være mindst 8 tegn");
+    return badRequest("Adgangskoden skal være mindst 8 tegn", origin);
   }
 
   if (!hasDigitOrSpecial) {
     return badRequest(
       "Adgangskoden skal indeholde mindst ét tal eller et specialtegn",
+      origin
     );
   }
 
@@ -93,7 +104,7 @@ serve(async (req) => {
     .limit(1);
 
   if (!existingError && existingUsers && existingUsers.length > 0) {
-    return badRequest("Brugernavnet er allerede taget");
+    return badRequest("Brugernavnet er allerede taget", origin);
   }
 
   // Create user using regular signUp (this will send confirmation email if enabled)
@@ -108,7 +119,7 @@ serve(async (req) => {
   });
 
   if (signUpError) {
-    return badRequest(signUpError.message ?? "Kunne ikke oprette bruger");
+    return badRequest(signUpError.message ?? "Kunne ikke oprette bruger", origin);
   }
 
   return jsonResponse(
@@ -117,6 +128,7 @@ serve(async (req) => {
       message:
         "Bruger oprettet. Tjek din email for bekræftelse.",
     },
+    origin,
     { status: 200 },
   );
 });

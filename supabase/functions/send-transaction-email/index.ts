@@ -2,10 +2,18 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import nodemailer from "npm:nodemailer@6.9.1";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const ALLOWED_ORIGINS = [
+  "http://localhost:5173",
+  "https://www.gearninja.dk"
+];
+
+function getCorsHeaders(origin: string | null) {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  };
+}
 
 interface EmailPayload {
   type: "INSERT" | "UPDATE" | "DELETE";
@@ -137,8 +145,10 @@ function generateBuyerConfirmedEmail(productName: string, buyerName: string, pro
 
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: getCorsHeaders(origin) });
   }
 
   try {
@@ -163,7 +173,7 @@ serve(async (req) => {
     if (!emailType) {
       console.log("Skipping: Not a relevant event");
       return new Response(JSON.stringify({ message: "Not a relevant event" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
         status: 200,
       });
     }
@@ -234,7 +244,7 @@ serve(async (req) => {
     if (!buyerEmail) {
       console.error("No buyer email found");
       return new Response(JSON.stringify({ message: "No buyer email found" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
         status: 200, 
       });
     }
@@ -269,7 +279,7 @@ serve(async (req) => {
       if (!sellerEmail) {
         console.error("No seller email found");
         return new Response(JSON.stringify({ message: "No seller email found" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
           status: 200,
         });
       }
@@ -290,7 +300,7 @@ serve(async (req) => {
     console.log("Email sent:", emailInfo);
 
     return new Response(JSON.stringify(emailInfo), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
