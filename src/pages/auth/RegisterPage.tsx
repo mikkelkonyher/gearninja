@@ -6,11 +6,14 @@ import { Button } from "../../components/ui/Button";
 import { supabase } from "../../lib/supabase";
 import { PUSHIABLE_API_KEY } from "../../lib/env";
 import { extractEdgeFunctionError } from "../../lib/edgeFunctionError";
+import { TermsModal } from "../../components/auth/TermsModal";
 
 export function RegisterPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -27,6 +30,11 @@ export function RegisterPage() {
       return;
     }
 
+    if (!termsAccepted) {
+      setError("Du skal acceptere vilkår og betingelser for at oprette en konto");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Adgangskoderne matcher ikke");
       return;
@@ -40,6 +48,7 @@ export function RegisterPage() {
           email: formData.email,
           password: formData.password,
           username: formData.username.trim(),
+          termsAccepted: termsAccepted,
         },
         headers: {
           apikey: PUSHIABLE_API_KEY || "",
@@ -177,6 +186,27 @@ export function RegisterPage() {
               </div>
             </div>
 
+            {/* Terms and Conditions Checkbox */}
+            <div className="flex items-start space-x-3 pt-2">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 w-4 h-4 rounded border-white/20 bg-background/50 text-neon-blue focus:ring-neon-blue focus:ring-offset-0 cursor-pointer"
+              />
+              <label htmlFor="terms" className="text-sm text-gray-300 leading-relaxed">
+                Jeg accepterer{" "}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="text-neon-blue hover:underline font-medium"
+                >
+                  vilkår og betingelser
+                </button>
+              </label>
+            </div>
+
             <Button
               type="submit"
               variant="neon"
@@ -199,6 +229,12 @@ export function RegisterPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Terms Modal */}
+      <TermsModal
+        isOpen={showTermsModal}
+        onClose={() => setShowTermsModal(false)}
+      />
     </div>
   );
 }

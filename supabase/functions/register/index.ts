@@ -53,7 +53,7 @@ serve(async (req) => {
     return jsonResponse("Method not allowed", origin, { status: 405 });
   }
 
-  let body: { email?: string; password?: string; username?: string };
+  let body: { email?: string; password?: string; username?: string; termsAccepted?: boolean };
 
   try {
     body = await req.json();
@@ -61,11 +61,16 @@ serve(async (req) => {
     return badRequest("Ugyldigt JSON-body", origin);
   }
 
-  const { email, password, username } = body;
+  const { email, password, username, termsAccepted } = body;
 
   // Basic presence validation
   if (!email || !password || !username) {
     return badRequest("Email, brugernavn og adgangskode er påkrævet", origin);
+  }
+
+  // Terms acceptance validation
+  if (!termsAccepted) {
+    return badRequest("Du skal acceptere vilkår og betingelser for at oprette en konto", origin);
   }
 
   const trimmedUsername = username.trim();
