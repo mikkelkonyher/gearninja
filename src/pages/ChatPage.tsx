@@ -592,7 +592,7 @@ export function ChatPage() {
                     <div
                       className={`rounded-2xl px-4 py-2.5 ${
                         isOwn
-                          ? "bg-neon-blue text-white rounded-br-sm"
+                          ? "bg-white/10 border border-white/20 text-white rounded-br-sm"
                           : "bg-secondary/60 text-white border border-white/10 rounded-bl-sm"
                       } ${message.isOptimistic ? "opacity-70" : ""}`}
                     >
@@ -601,7 +601,7 @@ export function ChatPage() {
                       </p>
                       <p
                         className={`text-xs mt-1.5 ${
-                          isOwn ? "text-blue-100/80" : "text-muted-foreground"
+                          isOwn ? "text-muted-foreground" : "text-muted-foreground"
                         }`}
                       >
                         {formatTime(message.created_at)}
@@ -638,7 +638,7 @@ export function ChatPage() {
             <button
               type="submit"
               disabled={!newMessage.trim() || sending}
-              className="flex-shrink-0 w-10 h-10 rounded-full bg-neon-blue hover:bg-neon-blue/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center text-white"
+              className="flex-shrink-0 w-10 h-10 rounded-full bg-transparent border border-neon-blue text-neon-blue shadow-[0_0_10px_#00f3ff] hover:bg-neon-blue/10 hover:shadow-[0_0_20px_#00f3ff] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
             >
               {sending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

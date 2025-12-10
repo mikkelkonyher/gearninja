@@ -450,7 +450,7 @@ export function ProductDetailPage() {
                         `/chat?itemId=${product.id}&itemType=product&sellerId=${product.user_id}`
                       )
                     }
-                    className="w-full px-4 py-3 rounded-lg bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors font-medium"
+                    className="w-full px-4 py-3 rounded-lg bg-transparent border border-neon-blue text-neon-blue shadow-[0_0_10px_#00f3ff] hover:bg-neon-blue/10 hover:shadow-[0_0_20px_#00f3ff] transition-all duration-300 font-medium"
                   >
                     Skriv til sælger
                   </button>
