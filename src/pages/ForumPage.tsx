@@ -221,8 +221,8 @@ export function ForumPage() {
         </div>
 
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Sidebar - Categories */}
-          <div className="w-full md:w-64 flex-shrink-0">
+          {/* Sidebar - Desktop Categories */}
+          <div className="hidden md:block w-64 flex-shrink-0">
             <div className="bg-secondary/40 rounded-xl border border-white/10 p-4 sticky top-28">
               <h2 className="text-lg font-bold text-white mb-4 px-2">Kategorier</h2>
               <nav className="flex flex-col gap-1">
@@ -285,6 +285,64 @@ export function ForumPage() {
             </div>
           </div>
 
+          {/* Mobile Categories - Horizontal Scroll */}
+          <div className="md:hidden overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+            <div className="flex gap-2">
+               <button
+                  onClick={() => { setActiveCategory(null); setShowSavedOnly(false); setShowMyThreadsOnly(false); }}
+                  className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors flex items-center gap-2 border ${
+                    activeCategory === null && !showSavedOnly && !showMyThreadsOnly
+                      ? "bg-neon-blue/10 text-neon-blue border-neon-blue"
+                      : "bg-secondary/40 text-muted-foreground border-white/10 hover:text-white"
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  Alle
+                </button>
+
+                {user && (
+                  <>
+                    <button
+                      onClick={() => { setActiveCategory(null); setShowSavedOnly(true); setShowMyThreadsOnly(false); }}
+                      className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors flex items-center gap-2 border ${
+                        showSavedOnly
+                          ? "bg-neon-blue/10 text-neon-blue border-neon-blue"
+                          : "bg-secondary/40 text-muted-foreground border-white/10 hover:text-white"
+                      }`}
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      Gemte
+                    </button>
+                     <button
+                      onClick={() => { setActiveCategory(null); setShowSavedOnly(false); setShowMyThreadsOnly(true); }}
+                      className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors flex items-center gap-2 border ${
+                        showMyThreadsOnly
+                          ? "bg-neon-blue/10 text-neon-blue border-neon-blue"
+                          : "bg-secondary/40 text-muted-foreground border-white/10 hover:text-white"
+                      }`}
+                    >
+                      <User className="w-4 h-4" />
+                      Mine
+                    </button>
+                  </>
+                )}
+
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => { setActiveCategory(cat.id); setShowSavedOnly(false); setShowMyThreadsOnly(false); }}
+                    className={`px-4 py-2 text-sm font-medium rounded-full whitespace-nowrap transition-colors border ${
+                      activeCategory === cat.id && !showSavedOnly && !showMyThreadsOnly
+                        ? "bg-neon-blue/10 text-neon-blue border-neon-blue"
+                        : "bg-secondary/40 text-muted-foreground border-white/10 hover:text-white"
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+            </div>
+          </div>
+
           {/* Main Content */}
           <div className="flex-1">
             {loading ? (
@@ -308,23 +366,26 @@ export function ForumPage() {
                         key={thread.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="group bg-secondary/40 border border-white/10 rounded-xl p-5 hover:border-neon-blue/50 transition-colors cursor-pointer relative"
+                        className="group bg-secondary/40 border border-white/10 rounded-xl p-4 md:p-5 hover:border-neon-blue/50 transition-colors cursor-pointer relative"
                         onClick={() => navigate(`/forum/thread/${thread.id}`)}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0 pr-4">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-white/5 text-muted-foreground border border-white/10">
+                            <div className="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+                              <span className="w-fit px-2 py-0.5 text-xs font-medium rounded-full bg-white/5 text-muted-foreground border border-white/10">
                                 {thread.category.name}
                               </span>
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {thread.author_name || "Anonym"}
-                              </span>
-                              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'short' }).format(new Date(thread.created_at))}
-                              </span>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <User className="w-3 h-3" />
+                                  {thread.author_name || "Anonym"}
+                                </span>
+                                <span className="text-white/20">•</span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3" />
+                                  {new Intl.DateTimeFormat('da-DK', { day: 'numeric', month: 'short' }).format(new Date(thread.created_at))}
+                                </span>
+                              </div>
                             </div>
                             <h3 className="text-lg font-semibold text-white group-hover:text-neon-blue transition-colors truncate">
                               {thread.title}

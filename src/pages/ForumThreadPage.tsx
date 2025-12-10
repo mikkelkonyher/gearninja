@@ -340,10 +340,10 @@ export function ForumThreadPage() {
         </div>
 
         {/* Thread Header */}
-        <div className="bg-secondary/40 border border-white/10 rounded-xl p-6 mb-6 relative group">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-neon-blue/10 text-neon-blue border border-neon-blue/20">
+        <div className="bg-secondary/40 border border-white/10 rounded-xl p-4 md:p-6 mb-6 relative group">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex flex-col md:flex-row md:items-center gap-2">
+              <span className="w-fit px-2.5 py-1 text-xs font-medium rounded-full bg-neon-blue/10 text-neon-blue border border-neon-blue/20">
                 {thread.category.name}
               </span>
               <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -416,7 +416,7 @@ export function ForumThreadPage() {
                </h1>
 
                <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/10">
-                 <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center border border-white/10">
+                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center border border-white/10">
                    <span className="text-lg font-bold text-white">
                      {thread.author_name.charAt(0).toUpperCase()}
                    </span>
@@ -445,9 +445,9 @@ export function ForumThreadPage() {
               key={post.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-black/20 border border-white/5 rounded-xl p-6 relative group"
+              className="bg-black/20 border border-white/5 rounded-xl p-4 md:p-6 relative group"
             >
-              <div className="flex items-start gap-4">
+              <div className="flex items-start gap-3 md:gap-4">
                 <div className="w-8 h-8 rounded-full bg-secondary/60 flex-shrink-0 flex items-center justify-center border border-white/10">
                   <span className="text-sm font-bold text-white">
                     {post.author_name.charAt(0).toUpperCase()}
@@ -536,7 +536,7 @@ export function ForumThreadPage() {
 
         {/* Reply Form */}
         {user ? (
-          <form onSubmit={handleSubmitReply} className="bg-secondary/40 border border-white/10 rounded-xl p-6">
+          <form onSubmit={handleSubmitReply} className="bg-secondary/40 border border-white/10 rounded-xl p-4 md:p-6">
             <h3 className="text-lg font-semibold text-white mb-4">Skriv et svar</h3>
             <div className="mb-4">
               <textarea
