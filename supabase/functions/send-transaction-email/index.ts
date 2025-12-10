@@ -143,6 +143,63 @@ function generateBuyerConfirmedEmail(productName: string, buyerName: string, pro
   `;
 }
 
+function generateBuyerDeclinedEmail(productName: string, buyerName: string, product: any, price: number, productId: string) {
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Køber har afvist</title>
+      </head>
+      <body style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+        <div style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+          
+          <div style="background-color: #1a1a1a; padding: 24px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: bold; letter-spacing: 1px;">Gearninja</h1>
+          </div>
+
+          <div style="padding: 32px 24px;">
+            <h2 style="margin-top: 0; color: #111827; font-size: 20px;">Køber har afvist købet</h2>
+            
+            <p style="color: #4b5563; margin-bottom: 24px;">
+              <strong>${buyerName}</strong> har desværre afvist købet af <strong>${productName}</strong>.
+            </p>
+
+            <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+              ${product.image_urls && product.image_urls[0] ? `
+                <div style="width: 80px; height: 80px; border-radius: 6px; overflow: hidden; margin-bottom: 12px;">
+                  <img src="${product.image_urls[0]}" alt="${productName}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+              ` : ''}
+              <h3 style="margin: 0 0 4px 0; font-size: 16px; color: #111827;">${productName}</h3>
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">Pris: ${price} DKK</p>
+            </div>
+
+            <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 24px;">
+              <p style="margin: 0; color: #92400e; font-size: 14px;">
+                <strong>Næste skridt:</strong> Dit produkt er nu tilgængeligt igen. Du kan vælge en anden køber eller vente på nye interesserede.
+              </p>
+            </div>
+
+            <div style="text-align: center; margin-top: 32px;">
+              <a href="https://gearninja.dk/product/${productId}" style="display: inline-block; background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; font-size: 16px;">
+                Se produkt
+              </a>
+            </div>
+          </div>
+
+          <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+              © ${new Date().getFullYear()} Gearninja. Alle rettigheder forbeholdes.
+            </p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
 
 serve(async (req) => {
   const origin = req.headers.get("Origin");
@@ -160,7 +217,7 @@ serve(async (req) => {
     console.log("Old record status:", old_record?.status);
 
     // Determine which email to send based on the event type
-    let emailType: "buyer_selected" | "buyer_confirmed" | null = null;
+    let emailType: "buyer_selected" | "buyer_confirmed" | "buyer_declined" | null = null;
 
     if (type === "INSERT" && record.status === "pending") {
       // Seller just selected a buyer
@@ -168,6 +225,9 @@ serve(async (req) => {
     } else if (type === "UPDATE" && record.status === "completed" && old_record?.status !== "completed") {
       // Buyer just confirmed the purchase
       emailType = "buyer_confirmed";
+    } else if (type === "UPDATE" && record.status === "cancelled" && old_record?.status === "pending") {
+      // Buyer just declined the purchase
+      emailType = "buyer_declined";
     }
 
     if (!emailType) {
@@ -271,7 +331,7 @@ serve(async (req) => {
         subject: `Du er valgt som køber: ${productName}`,
         html: generateBuyerSelectedEmail(productName, sellerName, product, price, product.id),
       });
-    } else {
+    } else if (emailType === "buyer_confirmed") {
       // Email to SELLER: Buyer confirmed! Write a review
       const { data: sellerUserData } = await supabase.auth.admin.getUserById(saleData.seller_id);
       const sellerEmail = sellerUserData?.user.email;
@@ -295,6 +355,30 @@ serve(async (req) => {
         subject: `Køb bekræftet: ${productName}`,
         html: generateBuyerConfirmedEmail(productName, buyerName, product, price),
       });
+    } else if (emailType === "buyer_declined") {
+      // Email to SELLER: Buyer declined
+      const { data: sellerUserData } = await supabase.auth.admin.getUserById(saleData.seller_id);
+      const sellerEmail = sellerUserData?.user.email;
+
+      if (!sellerEmail) {
+        console.error("No seller email found");
+        return new Response(JSON.stringify({ message: "No seller email found" }), {
+          headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+
+      const { data: buyerNameData } = await supabase.rpc("get_user_username", {
+        user_uuid: saleData.buyer_id
+      });
+      const buyerName = buyerNameData?.username || "Køber";
+
+      emailInfo = await transporter.sendMail({
+        from: "Gearninja <noreply@gearninja.dk>",
+        to: sellerEmail,
+        subject: `Køber har afvist: ${productName}`,
+        html: generateBuyerDeclinedEmail(productName, buyerName, product, price, product.id),
+      });
     }
 
     console.log("Email sent:", emailInfo);
@@ -306,7 +390,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Error sending email:", error);
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
       status: 500,
     });
   }

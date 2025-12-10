@@ -35,8 +35,13 @@ BEGIN
     'product'
   );
   
-  -- Delete the sale record
-  DELETE FROM sales WHERE id = p_sale_id;
+  -- Update sale to cancelled status (this triggers the webhook for email)
+  UPDATE sales 
+  SET status = 'cancelled'
+  WHERE id = p_sale_id;
+  
+  -- Note: We keep the cancelled sale record for history/audit purposes
+  -- It can be cleaned up later by a scheduled job if needed
   
   RETURN json_build_object('success', true);
 END;
