@@ -34,6 +34,7 @@ export function ForumPage() {
   // Search and Filter State
   const [searchQuery, setSearchQuery] = useState("");
   const [showSavedOnly, setShowSavedOnly] = useState(false);
+  const [showMyThreadsOnly, setShowMyThreadsOnly] = useState(false);
   const [savedThreadIds, setSavedThreadIds] = useState<Set<string>>(new Set());
 
   // Pagination State
@@ -52,7 +53,7 @@ export function ForumPage() {
     setPage(0);
     setHasMore(true);
     fetchThreads(0);
-  }, [activeCategory, searchQuery, showSavedOnly, user]);
+  }, [activeCategory, searchQuery, showSavedOnly, showMyThreadsOnly, user]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -112,6 +113,10 @@ export function ForumPage() {
            setHasMore(false);
            return;
          }
+      }
+
+      if (showMyThreadsOnly && user) {
+        query = query.eq("user_id", user.id);
       }
 
       // Pagination range
@@ -184,7 +189,7 @@ export function ForumPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
               {activeCategory 
                 ? categories.find(c => c.id === activeCategory)?.name 
-                : (showSavedOnly ? "Gemte tråde" : "Forum")}
+                : (showSavedOnly ? "Gemte tråde" : (showMyThreadsOnly ? "Mine tråde" : "Forum"))}
             </h1>
             <p className="text-muted-foreground">
               {/* Note: This count is now just the loaded threads, not total. Ideally we'd fetch a count. */}
@@ -222,9 +227,9 @@ export function ForumPage() {
               <h2 className="text-lg font-bold text-white mb-4 px-2">Kategorier</h2>
               <nav className="flex flex-col gap-1">
                 <button
-                  onClick={() => { setActiveCategory(null); setShowSavedOnly(false); }}
+                  onClick={() => { setActiveCategory(null); setShowSavedOnly(false); setShowMyThreadsOnly(false); }}
                   className={`px-3 py-2 text-sm text-left rounded-lg transition-colors flex items-center gap-2 ${
-                    activeCategory === null && !showSavedOnly
+                    activeCategory === null && !showSavedOnly && !showMyThreadsOnly
                       ? "bg-neon-blue/20 text-neon-blue"
                       : "text-muted-foreground hover:bg-white/5 hover:text-white"
                   }`}
@@ -234,17 +239,31 @@ export function ForumPage() {
                 </button>
                 
                 {user && (
-                  <button
-                    onClick={() => { setActiveCategory(null); setShowSavedOnly(true); }}
-                    className={`px-3 py-2 text-sm text-left rounded-lg transition-colors flex items-center gap-2 ${
-                      showSavedOnly
-                        ? "bg-neon-blue/20 text-neon-blue"
-                        : "text-muted-foreground hover:bg-white/5 hover:text-white"
-                    }`}
-                  >
-                    <Bookmark className="w-4 h-4" />
-                    Gemte tråde
-                  </button>
+                  <>
+                    <button
+                      onClick={() => { setActiveCategory(null); setShowSavedOnly(true); setShowMyThreadsOnly(false); }}
+                      className={`px-3 py-2 text-sm text-left rounded-lg transition-colors flex items-center gap-2 ${
+                        showSavedOnly
+                          ? "bg-neon-blue/20 text-neon-blue"
+                          : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      <Bookmark className="w-4 h-4" />
+                      Gemte tråde
+                    </button>
+
+                    <button
+                      onClick={() => { setActiveCategory(null); setShowSavedOnly(false); setShowMyThreadsOnly(true); }}
+                      className={`px-3 py-2 text-sm text-left rounded-lg transition-colors flex items-center gap-2 ${
+                        showMyThreadsOnly
+                          ? "bg-neon-blue/20 text-neon-blue"
+                          : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      <User className="w-4 h-4" />
+                      Mine tråde
+                    </button>
+                  </>
                 )}
 
                 <div className="h-px bg-white/10 my-2 mx-2" />
@@ -252,9 +271,9 @@ export function ForumPage() {
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => { setActiveCategory(cat.id); setShowSavedOnly(false); }}
+                    onClick={() => { setActiveCategory(cat.id); setShowSavedOnly(false); setShowMyThreadsOnly(false); }}
                     className={`px-3 py-2 text-sm text-left rounded-lg transition-colors ${
-                      activeCategory === cat.id && !showSavedOnly
+                      activeCategory === cat.id && !showSavedOnly && !showMyThreadsOnly
                         ? "bg-neon-blue/20 text-neon-blue"
                         : "text-muted-foreground hover:bg-white/5 hover:text-white"
                     }`}

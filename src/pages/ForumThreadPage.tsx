@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Loader2, ArrowLeft, Clock, Send, Bookmark } from "lucide-react";
+import { Loader2, ArrowLeft, Clock, Send, Bookmark, Trash2, Edit2, X, Check } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { Button } from "../components/ui/Button";
 
@@ -40,6 +40,17 @@ export function ForumThreadPage() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
+  // Thread Edit State
+  const [isEditingThread, setIsEditingThread] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editThreadContent, setEditThreadContent] = useState("");
+  const [updatingThread, setUpdatingThread] = useState(false);
+
+  // Post Edit State
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [updating, setUpdating] = useState(false);
+
   useEffect(() => {
     checkUser();
     if (id) {
@@ -62,7 +73,7 @@ export function ForumThreadPage() {
       .select("id")
       .eq("user_id", userId)
       .eq("thread_id", threadId)
-      .single();
+      .maybeSingle();
     if (data) setIsSaved(true);
   };
 
@@ -77,6 +88,8 @@ export function ForumThreadPage() {
 
       if (error) throw error;
       setThread(data);
+      setEditTitle(data.title);
+      setEditThreadContent(data.content);
     } catch (err) {
       console.error("Error fetching thread:", err);
     } finally {
@@ -147,6 +160,128 @@ export function ForumThreadPage() {
     }
   };
 
+  // --- Thread Actions ---
+  const startEditingThread = () => {
+    if (!thread) return;
+    setEditTitle(thread.title);
+    setEditThreadContent(thread.content);
+    setIsEditingThread(true);
+  };
+
+  const cancelEditingThread = () => {
+    setIsEditingThread(false);
+    if (thread) {
+       setEditTitle(thread.title);
+       setEditThreadContent(thread.content);
+    }
+  };
+
+  const handleUpdateThread = async () => {
+    if (!thread || !editTitle.trim() || !editThreadContent.trim()) return;
+
+    setUpdatingThread(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-forum-thread", {
+        body: {
+          thread_id: thread.id,
+          title: editTitle.trim(),
+          content: editThreadContent.trim()
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // Update local state
+      setThread({
+        ...thread,
+        title: data.thread.title,
+        content: data.thread.content
+      });
+      setIsEditingThread(false);
+    } catch (err: any) {
+      console.error("Error updating thread:", err);
+      alert(err.message || "Kunne ikke opdatere tråd");
+    } finally {
+      setUpdatingThread(false);
+    }
+  };
+
+  const handleDeleteThread = async () => {
+    if (!thread) return;
+    if (!confirm("Er du sikker på, at du vil slette hele tråden? Dette kan ikke fortrydes.")) return;
+
+    try {
+      const { error } = await supabase
+        .from("forum_threads")
+        .delete()
+        .eq("id", thread.id);
+
+      if (error) throw error;
+      
+      navigate("/forum");
+    } catch (err) {
+      console.error("Error deleting thread:", err);
+      alert("Kunne ikke slette tråd");
+    }
+  };
+
+  // --- Post Actions ---
+
+  const handleDeletePost = async (postId: string) => {
+    if (!confirm("Er du sikker på, at du vil slette dette svar?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("forum_posts")
+        .delete()
+        .eq("id", postId);
+
+      if (error) throw error;
+
+      setPosts(posts.filter(p => p.id !== postId));
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      alert("Kunne ikke slette svar");
+    }
+  };
+
+  const startEditing = (post: Post) => {
+    setEditingPostId(post.id);
+    setEditContent(post.content);
+  };
+
+  const cancelEditing = () => {
+    setEditingPostId(null);
+    setEditContent("");
+  };
+
+  const handleUpdatePost = async () => {
+    if (!editingPostId || !editContent.trim()) return;
+
+    setUpdating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("update-forum-post", {
+        body: {
+          post_id: editingPostId,
+          content: editContent.trim()
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // Update local state
+      setPosts(posts.map(p => p.id === editingPostId ? { ...p, content: data.post.content } : p));
+      cancelEditing();
+    } catch (err: any) {
+      console.error("Error updating post:", err);
+      alert(err.message || "Kunne ikke opdatere svar");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   const toggleSave = async () => {
     if (!user || !thread) {
        navigate("/login");
@@ -205,36 +340,98 @@ export function ForumThreadPage() {
         </div>
 
         {/* Thread Header */}
-        <div className="bg-secondary/40 border border-white/10 rounded-xl p-6 mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-neon-blue/10 text-neon-blue border border-neon-blue/20">
-              {thread.category.name}
-            </span>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {formatDate(thread.created_at)}
-            </span>
-          </div>
-          
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            {thread.title}
-          </h1>
-
-          <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/10">
-            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center border border-white/10">
-              <span className="text-lg font-bold text-white">
-                {thread.author_name.charAt(0).toUpperCase()}
+        <div className="bg-secondary/40 border border-white/10 rounded-xl p-6 mb-6 relative group">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-neon-blue/10 text-neon-blue border border-neon-blue/20">
+                {thread.category.name}
+              </span>
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                {formatDate(thread.created_at)}
               </span>
             </div>
-            <div>
-              <p className="text-sm font-medium text-white">{thread.author_name}</p>
-              <p className="text-xs text-muted-foreground">Opretter</p>
-            </div>
+             
+             {/* Thread Actions - Now part of flex justify-between */}
+             {user && user.id === thread.user_id && !isEditingThread && (
+                <div className="flex gap-2">
+                   <button 
+                     onClick={startEditingThread}
+                     className="p-1.5 rounded-lg bg-secondary/80 text-muted-foreground hover:text-white hover:bg-secondary transition-colors"
+                     title="Rediger tråd"
+                   >
+                     <Edit2 className="w-3.5 h-3.5" />
+                   </button>
+                   <button 
+                     onClick={handleDeleteThread}
+                     className="p-1.5 rounded-lg bg-secondary/80 text-muted-foreground hover:text-red-500 hover:bg-secondary transition-colors"
+                     title="Slet tråd"
+                   >
+                     <Trash2 className="w-3.5 h-3.5" />
+                   </button>
+                </div>
+              )}
           </div>
+          
+          {isEditingThread ? (
+             <div className="space-y-4 mb-4">
+               <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Titel</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full bg-black/40 border border-neon-blue/50 rounded-lg p-2 text-white font-bold text-xl focus:outline-none"
+                  />
+               </div>
+               <div>
+                  <label className="block text-xs text-muted-foreground mb-1">Indhold</label>
+                  <textarea
+                    value={editThreadContent}
+                    onChange={(e) => setEditThreadContent(e.target.value)}
+                    className="w-full bg-black/40 border border-neon-blue/50 rounded-lg p-3 text-white focus:outline-none min-h-[150px]"
+                  />
+               </div>
+               <div className="flex justify-end gap-2">
+                 <button 
+                   onClick={cancelEditingThread}
+                   className="flex items-center gap-1 px-3 py-1.5 text-xs rounded bg-secondary hover:bg-secondary/80 text-white transition-colors"
+                 >
+                   <X className="w-3 h-3" /> Annuller
+                 </button>
+                 <button 
+                   onClick={handleUpdateThread}
+                   disabled={updatingThread}
+                   className="flex items-center gap-1 px-3 py-1.5 text-xs rounded bg-neon-blue text-black font-semibold hover:bg-neon-blue/90 transition-colors"
+                 >
+                   {updatingThread ? <Loader2 className="w-3 h-3 animate-spin"/> : <Check className="w-3 h-3" />} 
+                   Gem ændringer
+                 </button>
+              </div>
+             </div>
+          ) : (
+             <>
+               <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                 {thread.title}
+               </h1>
 
-          <div className="prose prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
-            {thread.content}
-          </div>
+               <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/10">
+                 <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center border border-white/10">
+                   <span className="text-lg font-bold text-white">
+                     {thread.author_name.charAt(0).toUpperCase()}
+                   </span>
+                 </div>
+                 <div>
+                   <p className="text-sm font-medium text-white">{thread.author_name}</p>
+                   <p className="text-xs text-muted-foreground">Opretter</p>
+                 </div>
+               </div>
+
+               <div className="prose prose-invert max-w-none text-muted-foreground whitespace-pre-wrap">
+                 {thread.content}
+               </div>
+             </>
+          )}
         </div>
 
         {/* Replies */}
@@ -248,7 +445,7 @@ export function ForumThreadPage() {
               key={post.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-black/20 border border-white/5 rounded-xl p-6"
+              className="bg-black/20 border border-white/5 rounded-xl p-6 relative group"
             >
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-secondary/60 flex-shrink-0 flex items-center justify-center border border-white/10">
@@ -259,13 +456,61 @@ export function ForumThreadPage() {
                 <div className="flex-1">
                   <div className="flex items-baseline justify-between mb-2">
                     <span className="font-medium text-white text-sm">{post.author_name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatShortDate(post.created_at)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {formatShortDate(post.created_at)}
+                      </span>
+                      {/* Edit/Delete Actions - Now inline next to date */}
+                      {user && user.id === post.user_id && !editingPostId && (
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => startEditing(post)}
+                            className="p-1 rounded bg-secondary/80 text-muted-foreground hover:text-white hover:bg-secondary transition-colors"
+                            title="Rediger"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeletePost(post.id)}
+                            className="p-1 rounded bg-secondary/80 text-muted-foreground hover:text-red-500 hover:bg-secondary transition-colors"
+                            title="Slet"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {post.content}
-                  </div>
+                  
+                  {editingPostId === post.id ? (
+                    <div className="space-y-3">
+                      <textarea
+                        value={editContent}
+                        onChange={(e) => setEditContent(e.target.value)}
+                        className="w-full bg-black/40 border border-neon-blue/50 rounded-lg p-3 text-white focus:outline-none min-h-[100px]"
+                      />
+                      <div className="flex justify-end gap-2">
+                         <button 
+                           onClick={cancelEditing}
+                           className="flex items-center gap-1 px-3 py-1.5 text-xs rounded bg-secondary hover:bg-secondary/80 text-white transition-colors"
+                         >
+                           <X className="w-3 h-3" /> Annuller
+                         </button>
+                         <button 
+                           onClick={handleUpdatePost}
+                           disabled={updating}
+                           className="flex items-center gap-1 px-3 py-1.5 text-xs rounded bg-neon-blue text-black font-semibold hover:bg-neon-blue/90 transition-colors"
+                         >
+                           {updating ? <Loader2 className="w-3 h-3 animate-spin"/> : <Check className="w-3 h-3" />} 
+                           Gem
+                         </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground whitespace-pre-wrap relative">
+                      {post.content}
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
