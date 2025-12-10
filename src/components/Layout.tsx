@@ -127,6 +127,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 categoryPath = "/studieudstyr";
               } else if (category === "Øvelokaler") {
                 categoryPath = "/oevelokaler";
+              } else if (category === "Forum") {
+                categoryPath = "/forum";
               }
               return (
                 <Link
@@ -323,6 +325,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                       categoryPath = "/studieudstyr";
                     } else if (category === "Øvelokaler") {
                       categoryPath = "/oevelokaler";
+                    } else if (category === "Forum") {
+                      categoryPath = "/forum";
                     }
                     return (
                       <Link

@@ -33,6 +33,9 @@ import { OevelokalerPage } from './pages/OevelokalerPage';
 import { RoomDetailPage } from './pages/RoomDetailPage';
 import { ChatPage } from './pages/ChatPage';
 import { ChatLayout } from './layouts/ChatLayout';
+import { ForumPage } from './pages/ForumPage';
+import { ForumThreadPage } from './pages/ForumThreadPage';
+import { CreateThreadPage } from './pages/CreateThreadPage';
 
 function App() {
   return (
@@ -73,6 +76,10 @@ function App() {
           <Route path="/mine-annoncer" element={<MineAnnoncerPage />} />
           <Route path="/favoritter" element={<FavoritterPage />} />
           <Route path="/user/:userId" element={<UserProfilePage />} />
+
+          <Route path="/forum" element={<ForumPage />} />
+          <Route path="/forum/thread/:id" element={<ForumThreadPage />} />
+          <Route path="/forum/create" element={<CreateThreadPage />} />
 
           <Route path="/indstillinger" element={<IndstillingerPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
