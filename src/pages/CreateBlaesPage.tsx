@@ -80,6 +80,8 @@ export function CreateBlaesPage() {
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageFile[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  const [touchedIndex, setTouchedIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     type: "",
     brand: "",
@@ -180,6 +182,55 @@ export function CreateBlaesPage() {
 
   const handleDragEnd = () => {
     setDraggedIndex(null);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    setTouchedIndex(index);
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchedIndex === null || touchStartY === null) return;
+    
+    const touch = e.touches[0];
+    const touchY = touch.clientY;
+    
+    // Find the grid container
+    const gridContainer = (e.currentTarget as HTMLElement).closest('.grid');
+    if (!gridContainer) return;
+    
+    const gridRect = gridContainer.getBoundingClientRect();
+    
+    // Calculate which grid position the touch is over
+    const relativeY = touchY - gridRect.top;
+    const relativeX = touch.clientX - gridRect.left;
+    
+    // Determine grid columns (2 on mobile, 3 on desktop)
+    const isMobile = window.innerWidth < 768;
+    const cols = isMobile ? 2 : 3;
+    
+    // Calculate row and column
+    const itemWidth = gridRect.width / cols;
+    const itemHeight = itemWidth; // aspect-square
+    const col = Math.floor(relativeX / itemWidth);
+    const row = Math.floor(relativeY / itemHeight);
+    
+    // Calculate target index
+    const targetIndex = Math.min(row * cols + col, images.length - 1);
+    
+    if (targetIndex >= 0 && targetIndex < images.length && targetIndex !== touchedIndex) {
+      const newImages = [...images];
+      const touchedItem = newImages[touchedIndex];
+      newImages.splice(touchedIndex, 1);
+      newImages.splice(targetIndex, 0, touchedItem);
+      setImages(newImages);
+      setTouchedIndex(targetIndex);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchedIndex(null);
+    setTouchStartY(null);
   };
 
   const uploadImages = async (): Promise<string[]> => {
@@ -530,19 +581,25 @@ export function CreateBlaesPage() {
                 Billeder <span className="text-red-400">*</span> (max 6, første
                 er hovedbillede)
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4" style={{ touchAction: 'none' }}>
                 {images.map((image, index) => (
                   <motion.div
                     key={index}
+                    data-image-index={index}
                     draggable
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
+                    onTouchStart={(e) => handleTouchStart(e, index)}
+                    onTouchMove={(e) => handleTouchMove(e)}
+                    onTouchEnd={handleTouchEnd}
                     whileDrag={{ opacity: 0.5 }}
                     className={`relative group aspect-square rounded-lg overflow-hidden border-2 bg-background/30 ${
                       index === 0
                         ? "border-green-500"
                         : "border-white/10"
+                    } ${
+                      touchedIndex === index ? "opacity-50" : ""
                     }`}
                   >
                     <img
