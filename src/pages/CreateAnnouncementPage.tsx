@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  Drumstick,
+  Drum,
   Guitar,
   Piano,
   Wind,
@@ -15,7 +15,7 @@ const categories = [
   {
     name: "Trommer",
     slug: "trommer",
-    icon: Drumstick,
+    icon: Drum,
     color: "from-orange-500/20 to-red-500/20",
     borderColor: "border-orange-500/30",
     hoverColor: "hover:border-orange-500/60",
@@ -100,7 +100,8 @@ export function CreateAnnouncementPage() {
             Vælg kategori
           </h1>
           <p className="text-lg text-muted-foreground">
-            Vælg hvilken type produkt eller service du vil oprette en annonce for
+            Vælg hvilken type produkt eller service du vil oprette en annonce
+            for
           </p>
         </div>
 
@@ -141,4 +142,3 @@ export function CreateAnnouncementPage() {
     </div>
   );
 }
-
