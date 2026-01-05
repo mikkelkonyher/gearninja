@@ -36,6 +36,7 @@ import { ChatLayout } from './layouts/ChatLayout';
 import { ForumPage } from './pages/ForumPage';
 import { ForumThreadPage } from './pages/ForumThreadPage';
 import { CreateThreadPage } from './pages/CreateThreadPage';
+import { AboutPage } from './pages/AboutPage';
 
 function App() {
   return (
@@ -83,6 +84,7 @@ function App() {
 
           <Route path="/indstillinger" element={<IndstillingerPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
+          <Route path="/om" element={<AboutPage />} />
           {/* Placeholder for category routes */}
           <Route path="/category/:slug" element={<div className="text-center py-20 text-2xl text-muted-foreground">Kategori side kommer snart...</div>} />
         </Routes>

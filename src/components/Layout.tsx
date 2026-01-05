@@ -357,11 +357,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="border-t border-white/10 bg-background/50 backdrop-blur-sm py-8 mt-auto">
-        <div className="container mx-auto px-4 text-center text-muted-foreground text-sm">
-          <p>
-            &copy; {new Date().getFullYear()} GearNinja. Alle rettigheder
-            forbeholdes.
-          </p>
+        <div className="container mx-auto px-4 text-muted-foreground text-sm">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <p>
+              &copy; {new Date().getFullYear()} GearNinja. Alle rettigheder
+              forbeholdes.
+            </p>
+            <a
+              href="mailto:gearninja@gearninja.dk"
+              className="hover:text-neon-blue transition-colors"
+            >
+              Kontakt: gearninja@gearninja.dk
+            </a>
+            <Link
+              to="/om"
+              className="hover:text-neon-blue transition-colors"
+            >
+              Om GearNinja
+            </Link>
+          </div>
         </div>
       </footer>
     </div>
