@@ -176,6 +176,17 @@ export function LandingPage() {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  const handleGetStartedClick = () => {
+    if (currentUserId) {
+      window.alert(
+        "Du er allerede logget ind. Log ud, hvis du vil oprette en ny bruger."
+      );
+      return;
+    }
+    navigate("/register");
+  };
+
   return (
     <div className="flex flex-col gap-20 pb-20">
       {/* Hero Section */}
@@ -210,16 +221,15 @@ export function LandingPage() {
               Fra musikere, til musikere – uden støj.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/register">
-                <Button
-                  variant="neon"
-                  size="lg"
-                  className="w-full sm:w-auto group"
-                >
-                  Kom i gang
-                  <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+              <Button
+                variant="neon"
+                size="lg"
+                className="w-full sm:w-auto group"
+                onClick={handleGetStartedClick}
+              >
+                Kom i gang
+                <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
               <Link to="/create">
                 <Button
                   variant="outline"
@@ -485,11 +495,9 @@ export function LandingPage() {
               Opret en gratis profil i dag og bliv en del af Danmarks hurtigst
               voksende musikfællesskab.
             </p>
-            <Link to="/register">
-              <Button variant="neon" size="lg">
-                Opret gratis profil
-              </Button>
-            </Link>
+            <Button variant="neon" size="lg" onClick={handleGetStartedClick}>
+              Opret gratis profil
+            </Button>
           </div>
           <div className="absolute inset-0 bg-grid-white/[0.02]" />
         </div>
