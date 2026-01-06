@@ -79,7 +79,8 @@ export function RegisterPage() {
 
       navigate("/login", {
         state: {
-          message: "Konto oprettet! Tjek din email for at bekræfte.",
+          message:
+            "Konto oprettet! Tjek din email for at bekræfte. Hvis du ikke kan finde mailen, så kig i din spam/uønsket post-mappe.",
         },
       });
     } catch (err: any) {
