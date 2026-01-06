@@ -8,7 +8,7 @@ interface Notification {
   id: string;
   type: string;
   item_id: string;
-  item_type: "product" | "room" | "chat";
+  item_type: "product" | "room" | "chat" | "forum_thread";
   favoriter_id: string | null;
   chat_id?: string | null;
   read: boolean;
@@ -20,6 +20,7 @@ interface NotificationWithDetails extends Notification {
   product_brand?: string | null;
   product_model?: string | null;
   room_name?: string | null;
+  thread_title?: string | null;
 }
 
 export function NotificationBell({ userId }: { userId: string | null }) {
@@ -160,6 +161,23 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                 // Room might be deleted (rented), that's okay
                 console.error("Error fetching room details:", err);
               }
+            } else if (
+              notification.item_type === "forum_thread" ||
+              notification.type === "forum_reply"
+            ) {
+              try {
+                const { data: threadData, error: threadError } = await supabase
+                  .from("forum_threads")
+                  .select("title")
+                  .eq("id", notification.item_id)
+                  .maybeSingle();
+
+                if (!threadError && threadData) {
+                  details.thread_title = threadData.title;
+                }
+              } catch (err) {
+                console.error("Error fetching forum thread details:", err);
+              }
             }
 
             return details;
@@ -220,6 +238,8 @@ export function NotificationBell({ userId }: { userId: string | null }) {
     if (notification.type === "new_message" && notification.chat_id) {
       // Navigate to chat
       navigate(`/chat/${notification.chat_id}`);
+    } else if (notification.type === "forum_reply" || notification.item_type === "forum_thread") {
+      navigate(`/forum/thread/${notification.item_id}`);
     } else if (notification.type === "sale_request" || notification.type === "sale_declined") {
       // For sale requests and declines, navigate to the product detail page
       try {
@@ -462,6 +482,11 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                                     notification.product_model ||
                                     "Produkt"}{" "}
                                 er blevet solgt
+                              </>
+                            ) : notification.type === "forum_reply" ? (
+                              <>
+                                {notification.favoriter_username || "Nogen"} har svaret i din tråd{" "}
+                                {notification.thread_title || "på forum"}
                               </>
                             ) : notification.type === "room_rented" ? (
                               <>
