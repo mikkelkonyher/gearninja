@@ -5,5 +5,5 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   // Expose custom environment variables to the client
-  envPrefix: ['VITE_', 'SUPABASE_', 'PUSHIABLE_'],
+  envPrefix:['VITE_'], //only expose VITE_ prefixed variables to the client
 })
