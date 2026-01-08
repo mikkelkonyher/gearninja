@@ -208,6 +208,17 @@ serve(async (req) => {
     return new Response("ok", { headers: getCorsHeaders(origin) });
   }
 
+  // Shared-secret guard so only our DB webhook/trigger can call this
+  const SECRET = Deno.env.get("DENO_WEBHOOK_SECRET");
+  const incoming = req.headers.get("x-webhook-secret");
+
+  if (!SECRET || incoming !== SECRET) {
+    return new Response("Unauthorized", {
+      status: 401,
+      headers: getCorsHeaders(origin),
+    });
+  }
+
   try {
     const payload = await req.json() as EmailPayload;
     const { record, old_record, type } = payload;

@@ -1,6 +1,17 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 
 Deno.serve(async (req) => {
+  // Shared-secret guard so only our cron/scheduler can call this
+  const SECRET = Deno.env.get("DENO_WEBHOOK_SECRET");
+  const incoming = req.headers.get("x-webhook-secret");
+
+  if (!SECRET || incoming !== SECRET) {
+    return new Response("Unauthorized", {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     // Create Supabase client with service role key for admin access
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
