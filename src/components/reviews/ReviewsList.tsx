@@ -114,6 +114,11 @@ export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
     );
   }
 
+  // Don't show anything if there are no reviews (even after 14 days)
+  if (reviews.length === 0) {
+    return null;
+  }
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Anmeldelser af handlen</h3>
