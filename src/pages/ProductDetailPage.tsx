@@ -91,22 +91,23 @@ export function ProductDetailPage() {
   const fetchProduct = async (productId: string) => {
     try {
       setLoading(true);
+      
+      // Use RPC function to get product - this allows buyer/seller to see soft-deleted products
       const { data, error: fetchError } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId)
+        .rpc("get_product_for_transaction", { p_product_id: productId })
         .single();
 
       if (fetchError) throw fetchError;
+      if (!data) throw new Error("Produkt ikke fundet");
 
-      setProduct(data);
-
+      const productData = data as Product;
+      setProduct(productData);
 
       // Fetch favorite count
       await fetchFavoriteCount(productId);
 
       // Fetch sale status if sold
-      if (data.sold) {
+      if (productData.sold) {
         await fetchSaleStatus(productId);
       }
     } catch (err: any) {

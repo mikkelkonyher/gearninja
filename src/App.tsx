@@ -23,6 +23,8 @@ import { CreateStrygerePage } from './pages/CreateStrygerePage';
 import { StrygerePage } from './pages/StrygerePage';
 import { ProfilePage } from './pages/ProfilePage';
 import { MineAnnoncerPage } from './pages/MineAnnoncerPage';
+import { MineKoebPage } from './pages/MineKoebPage';
+import { MineSalgPage } from './pages/MineSalgPage';
 import { UserProfilePage } from './pages/UserProfilePage';
 import { FavoritterPage } from './pages/FavoritterPage';
 
@@ -74,7 +76,10 @@ function App() {
           </Route>
           <Route path="/chats" element={<ChatLayout />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/profil" element={<ProfilePage />} />
           <Route path="/mine-annoncer" element={<MineAnnoncerPage />} />
+          <Route path="/mine-koeb" element={<MineKoebPage />} />
+          <Route path="/mine-salg" element={<MineSalgPage />} />
           <Route path="/favoritter" element={<FavoritterPage />} />
           <Route path="/user/:userId" element={<UserProfilePage />} />
 

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Package, Heart, Settings, ArrowRight } from "lucide-react";
+import { Loader2, Package, Heart, Settings, ArrowRight, ShoppingBag, Store } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export function ProfilePage() {
   const navigate = useNavigate();
   const [totalCount, setTotalCount] = useState(0);
+  const [purchasesCount, setPurchasesCount] = useState(0);
+  const [salesCount, setSalesCount] = useState(0);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -16,6 +18,7 @@ export function ProfilePage() {
   useEffect(() => {
     if (user) {
       fetchProducts();
+      fetchTransactionCounts();
     }
   }, [user]);
 
@@ -64,6 +67,33 @@ export function ProfilePage() {
     }
   };
 
+  const fetchTransactionCounts = async () => {
+    if (!user) return;
+
+    try {
+      // Get count for purchases (where user is buyer)
+      const { count: buyerCount, error: buyerError } = await supabase
+        .from("sales")
+        .select("*", { count: "exact", head: true })
+        .eq("buyer_id", user.id)
+        .eq("status", "completed");
+
+      if (buyerError) throw buyerError;
+      setPurchasesCount(buyerCount || 0);
+
+      // Get count for sales (where user is seller)
+      const { count: sellerCount, error: sellerError } = await supabase
+        .from("sales")
+        .select("*", { count: "exact", head: true })
+        .eq("seller_id", user.id)
+        .eq("status", "completed");
+
+      if (sellerError) throw sellerError;
+      setSalesCount(sellerCount || 0);
+    } catch (err: any) {
+      console.error("Error fetching transaction counts:", err);
+    }
+  };
 
   if (!user) {
     return (
@@ -114,6 +144,60 @@ export function ProfilePage() {
               {totalCount > 0 && (
                 <div className="text-lg font-bold text-neon-blue">
                   {totalCount} {totalCount === 1 ? "annonce" : "annoncer"}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Mine køb Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 }}
+              onClick={() => navigate("/mine-koeb")}
+              className="rounded-xl border border-white/10 bg-secondary/40 p-6 cursor-pointer hover:bg-secondary/60 transition-all duration-200 hover:border-neon-blue/50 group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-lg bg-green-500/20 border border-green-500/30">
+                  <ShoppingBag className="w-6 h-6 text-green-500" />
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-neon-blue group-hover:translate-x-1 transition-all" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Mine køb
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Se produkter du har købt og skriv anmeldelser
+              </p>
+              {purchasesCount > 0 && (
+                <div className="text-lg font-bold text-green-500">
+                  {purchasesCount} {purchasesCount === 1 ? "køb" : "køb"}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Mine salg Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.18 }}
+              onClick={() => navigate("/mine-salg")}
+              className="rounded-xl border border-white/10 bg-secondary/40 p-6 cursor-pointer hover:bg-secondary/60 transition-all duration-200 hover:border-neon-blue/50 group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-lg bg-purple-500/20 border border-purple-500/30">
+                  <Store className="w-6 h-6 text-purple-500" />
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-neon-blue group-hover:translate-x-1 transition-all" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Mine salg
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Se produkter du har solgt og skriv anmeldelser
+              </p>
+              {salesCount > 0 && (
+                <div className="text-lg font-bold text-purple-500">
+                  {salesCount} {salesCount === 1 ? "salg" : "salg"}
                 </div>
               )}
             </motion.div>
