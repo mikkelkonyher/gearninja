@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Package, Heart, Settings, ArrowRight, ShoppingBag, Store } from "lucide-react";
+import { Loader2, Package, Heart, Settings, ArrowRight, ShoppingBag, Store, User } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
 export function ProfilePage() {
@@ -121,6 +121,28 @@ export function ProfilePage() {
 
           {/* Profile Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* Min offentlige profil Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.05 }}
+              onClick={() => navigate(`/user/${user.id}`)}
+              className="rounded-xl border border-white/10 bg-secondary/40 p-6 cursor-pointer hover:bg-secondary/60 transition-all duration-200 hover:border-neon-blue/50 group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 rounded-lg bg-cyan-500/20 border border-cyan-500/30">
+                  <User className="w-6 h-6 text-cyan-500" />
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-neon-blue group-hover:translate-x-1 transition-all" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                Min offentlige profil
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Se din profil som andre ser den - med anmeldelser og aktive annoncer
+              </p>
+            </motion.div>
+
             {/* Mine Annoncer Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}

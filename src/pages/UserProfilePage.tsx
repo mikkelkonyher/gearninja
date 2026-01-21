@@ -24,6 +24,16 @@ interface SoldProduct {
   sold_at: string;
 }
 
+interface ActiveProduct {
+  id: string;
+  brand: string | null;
+  model: string | null;
+  type: string;
+  price: number | null;
+  image_urls: string[];
+  created_at: string;
+}
+
 interface UserProfile {
   id: string;
   username: string;
@@ -36,6 +46,7 @@ export function UserProfilePage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [soldProducts, setSoldProducts] = useState<SoldProduct[]>([]);
+  const [activeProducts, setActiveProducts] = useState<ActiveProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reviewerNames, setReviewerNames] = useState<Record<string, string>>({});
@@ -96,6 +107,17 @@ export function UserProfilePage() {
 
       if (productsError) throw productsError;
       setSoldProducts(productsData || []);
+
+      // 4. Fetch Active Products (products for sale)
+      const { data: activeData, error: activeError } = await supabase
+        .from("products")
+        .select("id, brand, model, type, price, image_urls, created_at")
+        .eq("user_id", userId)
+        .eq("sold", false)
+        .order("created_at", { ascending: false });
+
+      if (activeError) throw activeError;
+      setActiveProducts(activeData || []);
 
     } catch (err: any) {
       console.error("Error fetching profile:", err);
@@ -184,6 +206,7 @@ export function UserProfilePage() {
               
               <div className="text-sm text-muted-foreground">
                 <p>{reviews.length} anmeldelser</p>
+                <p>{activeProducts.length} aktive annoncer</p>
                 <p>{soldProducts.length} solgte varer</p>
               </div>
             </motion.div>
@@ -246,14 +269,68 @@ export function UserProfilePage() {
               )}
             </motion.div>
 
-            {/* Sold Products Section */}
+            {/* Active Products Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Package className="w-5 h-5 text-neon-blue" />
+                <Package className="w-5 h-5 text-green-500" />
+                Aktive annoncer
+              </h2>
+
+              {activeProducts.length === 0 ? (
+                <div className="p-8 rounded-xl border border-white/10 bg-secondary/20 text-center text-muted-foreground">
+                  Ingen aktive annoncer
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {activeProducts.map((product) => (
+                    <div 
+                      key={product.id} 
+                      onClick={() => navigate(`/product/${product.id}`)}
+                      className="group flex gap-3 p-3 rounded-xl border border-white/5 bg-secondary/20 hover:bg-secondary/30 hover:border-neon-blue/30 transition-colors cursor-pointer"
+                    >
+                      <div className="w-16 h-16 rounded-lg bg-slate-700 flex-shrink-0 overflow-hidden">
+                        {product.image_urls && product.image_urls[0] ? (
+                          <img 
+                            src={product.image_urls[0]} 
+                            alt={product.model || product.type} 
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                            <Package className="w-6 h-6" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-col justify-center min-w-0">
+                        <h3 className="font-medium text-white truncate text-sm group-hover:text-neon-blue transition-colors">
+                          {product.brand && product.model 
+                            ? `${product.brand} ${product.model}`
+                            : product.type}
+                        </h3>
+                        {product.price && (
+                          <p className="text-sm font-semibold text-neon-blue">
+                            {product.price.toLocaleString("da-DK")} kr.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Sold Products Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Package className="w-5 h-5 text-muted-foreground" />
                 Tidligere salg
               </h2>
 
