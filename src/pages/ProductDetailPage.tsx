@@ -43,6 +43,7 @@ interface Sale {
   status: "pending" | "completed" | "cancelled";
   buyer_id: string;
   seller_id: string;
+  completed_at?: string;
 }
 
 export function ProductDetailPage() {
@@ -179,7 +180,19 @@ export function ProductDetailPage() {
       if (error) throw error;
 
       if (data.success) {
-        setSale({ ...sale, status: "completed" });
+        // Fetch updated sale to get completed_at timestamp
+        const { data: updatedSale, error: fetchError } = await supabase
+          .from("sales")
+          .select("*")
+          .eq("id", sale.id)
+          .single();
+
+        if (!fetchError && updatedSale) {
+          setSale(updatedSale);
+        } else {
+          // Fallback: set completed_at manually if fetch fails
+          setSale({ ...sale, status: "completed", completed_at: new Date().toISOString() });
+        }
       } else {
         throw new Error(data.error || "Der skete en fejl");
       }
@@ -265,6 +278,20 @@ export function ProductDetailPage() {
   const formatPrice = (price: number | null) => {
     if (!price) return "Pris på anmodning";
     return `${price.toLocaleString("da-DK")} kr.`;
+  };
+
+  const canStillReview = () => {
+    // If sale is not completed, can't review
+    if (sale?.status !== "completed") return false;
+    
+    // If completed_at is not set yet, allow review (just completed)
+    if (!sale?.completed_at) return true;
+    
+    // Check if 14 days have passed
+    const completedAt = new Date(sale.completed_at);
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    return completedAt >= fourteenDaysAgo;
   };
 
   if (loading) {
@@ -518,13 +545,17 @@ export function ProductDetailPage() {
                             <p className="text-white text-sm mt-2">{userReview.content}</p>
                           )}
                         </div>
-                      ) : (
+                      ) : canStillReview() ? (
                         <button
                           onClick={() => setShowReviewModal(true)}
                           className="w-full px-4 py-2 rounded-lg bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 transition-colors"
                         >
                           Skriv anmeldelse
                         </button>
+                      ) : (
+                        <div className="p-4 rounded-lg bg-secondary/50 border border-white/10 text-center text-muted-foreground text-sm">
+                          Tiden til at anmelde er udløbet (14 dage)
+                        </div>
                       )}
                     </div>
                     

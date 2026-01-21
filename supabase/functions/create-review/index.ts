@@ -77,10 +77,10 @@ serve(async (req) => {
       return badRequest("Kommentar må maks være 1000 tegn", origin);
     }
 
-    // Get sale details to determine reviewee
+    // Get sale details to determine reviewee and check completion date
     const { data: sale, error: saleError } = await supabase
       .from("sales")
-      .select("seller_id, buyer_id")
+      .select("seller_id, buyer_id, completed_at")
       .eq("id", sale_id)
       .single();
 
@@ -91,6 +91,24 @@ serve(async (req) => {
     // Verify user is part of the sale
     if (user.id !== sale.seller_id && user.id !== sale.buyer_id) {
       return jsonResponse({ error: "Du er ikke en del af dette salg" }, origin, { status: 403 });
+    }
+
+    // Check if sale is completed
+    if (!sale.completed_at) {
+      return jsonResponse({ error: "Salget er ikke gennemført endnu" }, origin, { status: 400 });
+    }
+
+    // Check if more than 14 days have passed since completion
+    const completedAt = new Date(sale.completed_at);
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+
+    if (completedAt < fourteenDaysAgo) {
+      return jsonResponse(
+        { error: "Du kan kun anmelde indenfor 14 dage efter handlen er gennemført" },
+        origin,
+        { status: 400 }
+      );
     }
 
     // Determine reviewee (the other party in the sale)

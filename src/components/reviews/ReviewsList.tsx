@@ -33,6 +33,15 @@ export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
     try {
       setLoading(true);
       
+      // Get sale details to check completed_at timestamp
+      const { data: saleData, error: saleError } = await supabase
+        .from("sales")
+        .select("completed_at")
+        .eq("id", saleId)
+        .single();
+
+      if (saleError) throw saleError;
+
       // Check if both parties have reviewed
       const { count, error: countError } = await supabase
         .from("reviews")
@@ -41,11 +50,16 @@ export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
 
       if (countError) throw countError;
 
-      // Only show reviews if both parties have reviewed (count >= 2)
-      // OR if the current user has reviewed, they can see their own? 
-      // Requirement: "Reviews only become visible when both parties have created their review."
+      const reviewCount = count || 0;
       
-      if ((count || 0) < 2) {
+      // Check if 14 days have passed since completion
+      const completedAt = saleData?.completed_at ? new Date(saleData.completed_at) : null;
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      const isFourteenDaysPassed = completedAt && completedAt < fourteenDaysAgo;
+
+      // Show reviews if both parties have reviewed OR if 14 days have passed
+      if (reviewCount < 2 && !isFourteenDaysPassed) {
         setCanView(false);
         return;
       }
@@ -95,7 +109,7 @@ export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
   if (!canView) {
     return (
       <div className="p-4 rounded-lg bg-secondary/20 border border-white/10 text-center text-muted-foreground text-sm">
-        Anmeldelser bliver synlige når både køber og sælger har afgivet deres bedømmelse.
+        Anmeldelser bliver synlige når både køber og sælger har afgivet deres bedømmelse, eller efter 14 dage.
       </div>
     );
   }
