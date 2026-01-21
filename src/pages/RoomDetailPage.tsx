@@ -426,12 +426,13 @@ export function RoomDetailPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
             onClick={closeLightbox}
+            style={{ paddingTop: '8rem', paddingBottom: '2rem' }}
           >
             <button
               onClick={closeLightbox}
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+              className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10 backdrop-blur-sm"
               aria-label="Luk"
             >
               <X className="w-6 h-6" />
@@ -444,7 +445,7 @@ export function RoomDetailPage() {
                     e.stopPropagation();
                     prevLightboxImage();
                   }}
-                  className="absolute left-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  className="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10 backdrop-blur-sm"
                   aria-label="Forrige billede"
                 >
                   <ChevronLeft className="w-8 h-8" />
@@ -454,7 +455,7 @@ export function RoomDetailPage() {
                     e.stopPropagation();
                     nextLightboxImage();
                   }}
-                  className="absolute right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                  className="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10 backdrop-blur-sm"
                   aria-label="Næste billede"
                 >
                   <ChevronRight className="w-8 h-8" />
@@ -470,12 +471,12 @@ export function RoomDetailPage() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="max-w-full max-h-full object-contain"
+              className="max-w-full max-h-full w-auto h-auto object-contain"
               onClick={(e) => e.stopPropagation()}
             />
 
             {hasMultipleImages && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm">
                 {lightboxImageIndex + 1} / {room.image_urls.length}
               </div>
             )}
