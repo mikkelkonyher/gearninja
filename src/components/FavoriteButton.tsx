@@ -17,8 +17,8 @@ export function FavoriteButton({ itemId, itemType, currentUserId, className = ""
   const [isOwner, setIsOwner] = useState(false);
   const [isInCooldown, setIsInCooldown] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const cooldownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const cooldownTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const COOLDOWN_MS = 2000; // 2 second cooldown between clicks
 
   useEffect(() => {
