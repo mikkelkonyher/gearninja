@@ -739,37 +739,46 @@ export function MineAnnoncerPage() {
                         product.sold &&
                         product.sold_at && (
                           <>
-                            <div className="mt-3 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 flex items-center gap-2">
-                              <Clock className="w-4 h-4" />
-                              <span className="text-sm font-medium">
-                                {formatTimeUntilDeletion(product.sold_at)}
-                              </span>
-                            </div>
-                            {/* Show buyer username if sale is completed */}
-                            {sales[item.id]?.status === "completed" && (
-                              <p className="mt-1 text-xs text-muted-foreground text-center">
-                                Solgt til {sales[item.id]?.buyer_username || "køber"}
-                              </p>
-                            )}
-                            {/* Only show cancel button if sale is not completed */}
-                            {sales[item.id]?.status !== "completed" && (
-                              <button
-                                onClick={() => handleUnmarkAsSold(item.id)}
-                                disabled={unmarkingAsSoldId === item.id}
-                                className="mt-2 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                {unmarkingAsSoldId === item.id ? (
-                                  <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>Annullerer...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <XCircle className="w-5 h-5" />
-                                    <span>Annuller solgt status</span>
-                                  </>
-                                )}
-                              </button>
+                            {/* Show deletion countdown only when sale is completed */}
+                            {sales[item.id]?.status === "completed" ? (
+                              <>
+                                <div className="mt-3 px-4 py-2 rounded-lg bg-red-500/20 border border-red-500/50 text-red-400 flex items-center gap-2">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="text-sm font-medium">
+                                    {formatTimeUntilDeletion(product.sold_at)}
+                                  </span>
+                                </div>
+                                <p className="mt-1 text-xs text-muted-foreground text-center">
+                                  Solgt til {sales[item.id]?.buyer_username || "køber"}
+                                </p>
+                              </>
+                            ) : (
+                              <>
+                                {/* Show pending message when sale is not completed */}
+                                <div className="mt-3 px-4 py-2 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 flex items-center gap-2">
+                                  <Clock className="w-4 h-4" />
+                                  <span className="text-sm font-medium">
+                                    Afventer købers bekræftelse
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={() => handleUnmarkAsSold(item.id)}
+                                  disabled={unmarkingAsSoldId === item.id}
+                                  className="mt-2 w-full px-4 py-3 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/30 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {unmarkingAsSoldId === item.id ? (
+                                    <>
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                      <span>Annullerer...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-5 h-5" />
+                                      <span>Annuller solgt status</span>
+                                    </>
+                                  )}
+                                </button>
+                              </>
                             )}
                           </>
                         )}
