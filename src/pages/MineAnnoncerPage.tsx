@@ -588,28 +588,30 @@ export function MineAnnoncerPage() {
                     whileHover={{ y: -4 }}
                     className="rounded-xl border border-white/10 bg-secondary/40 overflow-hidden flex flex-col group relative"
                   >
-                    {/* Action Buttons */}
-                    <div className="absolute top-2 right-2 z-10 flex gap-2">
-                      <button
-                        onClick={() => handleEdit(item.id, item.itemType)}
-                        className="p-2 rounded-lg bg-blue-500/80 hover:bg-blue-500 text-white backdrop-blur-sm transition-colors"
-                        title="Rediger"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id, item.itemType)}
-                        disabled={deletingId === item.id}
-                        className="p-2 rounded-lg bg-red-500/80 hover:bg-red-500 text-white backdrop-blur-sm transition-colors disabled:opacity-50"
-                        title="Slet"
-                      >
-                        {deletingId === item.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
+                    {/* Action Buttons - Hidden for sold products */}
+                    {!(isProduct && product?.sold) && (
+                      <div className="absolute top-2 right-2 z-10 flex gap-2">
+                        <button
+                          onClick={() => handleEdit(item.id, item.itemType)}
+                          className="p-2 rounded-lg bg-blue-500/80 hover:bg-blue-500 text-white backdrop-blur-sm transition-colors"
+                          title="Rediger"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id, item.itemType)}
+                          disabled={deletingId === item.id}
+                          className="p-2 rounded-lg bg-red-500/80 hover:bg-red-500 text-white backdrop-blur-sm transition-colors disabled:opacity-50"
+                          title="Slet"
+                        >
+                          {deletingId === item.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Image */}
                     <div
