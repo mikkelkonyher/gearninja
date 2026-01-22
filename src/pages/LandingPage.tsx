@@ -274,7 +274,7 @@ export function LandingPage() {
                     key={product.id}
                     whileHover={{ y: -2 }}
                     onClick={() => navigate(`/product/${product.id}`)}
-                    className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
+                    className="w-[calc(50%-8px)] md:w-[230px] lg:w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
                   >
                     <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
                       {product.image_urls && product.image_urls.length > 0 ? (
@@ -354,7 +354,7 @@ export function LandingPage() {
                     key={product.id}
                     whileHover={{ y: -2 }}
                     onClick={() => navigate(`/product/${product.id}`)}
-                    className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
+                    className="w-[calc(50%-8px)] md:w-[230px] lg:w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
                   >
                     <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
                       {product.image_urls && product.image_urls.length > 0 ? (
@@ -429,7 +429,7 @@ export function LandingPage() {
                     key={room.id}
                     whileHover={{ y: -2 }}
                     onClick={() => navigate(`/room/${room.id}`)}
-                    className="min-w-[220px] max-w-[220px] md:min-w-[230px] md:max-w-[230px] lg:min-w-[240px] lg:max-w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
+                    className="w-[calc(50%-8px)] md:w-[230px] lg:w-[240px] rounded-xl border border-white/10 bg-secondary/40 p-4 flex-shrink-0 flex flex-col gap-2 snap-start cursor-pointer group"
                   >
                     <div className="h-32 w-full rounded-lg bg-cover bg-center bg-slate-700 mb-3 overflow-hidden relative">
                       {room.image_urls && room.image_urls.length > 0 ? (
