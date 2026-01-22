@@ -451,9 +451,14 @@ export function ProductDetailPage() {
                       <span className="px-3 py-1 rounded-full bg-red-500/20 border border-red-500/50 text-red-400 text-sm font-semibold text-center">
                         SOLGT
                       </span>
-                      {product.sold_at && (
+                      {product.sold_at && sale?.status === "completed" && (
                         <span className="text-xs text-muted-foreground">
                           Slettes automatisk om {Math.max(0, 3 - Math.floor((new Date().getTime() - new Date(product.sold_at).getTime()) / (1000 * 60 * 60 * 24)))} dage
+                        </span>
+                      )}
+                      {product.sold_at && sale?.status !== "completed" && (
+                        <span className="text-xs text-yellow-400">
+                          Afventer købers bekræftelse
                         </span>
                       )}
                     </div>
