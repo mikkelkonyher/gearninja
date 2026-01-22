@@ -709,8 +709,11 @@ export function ProductDetailPage() {
             style={{ paddingTop: '8rem', paddingBottom: '2rem' }}
           >
             <button
-              onClick={closeLightbox}
-              className="absolute top-6 right-6 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white z-10 backdrop-blur-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeLightbox();
+              }}
+              className="fixed top-28 right-4 p-3 rounded-full bg-white text-black hover:bg-gray-200 transition-colors z-[200] shadow-lg"
               aria-label="Luk"
             >
               <X className="w-6 h-6" />

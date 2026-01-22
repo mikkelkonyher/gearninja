@@ -108,7 +108,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Desktop Navigation - Centered with max-width */}
-          <nav className="hidden lg:flex items-center justify-center gap-2 max-w-3xl mx-auto">
+          <nav className="hidden min-[1400px]:flex items-center justify-center gap-2 max-w-3xl mx-auto">
             {categories.map((category) => {
               let categoryPath = `/category/${category.toLowerCase()}`;
               if (category === "Trommer") {
@@ -144,7 +144,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* Actions - Desktop */}
-          <div className="hidden md:flex items-center gap-4 absolute right-4">
+          <div className="hidden min-[1400px]:flex items-center gap-4 absolute right-4">
             {userEmail && <NotificationBell userId={userId} />}
             <Link
               to="/create"
@@ -223,7 +223,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
 
           {/* Mobile Actions */}
-          <div className="md:hidden flex items-center gap-3 absolute right-4">
+          <div className="min-[1400px]:hidden flex items-center gap-3 absolute right-4">
             <Link
               to="/create"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
@@ -303,7 +303,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden border-b border-white/10 bg-background"
+              className="min-[1400px]:hidden border-b border-white/10 bg-background"
             >
               <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
                 <nav className="flex flex-col gap-2">
