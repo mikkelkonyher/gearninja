@@ -202,7 +202,7 @@ export function MineSalgPage() {
                 <div className="flex flex-col sm:flex-row">
                   {/* Product Image */}
                   <div
-                    className="w-full sm:w-32 h-32 bg-slate-700 flex-shrink-0 cursor-pointer"
+                    className="w-full sm:w-40 aspect-square sm:aspect-auto sm:h-40 bg-slate-700 flex-shrink-0 cursor-pointer"
                     onClick={() => navigate(`/product/${sale.product_id}`)}
                   >
                     {sale.product?.image_urls?.[0] ? (
