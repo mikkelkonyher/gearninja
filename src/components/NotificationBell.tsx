@@ -315,7 +315,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
       }
     } else if (notification.item_type === "product") {
       try {
-        const { data: productData, error } = await supabase
+        const { data: productData } = await supabase
           .from("products")
           .select("id")
           .eq("id", notification.item_id)
@@ -332,7 +332,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
       }
     } else {
       try {
-        const { data: roomData, error } = await supabase
+        const { data: roomData } = await supabase
           .from("rehearsal_rooms")
           .select("id")
           .eq("id", notification.item_id)

@@ -297,10 +297,9 @@ export function MineAnnoncerPage() {
 
         // Delete all images at once if we have paths
         if (imagePaths.length > 0) {
-          const { error: storageError } = await supabase.storage
+          await supabase.storage
             .from("gearninjaImages")
             .remove(imagePaths);
-
           // Continue with deletion even if image deletion fails
         }
       }
@@ -372,21 +371,19 @@ export function MineAnnoncerPage() {
 
       // Delete the sale record if it exists (this will cascade delete reviews if any)
       if (saleData?.id) {
-        const { error: saleDeleteError } = await supabase
+        await supabase
           .from("sales")
           .delete()
           .eq("id", saleData.id);
-
         // Continue even if sale deletion fails
 
         // Delete related notifications for this sale
-        const { error: notificationDeleteError } = await supabase
+        await supabase
           .from("notifications")
           .delete()
           .eq("item_id", itemId)
           .eq("item_type", "product")
           .eq("type", "sale_request");
-
         // Continue even if notification deletion fails
       }
 
