@@ -1,0 +1,10 @@
+---
+name: supabasewrite
+description: Safety protocols for Supabase MCP operations to prevent unauthorized database writes.
+---
+
+# Overview
+
+Regarding my Supabase MCP connection: You are allowed to perform read operations freely. However, for any WRITE, UPDATE, DELETE, or DROP operations, you MUST present the intended SQL/action in the chat and wait for my explicit confirmation before executing. When in doubt, provide the SQL code for manual execution instead.
+
+Always use the MCP get_schema or equivalent tool before suggesting changes to ensure SQL accuracy.
