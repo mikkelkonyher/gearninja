@@ -70,8 +70,7 @@ export function CreateStrygerePage() {
   const [error, setError] = useState<string | null>(null);
   const [images, setImages] = useState<ImageFile[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
-  const [touchedIndex, setTouchedIndex] = useState<number | null>(null);
+  const [selectedSwapIndex, setSelectedSwapIndex] = useState<number | null>(null);
   const [formData, setFormData] = useState({
     type: "",
     brand: "",
@@ -174,53 +173,23 @@ export function CreateStrygerePage() {
     setDraggedIndex(null);
   };
 
-  const handleTouchStart = (e: React.TouchEvent, index: number) => {
-    setTouchedIndex(index);
-    setTouchStartY(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (touchedIndex === null || touchStartY === null) return;
-    
-    const touch = e.touches[0];
-    const touchY = touch.clientY;
-    
-    // Find the grid container
-    const gridContainer = (e.currentTarget as HTMLElement).closest('.grid');
-    if (!gridContainer) return;
-    
-    const gridRect = gridContainer.getBoundingClientRect();
-    
-    // Calculate which grid position the touch is over
-    const relativeY = touchY - gridRect.top;
-    const relativeX = touch.clientX - gridRect.left;
-    
-    // Determine grid columns (2 on mobile, 3 on desktop)
-    const isMobile = window.innerWidth < 768;
-    const cols = isMobile ? 2 : 3;
-    
-    // Calculate row and column
-    const itemWidth = gridRect.width / cols;
-    const itemHeight = itemWidth; // aspect-square
-    const col = Math.floor(relativeX / itemWidth);
-    const row = Math.floor(relativeY / itemHeight);
-    
-    // Calculate target index
-    const targetIndex = Math.min(row * cols + col, images.length - 1);
-    
-    if (targetIndex >= 0 && targetIndex < images.length && targetIndex !== touchedIndex) {
+  // Tap-to-swap for mobile: tap one image to select, tap another to swap positions
+  const handleImageTap = (index: number) => {
+    if (selectedSwapIndex === null) {
+      // No image selected, select this one
+      setSelectedSwapIndex(index);
+    } else if (selectedSwapIndex === index) {
+      // Same image tapped, deselect
+      setSelectedSwapIndex(null);
+    } else {
+      // Different image tapped, swap positions
       const newImages = [...images];
-      const touchedItem = newImages[touchedIndex];
-      newImages.splice(touchedIndex, 1);
-      newImages.splice(targetIndex, 0, touchedItem);
+      const temp = newImages[selectedSwapIndex];
+      newImages[selectedSwapIndex] = newImages[index];
+      newImages[index] = temp;
       setImages(newImages);
-      setTouchedIndex(targetIndex);
+      setSelectedSwapIndex(null);
     }
-  };
-
-  const handleTouchEnd = () => {
-    setTouchedIndex(null);
-    setTouchStartY(null);
   };
 
   const uploadImages = async (): Promise<string[]> => {
@@ -571,7 +540,12 @@ export function CreateStrygerePage() {
                 Billeder <span className="text-red-400">*</span> (max 6, første
                 er hovedbillede)
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4" style={{ touchAction: touchedIndex !== null ? 'none' : 'auto' }}>
+              {images.length > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  Tryk på et billede for at vælge det, og tryk på et andet for at bytte plads
+                </p>
+              )}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {images.map((image, index) => (
                   <motion.div
                     key={index}
@@ -580,33 +554,49 @@ export function CreateStrygerePage() {
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
-                    onTouchStart={(e) => handleTouchStart(e, index)}
-                    onTouchMove={(e) => handleTouchMove(e)}
-                    onTouchEnd={handleTouchEnd}
+                    onClick={() => handleImageTap(index)}
                     whileDrag={{ opacity: 0.5 }}
-                    className={`relative group aspect-square rounded-lg overflow-hidden border-2 bg-background/30 ${
-                      index === 0
+                    className={`relative group aspect-square rounded-lg overflow-hidden border-2 bg-background/30 cursor-pointer transition-all ${
+                      selectedSwapIndex === index
+                        ? "border-neon-blue ring-2 ring-neon-blue/50 scale-[0.98]"
+                        : index === 0
                         ? "border-green-500"
                         : "border-white/10"
-                    } ${
-                      touchedIndex === index ? "opacity-50" : ""
                     }`}
                   >
                     <img
                       src={image.preview}
                       alt={`Upload ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover pointer-events-none"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    {selectedSwapIndex === index && (
+                      <div className="absolute inset-0 bg-neon-blue/20 flex items-center justify-center">
+                        <span className="text-white text-xs font-medium bg-neon-blue/80 px-2 py-1 rounded">
+                          Vælg billede at bytte med
+                        </span>
+                      </div>
+                    )}
+                    {selectedSwapIndex !== null && selectedSwapIndex !== index && (
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">
+                        <span className="text-white text-xs font-medium bg-background/80 px-2 py-1 rounded">
+                          Tryk for at bytte
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 md:flex hidden">
                       <GripVertical className="w-5 h-5 text-white cursor-move" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="p-1 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors"
-                      >
-                        <X className="w-4 h-4 text-white" />
-                      </button>
                     </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(index);
+                        if (selectedSwapIndex === index) setSelectedSwapIndex(null);
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-red-500/80 hover:bg-red-500 transition-colors opacity-0 group-hover:opacity-100 md:opacity-0 opacity-100"
+                    >
+                      <X className="w-4 h-4 text-white" />
+                    </button>
                     {index === 0 && (
                       <div className="absolute top-2 left-2 px-2 py-1 bg-background/80 backdrop-blur-sm text-green-500 text-xs font-semibold rounded border border-green-500/50">
                         Hovedbillede
