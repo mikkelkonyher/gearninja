@@ -543,7 +543,7 @@ export function CreateOevelokalerPage() {
                 Billeder <span className="text-red-400">*</span> (max 6, første
                 er hovedbillede)
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4" style={{ touchAction: 'none' }}>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4" style={{ touchAction: touchedIndex !== null ? 'none' : 'auto' }}>
                 {images.map((image, index) => (
                   <div
                     key={index}
