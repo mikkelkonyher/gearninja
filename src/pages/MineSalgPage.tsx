@@ -59,11 +59,12 @@ export function MineSalgPage() {
     try {
       setLoading(true);
 
-      // Fetch sales where user is seller
+      // Fetch sales where user is seller (exclude cancelled sales)
       const { data: salesData, error: salesError } = await supabase
         .from("sales")
         .select("id, product_id, status, completed_at, buyer_id")
         .eq("seller_id", user.id)
+        .neq("status", "cancelled")
         .order("completed_at", { ascending: false, nullsFirst: false });
 
       if (salesError) throw salesError;

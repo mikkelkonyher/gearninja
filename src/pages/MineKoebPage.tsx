@@ -59,11 +59,12 @@ export function MineKoebPage() {
     try {
       setLoading(true);
 
-      // Fetch sales where user is buyer
+      // Fetch sales where user is buyer (exclude cancelled sales)
       const { data: salesData, error: salesError } = await supabase
         .from("sales")
         .select("id, product_id, status, completed_at, seller_id")
         .eq("buyer_id", user.id)
+        .neq("status", "cancelled")
         .order("completed_at", { ascending: false, nullsFirst: false });
 
       if (salesError) throw salesError;
