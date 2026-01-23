@@ -59,12 +59,6 @@ export function RegisterPage() {
         // Try to get the actual error message from the response
         let errorMessage = "Der skete en fejl under oprettelsen";
 
-        // Debug: log the error structure to understand what we're working with
-        console.log("Edge Function error:", error);
-        console.log("Edge Function data:", data);
-        console.log("Error type:", error?.constructor?.name);
-        console.log("Error context:", error?.context);
-
         // Check if data contains the error (sometimes Supabase returns the error in data even on error)
         if (data && typeof data === "object" && "error" in data) {
           errorMessage = (data as { error: string }).error;

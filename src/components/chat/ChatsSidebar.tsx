@@ -134,8 +134,8 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
               }
             );
             otherUsername = usernameData?.username || null;
-          } catch (err) {
-            console.error("Error fetching username:", err);
+          } catch {
+            // Error fetching username - continue silently
           }
 
           // Fetch item title
@@ -200,8 +200,8 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
       );
 
       setChats(chatsWithDetails);
-    } catch (err: any) {
-      console.error("Error fetching chats:", err);
+    } catch {
+      // Error fetching chats - handled silently
     } finally {
       setLoading(false);
     }
@@ -280,8 +280,7 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
       if (currentChatId === chat.id) {
         navigate("/chat");
       }
-    } catch (err) {
-      console.error("Error deleting chat:", err);
+    } catch {
       alert("Kunne ikke slette samtale.");
     }
   };

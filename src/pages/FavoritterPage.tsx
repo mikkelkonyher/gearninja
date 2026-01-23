@@ -125,8 +125,8 @@ export function FavoritterPage() {
       }
 
       setFavorites(favoriteItems);
-    } catch (error) {
-      console.error("Error fetching favorites:", error);
+    } catch {
+      // Error fetching favorites - handled silently
     } finally {
       setLoading(false);
     }

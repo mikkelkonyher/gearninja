@@ -106,8 +106,8 @@ export function ProductFiltersComponent({
       setAvailableTypes(Array.from(types).sort());
       setAvailableBrands(Array.from(brands).sort());
       setAvailableLocations(Array.from(locations).sort());
-    } catch (err) {
-      console.error("Error fetching filter options:", err);
+    } catch {
+      // Error fetching filter options - handled silently
     } finally {
       setLoadingOptions(false);
     }

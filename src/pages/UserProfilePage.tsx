@@ -119,8 +119,7 @@ export function UserProfilePage() {
       if (activeError) throw activeError;
       setActiveProducts(activeData || []);
 
-    } catch (err: any) {
-      console.error("Error fetching profile:", err);
+    } catch {
       setError("Kunne ikke hente brugerprofil");
     } finally {
       setLoading(false);

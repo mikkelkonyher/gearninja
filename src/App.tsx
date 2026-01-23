@@ -90,8 +90,6 @@ function App() {
           <Route path="/indstillinger" element={<IndstillingerPage />} />
           <Route path="/search" element={<SearchResultsPage />} />
           <Route path="/om" element={<AboutPage />} />
-          {/* Placeholder for category routes */}
-          <Route path="/category/:slug" element={<div className="text-center py-20 text-2xl text-muted-foreground">Kategori side kommer snart...</div>} />
         </Routes>
       </Layout>
     </Router>

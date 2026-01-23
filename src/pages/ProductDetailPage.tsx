@@ -127,8 +127,7 @@ export function ProductDetailPage() {
       if (!error) {
         setFavoriteCount(count || 0);
       }
-    } catch (err) {
-      console.error("Error fetching favorite count:", err);
+    } catch {
       setFavoriteCount(0);
     }
   };
@@ -145,8 +144,8 @@ export function ProductDetailPage() {
       if (!error && data) {
         setSale(data);
       }
-    } catch (err) {
-      console.error("Error fetching sale status:", err);
+    } catch {
+      // Error fetching sale status - handled silently
     }
   };
 
@@ -162,8 +161,8 @@ export function ProductDetailPage() {
       if (!error && data) {
         setUserReview(data);
       }
-    } catch (err) {
-      console.error("Error fetching user review:", err);
+    } catch {
+      // Error fetching user review - handled silently
     }
   };
 
@@ -198,7 +197,6 @@ export function ProductDetailPage() {
         throw new Error(data.error || "Der skete en fejl");
       }
     } catch (err: any) {
-      console.error("Error confirming sale:", err);
       alert("Fejl ved bekræftelse af salg: " + err.message);
     } finally {
       setProcessingSale(false);
@@ -232,7 +230,6 @@ export function ProductDetailPage() {
         throw new Error(data.error || "Der skete en fejl");
       }
     } catch (err: any) {
-      console.error("Error declining sale:", err);
       alert("Fejl ved afvisning af salg: " + err.message);
     } finally {
       setProcessingSale(false);

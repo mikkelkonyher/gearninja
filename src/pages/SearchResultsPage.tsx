@@ -100,8 +100,7 @@ export function SearchResultsPage() {
       if (fetchError) throw fetchError;
 
       setAllSearchResults(data || []);
-    } catch (err) {
-      console.error("Error fetching all search results:", err);
+    } catch {
       setAllSearchResults([]);
     }
   };

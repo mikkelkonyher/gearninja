@@ -114,8 +114,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                 } else {
                   details.favoriter_username = "Nogen";
                 }
-              } catch (err) {
-                console.error("Error fetching username:", err);
+              } catch {
                 details.favoriter_username = "Nogen";
               }
             }
@@ -139,9 +138,8 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                   details.product_brand = productData.brand;
                   details.product_model = productData.model;
                 }
-              } catch (err) {
+              } catch {
                 // Product might be deleted (sold), that's okay
-                console.error("Error fetching product details:", err);
               }
             } else if (
               notification.item_type === "room" ||
@@ -157,9 +155,8 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                 if (!roomError && roomData) {
                   details.room_name = roomData.name;
                 }
-              } catch (err) {
+              } catch {
                 // Room might be deleted (rented), that's okay
-                console.error("Error fetching room details:", err);
               }
             } else if (
               notification.item_type === "forum_thread" ||
@@ -175,8 +172,8 @@ export function NotificationBell({ userId }: { userId: string | null }) {
                 if (!threadError && threadData) {
                   details.thread_title = threadData.title;
                 }
-              } catch (err) {
-                console.error("Error fetching forum thread details:", err);
+              } catch {
+                // Error fetching forum thread details - continue silently
               }
             }
 
@@ -188,8 +185,8 @@ export function NotificationBell({ userId }: { userId: string | null }) {
       setUnreadCount(
         notificationsWithDetails.filter((n) => !n.read).length || 0
       );
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
+    } catch {
+      // Error fetching notifications - handled silently
     } finally {
       setLoading(false);
     }
@@ -212,8 +209,8 @@ export function NotificationBell({ userId }: { userId: string | null }) {
         );
         setUnreadCount(0);
       }
-    } catch (err) {
-      console.error("Error marking all notifications as read:", err);
+    } catch {
+      // Error marking all notifications as read - handled silently
     }
   };
 
@@ -254,8 +251,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
           return;
         }
         navigate(`/product/${notification.item_id}`);
-      } catch (err) {
-        console.error("Error checking product:", err);
+      } catch {
         alert("Denne annonce findes ikke længere.");
       }
     } else if (notification.type === "review_reminder") {
@@ -272,8 +268,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
           return;
         }
         navigate(`/product/${notification.item_id}`);
-      } catch (err) {
-        console.error("Error checking product:", err);
+      } catch {
         alert("Denne annonce findes ikke længere.");
       }
     } else if (notification.type === "product_sold") {
@@ -294,8 +289,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
         }
         // Product still exists (marked as sold but not deleted yet), navigate to it
         navigate(`/product/${notification.item_id}`);
-      } catch (err) {
-        console.error("Error checking product:", err);
+      } catch {
         alert("Denne annonce findes ikke længere.");
       }
     } else if (notification.type === "room_rented") {
@@ -316,8 +310,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
         }
         // Room still exists (marked as rented but not deleted yet), navigate to it
         navigate(`/room/${notification.item_id}`);
-      } catch (err) {
-        console.error("Error checking room:", err);
+      } catch {
         alert("Dette øvelokale findes ikke længere.");
       }
     } else if (notification.item_type === "product") {
@@ -328,18 +321,13 @@ export function NotificationBell({ userId }: { userId: string | null }) {
           .eq("id", notification.item_id)
           .maybeSingle();
 
-        if (error) {
-          console.error("Error checking product existence:", error);
-        }
-
         if (!productData) {
           window.alert("Denne annonce findes ikke længere.");
           return;
         }
 
         navigate(`/product/${notification.item_id}`);
-      } catch (err) {
-        console.error("Error handling product notification click:", err);
+      } catch {
         window.alert("Kunne ikke åbne annoncen. Prøv igen senere.");
       }
     } else {
@@ -350,18 +338,13 @@ export function NotificationBell({ userId }: { userId: string | null }) {
           .eq("id", notification.item_id)
           .maybeSingle();
 
-        if (error) {
-          console.error("Error checking room existence:", error);
-        }
-
         if (!roomData) {
           window.alert("Dette øvelokale findes ikke længere.");
           return;
         }
 
         navigate(`/room/${notification.item_id}`);
-      } catch (err) {
-        console.error("Error handling room notification click:", err);
+      } catch {
         window.alert("Kunne ikke åbne øvelokalet. Prøv igen senere.");
       }
     }

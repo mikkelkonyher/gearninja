@@ -47,7 +47,6 @@ export function BuyerSelectionModal({
 
       setPotentialBuyers(data || []);
     } catch (err: any) {
-      console.error("Error fetching buyers:", err);
       setError("Kunne ikke hente købere: " + err.message);
     } finally {
       setLoading(false);
@@ -73,7 +72,6 @@ export function BuyerSelectionModal({
         throw new Error(data.error || "Der skete en fejl");
       }
     } catch (err: any) {
-      console.error("Error creating sale:", err);
       alert("Fejl ved oprettelse af salg: " + err.message);
     } finally {
       setProcessing(false);

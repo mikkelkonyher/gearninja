@@ -254,8 +254,8 @@ export function CreateStudieudstyrPage() {
         if (path) {
           await supabase.storage.from("gearninjaImages").remove([path]);
         }
-      } catch (err) {
-        console.error("Error deleting removed image:", err);
+      } catch {
+        // Error deleting removed image - continue silently
       }
     }
   };
@@ -324,7 +324,6 @@ export function CreateStudieudstyrPage() {
         navigate("/studieudstyr", { state: { message: "Annonce oprettet!" } });
       }
     } catch (err: any) {
-      console.error("Error submitting product:", err);
       // Try to parse error message if it's a JSON string from edge function
       let errorMessage = "Der skete en fejl under oprettelsen";
       if (err.message) {

@@ -55,8 +55,7 @@ export function UsernameWithRating({
           setAverageRating(null);
         }
       }
-    } catch (err) {
-      console.error("Error fetching username and rating:", err);
+    } catch {
       setUsername("Bruger");
       setAverageRating(null);
     } finally {

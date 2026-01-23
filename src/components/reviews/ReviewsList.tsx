@@ -97,8 +97,8 @@ export function ReviewsList({ saleId, refreshTrigger }: ReviewsListProps) {
       );
 
       setReviews(reviewsWithDetails);
-    } catch (err) {
-      console.error("Error fetching reviews:", err);
+    } catch {
+      // Error fetching reviews - handled silently
     } finally {
       setLoading(false);
     }

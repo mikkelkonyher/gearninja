@@ -48,8 +48,7 @@ export function MineSalgPage() {
         return;
       }
       setUser(currentUser);
-    } catch (err: any) {
-      console.error("Error checking user:", err);
+    } catch {
       navigate("/login");
     }
   };
@@ -122,8 +121,8 @@ export function MineSalgPage() {
       );
 
       setSales(salesWithDetails);
-    } catch (err: any) {
-      console.error("Error fetching sales:", err);
+    } catch {
+      // Error fetching sales - handled silently
     } finally {
       setLoading(false);
     }

@@ -54,7 +54,6 @@ export function ReviewModal({
       onReviewSubmitted();
       onClose();
     } catch (err: any) {
-      console.error("Error submitting review:", err);
       // Try to parse error message if it's a JSON string from edge function
       let errorMessage = "Der skete en fejl";
       if (err.message) {

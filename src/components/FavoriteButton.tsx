@@ -76,8 +76,7 @@ export function FavoriteButton({ itemId, itemType, currentUserId, className = ""
           setIsFavorited(!!data);
         }
       }
-    } catch (err) {
-      console.error("Error fetching favorite status:", err);
+    } catch {
       // Set defaults on error
       setLikesCount(0);
       setIsFavorited(false);
@@ -174,8 +173,7 @@ export function FavoriteButton({ itemId, itemType, currentUserId, className = ""
 
         if (error) throw error;
       }
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
+    } catch {
       // Revert optimistic update
       setIsFavorited(previousState);
       setLikesCount(previousCount);

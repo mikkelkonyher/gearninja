@@ -32,8 +32,7 @@ export function ProfilePage() {
         return;
       }
       setUser(currentUser);
-    } catch (err: any) {
-      console.error("Error checking user:", err);
+    } catch {
       navigate("/login", {
         state: { message: "Kunne ikke hente brugerinformation" },
       });
@@ -62,8 +61,8 @@ export function ProfilePage() {
 
       // Combine counts
       setTotalCount((productsCount || 0) + (roomsCount || 0));
-    } catch (err: any) {
-      console.error("Error fetching announcement count:", err);
+    } catch {
+      // Error fetching announcement count - handled silently
     }
   };
 
@@ -90,8 +89,8 @@ export function ProfilePage() {
 
       if (sellerError) throw sellerError;
       setSalesCount(sellerCount || 0);
-    } catch (err: any) {
-      console.error("Error fetching transaction counts:", err);
+    } catch {
+      // Error fetching transaction counts - handled silently
     }
   };
 

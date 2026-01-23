@@ -77,8 +77,8 @@ export function LandingPage() {
       if (error) throw error;
 
       setNewestProducts(data || []);
-    } catch (err) {
-      console.error("Error fetching newest products:", err);
+    } catch {
+      // Error fetching newest products - handled silently
     } finally {
       setLoading(false);
     }
@@ -132,8 +132,7 @@ export function LandingPage() {
         .slice(0, 15);
 
       setPopularProducts(productsWithFavorites);
-    } catch (err) {
-      console.error("Error fetching popular products:", err);
+    } catch {
       setPopularProducts([]);
     } finally {
       setPopularLoading(false);
@@ -153,8 +152,8 @@ export function LandingPage() {
       if (error) throw error;
 
       setRehearsalRooms(data || []);
-    } catch (err) {
-      console.error("Error fetching rehearsal rooms:", err);
+    } catch {
+      // Error fetching rehearsal rooms - handled silently
     } finally {
       setRoomsLoading(false);
     }

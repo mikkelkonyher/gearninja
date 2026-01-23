@@ -93,8 +93,7 @@ export function RoomDetailPage() {
       if (!error) {
         setFavoriteCount(count || 0);
       }
-    } catch (err) {
-      console.error('Error fetching favorite count:', err);
+    } catch {
       setFavoriteCount(0);
     }
   };

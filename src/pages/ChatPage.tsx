@@ -154,8 +154,7 @@ export function ChatPage() {
 
       // Navigate to chat page
       navigate(`/chat/${chatIdToUse}`, { replace: true });
-    } catch (err: any) {
-      console.error("Error creating/getting chat:", err);
+    } catch {
       alert("Kunne ikke oprette chat. Prøv igen.");
     } finally {
       setLoading(false);
@@ -174,7 +173,6 @@ export function ChatPage() {
         .single();
 
       if (error) {
-        console.error("Error fetching chat:", error);
         alert("Denne chat findes ikke eller du har ikke adgang til den.");
         navigate("/chat");
         return;
@@ -198,8 +196,8 @@ export function ChatPage() {
           user_uuid: otherUserId,
         });
         otherUsername = usernameData?.username || null;
-      } catch (err) {
-        console.error("Error fetching username:", err);
+      } catch {
+        // Error fetching username - continue silently
       }
 
       // Fetch current user's username
@@ -209,8 +207,8 @@ export function ChatPage() {
           user_uuid: currentUserId,
         });
         currentUsername = usernameData?.username || null;
-      } catch (err) {
-        console.error("Error fetching current username:", err);
+      } catch {
+        // Error fetching current username - continue silently
       }
 
       // Fetch item title
@@ -247,8 +245,7 @@ export function ChatPage() {
         item_title: itemTitle,
         current_user_username: currentUsername,
       });
-    } catch (err: any) {
-      console.error("Error fetching chat:", err);
+    } catch {
       alert("Kunne ikke hente chat.");
     } finally {
       setLoading(false);
@@ -279,8 +276,8 @@ export function ChatPage() {
               }
             );
             senderUsername = usernameData?.username || null;
-          } catch (err) {
-            console.error("Error fetching sender username:", err);
+          } catch {
+            // Error fetching sender username - continue silently
           }
           return {
             ...message,
@@ -307,8 +304,8 @@ export function ChatPage() {
           })
         );
       }
-    } catch (err) {
-      console.error("Error fetching messages:", err);
+    } catch {
+      // Error fetching messages - handled silently
     }
   };
 
@@ -338,8 +335,8 @@ export function ChatPage() {
               }
             );
             senderUsername = usernameData?.username || null;
-          } catch (err) {
-            console.error("Error fetching sender username:", err);
+          } catch {
+            // Error fetching sender username - continue silently
           }
 
           setMessages((prev) => {
@@ -439,7 +436,6 @@ export function ChatPage() {
         )
       );
     } catch (err: any) {
-      console.error("Error sending message:", err);
       // Remove optimistic message on error
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
       setNewMessage(messageContent); // Restore message on error

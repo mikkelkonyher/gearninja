@@ -70,8 +70,7 @@ export function IndstillingerPage() {
       // Sign out and redirect
       await supabase.auth.signOut();
       navigate("/");
-    } catch (error) {
-      console.error("Error deleting account:", error);
+    } catch {
       setDeleteError("Der opstod en fejl. Prøv igen senere.");
       setIsDeleting(false);
     }

@@ -48,8 +48,7 @@ export function MineKoebPage() {
         return;
       }
       setUser(currentUser);
-    } catch (err: any) {
-      console.error("Error checking user:", err);
+    } catch {
       navigate("/login");
     }
   };
@@ -122,8 +121,8 @@ export function MineKoebPage() {
       );
 
       setPurchases(purchasesWithDetails);
-    } catch (err: any) {
-      console.error("Error fetching purchases:", err);
+    } catch {
+      // Error fetching purchases - handled silently
     } finally {
       setLoading(false);
     }

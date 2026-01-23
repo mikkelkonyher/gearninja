@@ -202,8 +202,7 @@ export function MineAnnoncerPage() {
         if (!error) {
           counts[item.id] = count || 0;
         }
-      } catch (err) {
-        console.error(`Error fetching favorite count for ${item.id}:`, err);
+      } catch {
         counts[item.id] = 0;
       }
     }
@@ -242,8 +241,7 @@ export function MineAnnoncerPage() {
               ...sale,
               buyer_username: usernameData?.username || "Køber",
             };
-          } catch (err) {
-            console.error("Error fetching buyer username:", err);
+          } catch {
             salesMap[sale.product_id] = {
               ...sale,
               buyer_username: "Køber",
@@ -251,8 +249,8 @@ export function MineAnnoncerPage() {
           }
         }
       }
-    } catch (err) {
-      console.error("Error fetching sales:", err);
+    } catch {
+      // Error fetching sales - continue silently
     }
 
     setSales(salesMap);
@@ -292,8 +290,8 @@ export function MineAnnoncerPage() {
             if (path) {
               imagePaths.push(path);
             }
-          } catch (err) {
-            console.error("Error extracting image path:", err, imageUrl);
+          } catch {
+            // Error extracting image path - continue silently
           }
         }
 
@@ -303,10 +301,7 @@ export function MineAnnoncerPage() {
             .from("gearninjaImages")
             .remove(imagePaths);
 
-          if (storageError) {
-            console.error("Error deleting images from storage:", storageError);
-            // Continue with deletion even if image deletion fails
-          }
+          // Continue with deletion even if image deletion fails
         }
       }
 
@@ -382,9 +377,7 @@ export function MineAnnoncerPage() {
           .delete()
           .eq("id", saleData.id);
 
-        if (saleDeleteError) {
-          console.error("Error deleting sale:", saleDeleteError);
-        }
+        // Continue even if sale deletion fails
 
         // Delete related notifications for this sale
         const { error: notificationDeleteError } = await supabase
@@ -394,9 +387,7 @@ export function MineAnnoncerPage() {
           .eq("item_type", "product")
           .eq("type", "sale_request");
 
-        if (notificationDeleteError) {
-          console.error("Error deleting notifications:", notificationDeleteError);
-        }
+        // Continue even if notification deletion fails
       }
 
       // Update product to unmark as sold
@@ -410,8 +401,8 @@ export function MineAnnoncerPage() {
 
       // Refresh items list
       await fetchAllItems();
-    } catch (err: any) {
-      console.error("Error unmarking product as sold:", err);
+    } catch {
+      // Error unmarking product as sold - handled silently
     } finally {
       setUnmarkingAsSoldId(null);
     }
@@ -428,13 +419,11 @@ export function MineAnnoncerPage() {
       });
 
       if (error) {
-        console.error("RPC error:", error);
         setError(`Fejl ved markering som lejet ud: ${error.message || JSON.stringify(error)}`);
         throw error;
       }
 
       if (data?.error) {
-        console.error("Error marking room as rented:", data.error);
         setError(`Fejl: ${data.error}`);
         return;
       }
@@ -442,7 +431,6 @@ export function MineAnnoncerPage() {
       // Refresh items list
       await fetchAllItems();
     } catch (err: any) {
-      console.error("Error marking room as rented:", err);
       setError(`Kunne ikke markere som lejet ud: ${err.message || "Ukendt fejl"}`);
     } finally {
       setMarkingAsRentedId(null);
@@ -464,8 +452,8 @@ export function MineAnnoncerPage() {
 
       // Refresh items list
       await fetchAllItems();
-    } catch (err: any) {
-      console.error("Error unmarking room as rented:", err);
+    } catch {
+      // Error unmarking room as rented - handled silently
     } finally {
       setUnmarkingAsRentedId(null);
     }

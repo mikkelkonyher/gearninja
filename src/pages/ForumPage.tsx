@@ -141,8 +141,8 @@ export function ForumPage() {
         setHasMore(data.length === PAGE_SIZE);
         setPage(pageNumber);
       }
-    } catch (error) {
-      console.error("Error fetching threads:", error);
+    } catch {
+      // Error fetching threads - handled silently
     } finally {
       if (pageNumber === 0) setLoading(false);
       else setFetchingMore(false);

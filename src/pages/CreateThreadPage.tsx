@@ -59,8 +59,6 @@ export function CreateThreadPage() {
 
       navigate(`/forum/thread/${data.thread.id}`);
     } catch (err: any) {
-      console.error("Error creating thread:", err);
-      // Ideally show error toast here
       alert(err.message || "Kunne ikke oprette tråd");
     } finally {
       setSubmitting(false);

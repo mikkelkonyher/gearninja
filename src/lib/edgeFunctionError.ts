@@ -54,9 +54,8 @@ export async function extractEdgeFunctionError(
           return errorBody.message;
         }
       }
-    } catch (e) {
+    } catch {
       // Continue to next strategy
-      console.error('Error parsing error context:', e);
     }
   }
 

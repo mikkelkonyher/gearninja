@@ -7,10 +7,6 @@ const supabaseUrl =
 const supabaseAnonKey =
   import.meta.env.PUSHIABLE_API_KEY ?? import.meta.env.VITE_PUSHIABLE_API_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
-    "Missing Supabase environment variables (SUPABASE_URL / PUSHIABLE_API_KEY)"
-  );
-}
+// Environment variables are required - app will fail gracefully if missing
 
 export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "");

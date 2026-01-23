@@ -67,8 +67,8 @@ export function RoomFiltersComponent({
       setAvailableTypes(Array.from(types).sort());
       setAvailableLocations(Array.from(locations).sort());
       setAvailablePaymentTypes(Array.from(paymentTypes).sort());
-    } catch (err) {
-      console.error("Error fetching filter options:", err);
+    } catch {
+      // Error fetching filter options - handled silently
     } finally {
       setLoadingOptions(false);
     }

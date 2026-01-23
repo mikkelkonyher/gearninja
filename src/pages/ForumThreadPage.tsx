@@ -90,8 +90,8 @@ export function ForumThreadPage() {
       setThread(data);
       setEditTitle(data.title);
       setEditThreadContent(data.content);
-    } catch (err) {
-      console.error("Error fetching thread:", err);
+    } catch {
+      // Error fetching thread - handled silently
     } finally {
       setLoading(false);
     }
@@ -122,8 +122,8 @@ export function ForumThreadPage() {
         setHasMore(data.length === PAGE_SIZE);
         setPage(pageNumber);
       }
-    } catch (err) {
-      console.error("Error fetching posts:", err);
+    } catch {
+      // Error fetching posts - handled silently
     } finally {
       setFetchingPosts(false);
     }
@@ -153,7 +153,6 @@ export function ForumThreadPage() {
       setPosts([...posts, data.post]);
       setNewReply("");
     } catch (err: any) {
-      console.error("Error submitting reply:", err);
       alert(err.message || "Kunne ikke sende svar");
     } finally {
       setSubmitting(false);
@@ -200,7 +199,6 @@ export function ForumThreadPage() {
       });
       setIsEditingThread(false);
     } catch (err: any) {
-      console.error("Error updating thread:", err);
       alert(err.message || "Kunne ikke opdatere tråd");
     } finally {
       setUpdatingThread(false);
@@ -220,8 +218,7 @@ export function ForumThreadPage() {
       if (error) throw error;
       
       navigate("/forum");
-    } catch (err) {
-      console.error("Error deleting thread:", err);
+    } catch {
       alert("Kunne ikke slette tråd");
     }
   };
@@ -240,8 +237,7 @@ export function ForumThreadPage() {
       if (error) throw error;
 
       setPosts(posts.filter(p => p.id !== postId));
-    } catch (err) {
-      console.error("Error deleting post:", err);
+    } catch {
       alert("Kunne ikke slette svar");
     }
   };
@@ -275,7 +271,6 @@ export function ForumThreadPage() {
       setPosts(posts.map(p => p.id === editingPostId ? { ...p, content: data.post.content } : p));
       cancelEditing();
     } catch (err: any) {
-      console.error("Error updating post:", err);
       alert(err.message || "Kunne ikke opdatere svar");
     } finally {
       setUpdating(false);
