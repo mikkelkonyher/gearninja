@@ -90,7 +90,9 @@ export function LandingPage() {
       // Note: Add .or("sold.is.null,sold.eq.false") after running the SQL script to filter out sold products
       const { data: products, error: productsError } = await supabase
         .from("products")
-        .select("id, brand, model, location, price, image_urls, type, sold, sold_at")
+        .select(
+          "id, brand, model, location, price, image_urls, type, sold, sold_at",
+        )
         .order("created_at", { ascending: false })
         .limit(100);
 
@@ -143,7 +145,7 @@ export function LandingPage() {
       const { data, error } = await supabase
         .from("rehearsal_rooms")
         .select(
-          "id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at, rented_out, rented_out_at"
+          "id, name, address, location, description, payment_type, price, room_size, type, image_urls, created_at, rented_out, rented_out_at",
         )
         .order("created_at", { ascending: false })
         .limit(15);
@@ -180,7 +182,7 @@ export function LandingPage() {
   const handleGetStartedClick = () => {
     if (currentUserId) {
       window.alert(
-        "Du er allerede logget ind. Log ud, hvis du vil oprette en ny bruger."
+        "Du er allerede logget ind. Log ud, hvis du vil oprette en ny bruger.",
       );
       return;
     }
@@ -224,18 +226,14 @@ export function LandingPage() {
               <Button
                 variant="neon"
                 size="lg"
-                className={`w-full sm:w-auto group ${currentUserId ? 'hidden sm:inline-flex' : ''}`}
+                className={`w-full sm:w-auto group ${currentUserId ? "hidden sm:inline-flex" : ""}`}
                 onClick={handleGetStartedClick}
               >
                 Kom i gang
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
               <Link to="/create">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full sm:w-auto"
-                >
+                <Button variant="neon" size="lg" className="w-full sm:w-auto">
                   Opret annonce
                 </Button>
               </Link>
