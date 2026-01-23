@@ -136,7 +136,7 @@ export function TermsModal({ isOpen, onClose }: TermsModalProps) {
               <div className="p-6 border-t border-white/10">
                 <button
                   onClick={onClose}
-                  className="w-full bg-neon-blue hover:bg-neon-blue/80 text-black font-semibold py-3 px-4 rounded-lg transition-colors"
+                  className="w-full border border-[#00f3ff] text-[#00f3ff] shadow-[0_0_10px_#00f3ff] hover:bg-[#00f3ff]/10 hover:shadow-[0_0_20px_#00f3ff] font-semibold py-3 px-4 rounded-lg transition-all duration-300"
                 >
                   Luk
                 </button>

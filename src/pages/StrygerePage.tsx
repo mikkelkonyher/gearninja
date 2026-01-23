@@ -284,7 +284,7 @@ export function StrygerePage() {
                     onClick={() => setCurrentPage(page)}
                     className={`px-4 py-2 rounded-lg border transition-colors ${
                       currentPage === page
-                        ? "bg-neon-blue border-neon-blue text-white"
+                        ? "border-[#00f3ff] text-[#00f3ff] shadow-[0_0_10px_#00f3ff] bg-[#00f3ff]/10"
                         : "border-white/10 bg-secondary/40 hover:bg-secondary/60 text-white"
                     }`}
                   >
