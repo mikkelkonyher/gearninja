@@ -191,7 +191,7 @@ export function LandingPage() {
   return (
     <div className="flex flex-col gap-20 pb-20">
       {/* Hero Section */}
-      <section className="relative pt-16 pb-20 md:pt-20 md:pb-24 overflow-hidden">
+      <section className="relative pt-10 pb-20 md:pt-14 md:pb-24 overflow-hidden">
         <div className="container mx-auto px-4 relative z-10 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -200,7 +200,7 @@ export function LandingPage() {
             className="space-y-6"
           >
             {/* Landing search */}
-            <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+            <form onSubmit={handleSearch} className="max-w-3xl mx-auto mb-8">
               <div className="relative group">
                 <Search className="w-6 h-6 text-muted-foreground absolute left-5 top-1/2 -translate-y-1/2 group-hover:text-neon-blue transition-colors pointer-events-none" />
                 <input
