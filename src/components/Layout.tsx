@@ -38,7 +38,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       setUserId(user?.id ?? null);
       setUsername(
         (user?.user_metadata as any)?.username ??
-          (user?.email ? user.email.split("@")[0] : null)
+          (user?.email ? user.email.split("@")[0] : null),
       );
     });
 
@@ -49,9 +49,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         setUserId(user?.id ?? null);
         setUsername(
           (user?.user_metadata as any)?.username ??
-            (user?.email ? user.email.split("@")[0] : null)
+            (user?.email ? user.email.split("@")[0] : null),
         );
-      }
+      },
     );
 
     return () => {
@@ -166,7 +166,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {(username ?? userEmail).charAt(0).toUpperCase()}
                   </button>
                   {isUserMenuOpen && (
-                    <div 
+                    <div
                       ref={userMenuDropdownRef}
                       className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50"
                       onMouseDown={(e) => e.stopPropagation()}
@@ -360,7 +360,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto px-4 text-muted-foreground text-sm">
           <div className="flex flex-col items-center gap-2 text-center">
             <p>
-              &copy; {new Date().getFullYear()} GearNinja. Alle rettigheder
+              &copy; {new Date().getFullYear()} GearNinja.dk Alle rettigheder
               forbeholdes.
             </p>
             <a
@@ -373,7 +373,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               to="/om"
               className="hover:text-neon-blue transition-colors underline underline-offset-2"
             >
-              Om GearNinja
+              Om GearNinja.dk
             </Link>
           </div>
         </div>
