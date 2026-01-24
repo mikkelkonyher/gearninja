@@ -23,6 +23,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
   const [username, setUsername] = React.useState<string | null>(null);
   const [userId, setUserId] = React.useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = React.useState<string | null>(null);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const navigate = useNavigate();
   const userMenuRef = React.useRef<HTMLDivElement>(null);
@@ -40,6 +41,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         (user?.user_metadata as any)?.username ??
           (user?.email ? user.email.split("@")[0] : null),
       );
+      setAvatarUrl((user?.user_metadata as any)?.avatar_url ?? null);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange(
@@ -51,6 +53,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           (user?.user_metadata as any)?.username ??
             (user?.email ? user.email.split("@")[0] : null),
         );
+        setAvatarUrl((user?.user_metadata as any)?.avatar_url ?? null);
       },
     );
 
@@ -161,18 +164,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {userEmail ? (
                 <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
                   <div className="relative" ref={userMenuRef}>
-                    <span className="hidden text-sm text-muted-foreground md:inline mr-3">
-                      {username ?? userEmail}
-                    </span>
-                    <button
-                      onClick={() => setIsUserMenuOpen((open) => !open)}
-                      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
-                    >
-                      {(username ?? userEmail).charAt(0).toUpperCase()}
-                    </button>
-                    {isUserMenuOpen && (
-                      <div
-                        ref={userMenuDropdownRef}
+<span className="hidden text-sm text-muted-foreground md:inline mr-3">
+                                      {username ?? userEmail}
+                                    </span>
+                                    <button
+                                      onClick={() => setIsUserMenuOpen((open) => !open)}
+                                      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors overflow-hidden"
+                                    >
+                                      {avatarUrl ? (
+                                        <img 
+                                          src={avatarUrl} 
+                                          alt={username ?? "User"}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        (username ?? userEmail).charAt(0).toUpperCase()
+                                      )}
+                                    </button>
+                                    {isUserMenuOpen && (
+                                      <div
+                                        ref={userMenuDropdownRef}
                         className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50"
                         onMouseDown={(e) => e.stopPropagation()}
                       >
@@ -233,9 +244,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen((open) => !open)}
-                    className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
+                    className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors overflow-hidden"
                   >
-                    {(username ?? userEmail).charAt(0).toUpperCase()}
+                    {avatarUrl ? (
+                      <img 
+                        src={avatarUrl} 
+                        alt={username ?? "User"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      (username ?? userEmail).charAt(0).toUpperCase()
+                    )}
                   </button>
                   {isUserMenuOpen && (
                     <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">

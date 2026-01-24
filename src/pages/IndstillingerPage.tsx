@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Settings, Lock, ArrowRight, Trash2, AlertTriangle } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, Settings, Lock, ArrowRight, Trash2, AlertTriangle, Camera, Loader2, User } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "../lib/supabase";
 import { Button } from "../components/ui/Button";
 
@@ -11,6 +11,149 @@ export function IndstillingerPage() {
   const [password, setPassword] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+  const [avatarSuccess, setAvatarSuccess] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (currentUser) {
+      setUser(currentUser);
+      setUsername(currentUser.user_metadata?.username || currentUser.email?.split("@")[0] || "");
+      setAvatarUrl(currentUser.user_metadata?.avatar_url || null);
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      setAvatarError("Kun JPG, PNG og WebP billeder er tilladt");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Billedet må højst være 5 MB");
+      return;
+    }
+
+    setAvatarError("");
+    setAvatarSuccess("");
+    setIsUploadingAvatar(true);
+
+    try {
+      // Create unique filename with user id prefix (matching storage policy: user_id/filename)
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      // Delete existing avatar if any (look for any avatar.* files)
+      const { data: existingFiles } = await supabase.storage
+        .from("gearninjaImages")
+        .list(user.id);
+
+      if (existingFiles && existingFiles.length > 0) {
+        // Only delete avatar files, not product images
+        const avatarFiles = existingFiles.filter(f => f.name.startsWith("avatar."));
+        if (avatarFiles.length > 0) {
+          const filesToDelete = avatarFiles.map(f => `${user.id}/${f.name}`);
+          await supabase.storage.from("gearninjaImages").remove(filesToDelete);
+        }
+      }
+
+      // Upload new avatar
+      const { error: uploadError } = await supabase.storage
+        .from("gearninjaImages")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from("gearninjaImages")
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData.publicUrl;
+
+      // Update user metadata with avatar URL
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: publicUrl }
+      });
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(publicUrl);
+      setAvatarSuccess("Profilbillede opdateret!");
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setAvatarSuccess(""), 3000);
+    } catch (error: any) {
+      console.error("Error uploading avatar:", error);
+      setAvatarError(error.message || "Der opstod en fejl ved upload af billedet");
+    } finally {
+      setIsUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return;
+
+    setAvatarError("");
+    setAvatarSuccess("");
+    setIsUploadingAvatar(true);
+
+    try {
+      // Delete avatar from storage
+      const { data: existingFiles } = await supabase.storage
+        .from("gearninjaImages")
+        .list(user.id);
+
+      if (existingFiles && existingFiles.length > 0) {
+        // Only delete avatar files, not product images
+        const avatarFiles = existingFiles.filter(f => f.name.startsWith("avatar."));
+        if (avatarFiles.length > 0) {
+          const filesToDelete = avatarFiles.map(f => `${user.id}/${f.name}`);
+          await supabase.storage.from("gearninjaImages").remove(filesToDelete);
+        }
+      }
+
+      // Remove avatar URL from user metadata
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: { avatar_url: null }
+      });
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(null);
+      setAvatarSuccess("Profilbillede fjernet!");
+      
+      setTimeout(() => setAvatarSuccess(""), 3000);
+    } catch (error: any) {
+      console.error("Error removing avatar:", error);
+      setAvatarError(error.message || "Der opstod en fejl ved fjernelse af billedet");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,6 +247,96 @@ export function IndstillingerPage() {
 
           {/* Settings Options */}
           <div className="max-w-2xl mx-auto space-y-4">
+            {/* Profile Picture Card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.05 }}
+              className="rounded-xl border border-white/10 bg-secondary/40 p-6"
+            >
+              <div className="flex flex-col sm:flex-row items-center gap-6">
+                {/* Avatar Preview */}
+                <div className="relative">
+                  <div 
+                    onClick={handleAvatarClick}
+                    className="w-24 h-24 rounded-full bg-gradient-to-br from-neon-blue/20 to-purple-500/20 border-2 border-neon-blue/30 flex items-center justify-center cursor-pointer hover:border-neon-blue/60 transition-colors overflow-hidden group"
+                  >
+                    {isUploadingAvatar ? (
+                      <Loader2 className="w-8 h-8 animate-spin text-neon-blue" />
+                    ) : avatarUrl ? (
+                      <img 
+                        src={avatarUrl} 
+                        alt="Profilbillede" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-10 h-10 text-muted-foreground" />
+                    )}
+                    {/* Overlay on hover */}
+                    {!isUploadingAvatar && (
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
+                        <Camera className="w-6 h-6 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleAvatarChange}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Text and Actions */}
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Profilbillede
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Klik på billedet for at uploade et nyt profilbillede. JPG, PNG eller WebP (maks 5 MB).
+                  </p>
+                  
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleAvatarClick}
+                      disabled={isUploadingAvatar}
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Vælg billede
+                    </Button>
+                    {avatarUrl && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveAvatar}
+                        disabled={isUploadingAvatar}
+                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Fjern billede
+                      </Button>
+                    )}
+                  </div>
+
+                  {avatarError && (
+                    <div className="mt-3 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                      {avatarError}
+                    </div>
+                  )}
+                  {avatarSuccess && (
+                    <div className="mt-3 p-2 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+                      {avatarSuccess}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
             {/* Reset Password Card */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}

@@ -38,6 +38,7 @@ interface UserProfile {
   id: string;
   username: string;
   created_at?: string;
+  avatar_url?: string | null;
 }
 
 export function UserProfilePage() {
@@ -73,6 +74,7 @@ export function UserProfilePage() {
       setProfile({
         id: userId,
         username: userData?.username || userData?.email?.split("@")[0] || "Ukendt Bruger",
+        avatar_url: userData?.avatar_url || null,
       });
 
       // 2. Fetch Reviews (using RPC to enforce double-blind rule)
@@ -183,10 +185,18 @@ export function UserProfilePage() {
               animate={{ opacity: 1, y: 0 }}
               className="p-6 rounded-xl border border-white/10 bg-secondary/30 backdrop-blur-sm text-center"
             >
-              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-neon-blue/20 to-purple-500/20 rounded-full flex items-center justify-center border-2 border-neon-blue/30 mb-4">
-                <span className="text-3xl font-bold text-white">
-                  {profile.username.charAt(0).toUpperCase()}
-                </span>
+              <div className="w-24 h-24 mx-auto bg-gradient-to-br from-neon-blue/20 to-purple-500/20 rounded-full flex items-center justify-center border-2 border-neon-blue/30 mb-4 overflow-hidden">
+                {profile.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt={profile.username}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-3xl font-bold text-white">
+                    {profile.username.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <h1 className="text-2xl font-bold text-white mb-2">{profile.username}</h1>
               
