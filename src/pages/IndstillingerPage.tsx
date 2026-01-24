@@ -81,12 +81,13 @@ export function IndstillingerPage() {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache-busting timestamp
       const { data: urlData } = supabase.storage
         .from("gearninjaImages")
         .getPublicUrl(fileName);
 
-      const publicUrl = urlData.publicUrl;
+      // Add timestamp to prevent browser caching
+      const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
 
       // Update user metadata with avatar URL
       const { error: updateError } = await supabase.auth.updateUser({
