@@ -67,6 +67,7 @@ export function ForumPage() {
     const { data } = await supabase
       .from("forum_categories")
       .select("*")
+      .order("sort_order")
       .order("name");
     if (data) setCategories(data);
   };

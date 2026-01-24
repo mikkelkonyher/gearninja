@@ -28,6 +28,7 @@ export function CreateThreadPage() {
     const { data } = await supabase
       .from("forum_categories")
       .select("id, name")
+      .order("sort_order")
       .order("name");
     
     if (data) {
