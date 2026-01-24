@@ -608,13 +608,13 @@ export function LandingPage() {
 
       {/* Feedback Section */}
       <section className="container mx-auto px-4 pb-8">
-        <div className="text-center">
+        <div className="flex justify-center">
           <button
             onClick={() => setShowBugReportModal(true)}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-neon-blue transition-colors group"
+            className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:text-neon-blue hover:bg-white/5 transition-all group"
           >
-            <Bug className="w-4 h-4" />
-            <span>
+            <Bug className="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
+            <span className="text-sm text-center sm:text-left">
               Fandt du en fejl? Hjælp os med at gøre GearNinja.dk bedre
             </span>
           </button>
