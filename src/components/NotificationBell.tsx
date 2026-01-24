@@ -388,7 +388,7 @@ export function NotificationBell({ userId }: { userId: string | null }) {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute right-0 top-11 w-72 sm:w-80 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm z-50 max-h-80 sm:max-h-96 overflow-hidden flex flex-col"
+            className="fixed sm:absolute right-4 sm:right-0 left-4 sm:left-auto top-20 sm:top-11 w-auto sm:w-80 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm z-50 max-h-80 sm:max-h-96 overflow-hidden flex flex-col"
           >
             <div className="px-4 py-3 border-b border-white/5 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-white">

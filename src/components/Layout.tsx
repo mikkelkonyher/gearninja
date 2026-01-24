@@ -143,9 +143,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Actions - Desktop */}
-          <div className="hidden min-[1400px]:flex items-center gap-4 absolute right-4">
+          {/* Actions - All screen sizes */}
+          <div className="flex items-center gap-3 absolute right-4">
+            {/* Notification Bell - single instance for all screen sizes */}
             {userEmail && <NotificationBell userId={userId} />}
+            
             <Link
               to="/create"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
@@ -153,12 +155,82 @@ export function Layout({ children }: { children: React.ReactNode }) {
             >
               <Plus className="w-5 h-5" />
             </Link>
-            {userEmail ? (
-              <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
+            
+            {/* Desktop-only elements */}
+            <div className="hidden min-[1400px]:flex items-center gap-4">
+              {userEmail ? (
+                <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
+                  <div className="relative" ref={userMenuRef}>
+                    <span className="hidden text-sm text-muted-foreground md:inline mr-3">
+                      {username ?? userEmail}
+                    </span>
+                    <button
+                      onClick={() => setIsUserMenuOpen((open) => !open)}
+                      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
+                    >
+                      {(username ?? userEmail).charAt(0).toUpperCase()}
+                    </button>
+                    {isUserMenuOpen && (
+                      <div
+                        ref={userMenuDropdownRef}
+                        className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50"
+                        onMouseDown={(e) => e.stopPropagation()}
+                      >
+                        <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
+                          {username ?? userEmail}
+                        </div>
+                        <nav className="py-1">
+                          <button
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              navigate("/profile");
+                            }}
+                          >
+                            Profil
+                          </button>
+                          <button
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
+                            onClick={() => {
+                              setIsUserMenuOpen(false);
+                              navigate("/chats");
+                            }}
+                          >
+                            Indbakke
+                          </button>
+                          <button
+                            className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
+                            onClick={() => {
+                              handleLogout();
+                            }}
+                          >
+                            Log ud
+                          </button>
+                        </nav>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 border-l border-white/10 pl-4">
+                  <Link to="/login">
+                    <Button variant="ghost" size="sm">
+                      Log ind
+                    </Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button variant="neon" size="sm">
+                      Opret bruger
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+            
+            {/* Mobile-only elements */}
+            <div className="min-[1400px]:hidden flex items-center gap-3">
+              {userEmail && (
                 <div className="relative" ref={userMenuRef}>
-                  <span className="hidden text-sm text-muted-foreground md:inline mr-3">
-                    {username ?? userEmail}
-                  </span>
                   <button
                     onClick={() => setIsUserMenuOpen((open) => !open)}
                     className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
@@ -166,18 +238,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {(username ?? userEmail).charAt(0).toUpperCase()}
                   </button>
                   {isUserMenuOpen && (
-                    <div
-                      ref={userMenuDropdownRef}
-                      className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50"
-                      onMouseDown={(e) => e.stopPropagation()}
-                    >
+                    <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
                       <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
                         {username ?? userEmail}
                       </div>
                       <nav className="py-1">
                         <button
                           className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setIsUserMenuOpen(false);
                             navigate("/profile");
                           }}
@@ -186,7 +255,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         </button>
                         <button
                           className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setIsUserMenuOpen(false);
                             navigate("/chats");
                           }}
@@ -195,7 +265,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                         </button>
                         <button
                           className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleLogout();
                           }}
                         >
@@ -205,94 +276,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                   )}
                 </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 border-l border-white/10 pl-4">
+              )}
+              {!userEmail && (
                 <Link to="/login">
                   <Button variant="ghost" size="sm">
                     Log ind
                   </Button>
                 </Link>
-                <Link to="/register">
-                  <Button variant="neon" size="sm">
-                    Opret bruger
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Actions */}
-          <div className="min-[1400px]:hidden flex items-center gap-3 absolute right-4">
-            <Link
-              to="/create"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
-              aria-label="Opret annonce"
-            >
-              <Plus className="w-5 h-5" />
-            </Link>
-            {userEmail && (
-              <div className="relative" ref={userMenuRef}>
-                <button
-                  onClick={() => setIsUserMenuOpen((open) => !open)}
-                  className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors"
-                >
-                  {(username ?? userEmail).charAt(0).toUpperCase()}
-                </button>
-                {isUserMenuOpen && (
-                  <div className="absolute right-0 top-11 w-52 rounded-xl border border-white/10 bg-background/95 shadow-xl backdrop-blur-sm text-sm z-50">
-                    <div className="px-3 py-2 border-b border-white/5 text-xs text-muted-foreground truncate">
-                      {username ?? userEmail}
-                    </div>
-                    <nav className="py-1">
-                      <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsUserMenuOpen(false);
-                          navigate("/profile");
-                        }}
-                      >
-                        Profil
-                      </button>
-                      <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-white/5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsUserMenuOpen(false);
-                          navigate("/chats");
-                        }}
-                      >
-                        Indbakke
-                      </button>
-                      <button
-                        className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-red-500/10"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLogout();
-                        }}
-                      >
-                        Log ud
-                      </button>
-                    </nav>
-                  </div>
-                )}
-              </div>
-            )}
-            {userEmail && <NotificationBell userId={userId} />}
-            {!userEmail && (
-              <Link to="/login">
-                <Button variant="ghost" size="sm">
-                  Log ind
-                </Button>
-              </Link>
-            )}
-            <button
-              className="p-2 text-muted-foreground hover:text-white"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              {isMobileMenuOpen ? <X /> : <Menu />}
-            </button>
+              )}
+              <button
+                className="p-2 text-muted-foreground hover:text-white"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X /> : <Menu />}
+              </button>
+            </div>
           </div>
         </div>
 
