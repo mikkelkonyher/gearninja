@@ -21,6 +21,7 @@ interface Thread {
   category: Category;
   user_id: string;
   post_count?: number;
+  avatar_url?: string | null;
 }
 
 export function ForumPage() {
@@ -128,15 +129,24 @@ export function ForumPage() {
       const { data } = await query;
       
       if (data) {
-        const formattedThreads = data.map((thread: any) => ({
-          ...thread,
-          post_count: thread.posts?.[0]?.count || 0
-        }));
+        // Fetch avatars for all thread authors
+        const threadsWithAvatars = await Promise.all(
+          data.map(async (thread: any) => {
+            const { data: userData } = await supabase.rpc("get_user_username", {
+              user_uuid: thread.user_id
+            });
+            return {
+              ...thread,
+              post_count: thread.posts?.[0]?.count || 0,
+              avatar_url: userData?.avatar_url || null
+            };
+          })
+        );
 
         if (pageNumber === 0) {
-          setThreads(formattedThreads);
+          setThreads(threadsWithAvatars);
         } else {
-          setThreads(prev => [...prev, ...formattedThreads]);
+          setThreads(prev => [...prev, ...threadsWithAvatars]);
         }
         
         setHasMore(data.length === PAGE_SIZE);
@@ -378,7 +388,15 @@ export function ForumPage() {
                               </span>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <span className="flex items-center gap-1">
-                                  <User className="w-3 h-3" />
+                                  {thread.avatar_url ? (
+                                    <img 
+                                      src={thread.avatar_url} 
+                                      alt={thread.author_name}
+                                      className="w-4 h-4 rounded-full object-cover"
+                                    />
+                                  ) : (
+                                    <User className="w-3 h-3" />
+                                  )}
                                   {thread.author_name || "Anonym"}
                                 </span>
                                 <span className="text-white/20">•</span>

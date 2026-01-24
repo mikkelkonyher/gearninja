@@ -11,6 +11,7 @@ interface Post {
   author_name: string;
   created_at: string;
   user_id: string;
+  avatar_url?: string | null;
 }
 
 interface Thread {
@@ -21,6 +22,7 @@ interface Thread {
   created_at: string;
   user_id: string;
   category: { id: string; name: string };
+  avatar_url?: string | null;
 }
 
 export function ForumThreadPage() {
@@ -87,7 +89,17 @@ export function ForumThreadPage() {
         .single();
 
       if (error) throw error;
-      setThread(data);
+      
+      // Fetch avatar for thread author
+      let avatarUrl = null;
+      if (data.user_id) {
+        const { data: userData } = await supabase.rpc("get_user_username", {
+          user_uuid: data.user_id
+        });
+        avatarUrl = userData?.avatar_url || null;
+      }
+      
+      setThread({ ...data, avatar_url: avatarUrl });
       setEditTitle(data.title);
       setEditThreadContent(data.content);
     } catch {
@@ -113,10 +125,20 @@ export function ForumThreadPage() {
       if (error) throw error;
 
       if (data) {
+        // Fetch avatars for all post authors
+        const postsWithAvatars = await Promise.all(
+          data.map(async (post) => {
+            const { data: userData } = await supabase.rpc("get_user_username", {
+              user_uuid: post.user_id
+            });
+            return { ...post, avatar_url: userData?.avatar_url || null };
+          })
+        );
+
         if (pageNumber === 0) {
-          setPosts(data);
+          setPosts(postsWithAvatars);
         } else {
-          setPosts(prev => [...prev, ...data]);
+          setPosts(prev => [...prev, ...postsWithAvatars]);
         }
         
         setHasMore(data.length === PAGE_SIZE);
@@ -149,8 +171,12 @@ export function ForumThreadPage() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      // Append new post immediately
-      setPosts([...posts, data.post]);
+      // Append new post immediately with current user's avatar
+      const newPost = {
+        ...data.post,
+        avatar_url: user.user_metadata?.avatar_url || null
+      };
+      setPosts([...posts, newPost]);
       setNewReply("");
     } catch (err: any) {
       alert(err.message || "Kunne ikke sende svar");
@@ -411,10 +437,18 @@ export function ForumThreadPage() {
                </h1>
 
                <div className="flex items-center gap-3 mb-6 pb-6 border-b border-white/10">
-                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center border border-white/10">
-                   <span className="text-lg font-bold text-white">
-                     {thread.author_name.charAt(0).toUpperCase()}
-                   </span>
+                 <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-secondary flex items-center justify-center border border-white/10 overflow-hidden">
+                   {thread.avatar_url ? (
+                     <img 
+                       src={thread.avatar_url} 
+                       alt={thread.author_name}
+                       className="w-full h-full object-cover"
+                     />
+                   ) : (
+                     <span className="text-lg font-bold text-white">
+                       {thread.author_name.charAt(0).toUpperCase()}
+                     </span>
+                   )}
                  </div>
                  <div>
                    <p className="text-sm font-medium text-white">{thread.author_name}</p>
@@ -443,10 +477,18 @@ export function ForumThreadPage() {
               className="bg-black/20 border border-white/5 rounded-xl p-4 md:p-6 relative group"
             >
               <div className="flex items-start gap-3 md:gap-4">
-                <div className="w-8 h-8 rounded-full bg-secondary/60 flex-shrink-0 flex items-center justify-center border border-white/10">
-                  <span className="text-sm font-bold text-white">
-                    {post.author_name.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-8 h-8 rounded-full bg-secondary/60 flex-shrink-0 flex items-center justify-center border border-white/10 overflow-hidden">
+                  {post.avatar_url ? (
+                    <img 
+                      src={post.avatar_url} 
+                      alt={post.author_name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-white">
+                      {post.author_name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-baseline justify-between mb-2">

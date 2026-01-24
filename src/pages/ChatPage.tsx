@@ -13,6 +13,7 @@ interface Message {
   read: boolean;
   created_at: string;
   sender_username?: string;
+  sender_avatar_url?: string | null;
   isOptimistic?: boolean;
 }
 
@@ -31,8 +32,10 @@ interface Chat {
 interface ChatWithDetails extends Chat {
   other_user_id: string;
   other_user_username: string | null;
+  other_user_avatar_url: string | null;
   item_title: string;
   current_user_username: string | null;
+  current_user_avatar_url: string | null;
 }
 
 export function ChatPage() {
@@ -189,24 +192,28 @@ export function ChatPage() {
       const otherUserId =
         data.buyer_id === currentUserId ? data.seller_id : data.buyer_id;
 
-      // Fetch other user's username
+      // Fetch other user's username and avatar
       let otherUsername: string | null = null;
+      let otherAvatarUrl: string | null = null;
       try {
         const { data: usernameData } = await supabase.rpc("get_user_username", {
           user_uuid: otherUserId,
         });
         otherUsername = usernameData?.username || null;
+        otherAvatarUrl = usernameData?.avatar_url || null;
       } catch {
         // Error fetching username - continue silently
       }
 
-      // Fetch current user's username
+      // Fetch current user's username and avatar
       let currentUsername: string | null = null;
+      let currentAvatarUrl: string | null = null;
       try {
         const { data: usernameData } = await supabase.rpc("get_user_username", {
           user_uuid: currentUserId,
         });
         currentUsername = usernameData?.username || null;
+        currentAvatarUrl = usernameData?.avatar_url || null;
       } catch {
         // Error fetching current username - continue silently
       }
@@ -242,8 +249,10 @@ export function ChatPage() {
         ...data,
         other_user_id: otherUserId,
         other_user_username: otherUsername,
+        other_user_avatar_url: otherAvatarUrl,
         item_title: itemTitle,
         current_user_username: currentUsername,
+        current_user_avatar_url: currentAvatarUrl,
       });
     } catch {
       alert("Kunne ikke hente chat.");
@@ -264,10 +273,11 @@ export function ChatPage() {
 
       if (error) throw error;
 
-      // Add usernames to messages
+      // Add usernames and avatars to messages
       const messagesWithUsernames = await Promise.all(
         (data || []).map(async (message) => {
           let senderUsername: string | null = null;
+          let senderAvatarUrl: string | null = null;
           try {
             const { data: usernameData } = await supabase.rpc(
               "get_user_username",
@@ -276,12 +286,14 @@ export function ChatPage() {
               }
             );
             senderUsername = usernameData?.username || null;
+            senderAvatarUrl = usernameData?.avatar_url || null;
           } catch {
             // Error fetching sender username - continue silently
           }
           return {
             ...message,
             sender_username: senderUsername || undefined,
+            sender_avatar_url: senderAvatarUrl,
           };
         })
       );
@@ -325,8 +337,9 @@ export function ChatPage() {
         async (payload) => {
           const newMessage = payload.new as Message;
 
-          // Fetch username for new message
+          // Fetch username and avatar for new message
           let senderUsername: string | null = null;
+          let senderAvatarUrl: string | null = null;
           try {
             const { data: usernameData } = await supabase.rpc(
               "get_user_username",
@@ -335,6 +348,7 @@ export function ChatPage() {
               }
             );
             senderUsername = usernameData?.username || null;
+            senderAvatarUrl = usernameData?.avatar_url || null;
           } catch {
             // Error fetching sender username - continue silently
           }
@@ -357,13 +371,14 @@ export function ChatPage() {
                   ? {
                       ...newMessage,
                       sender_username: senderUsername || undefined,
+                      sender_avatar_url: senderAvatarUrl,
                     }
                   : m
               );
             }
             return [
               ...prev,
-              { ...newMessage, sender_username: senderUsername || undefined },
+              { ...newMessage, sender_username: senderUsername || undefined, sender_avatar_url: senderAvatarUrl },
             ];
           });
 
@@ -406,6 +421,7 @@ export function ChatPage() {
       read: false,
       created_at: new Date().toISOString(),
       sender_username: chat.current_user_username || undefined,
+      sender_avatar_url: chat.current_user_avatar_url,
       isOptimistic: true,
     };
 
@@ -571,8 +587,16 @@ export function ChatPage() {
                   } ${showAvatar ? "mt-4" : "mt-1"}`}
                 >
                   {!isOwn && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-neon-blue/20 border border-neon-blue/30 flex items-center justify-center text-neon-blue text-xs font-semibold">
-                      {(message.sender_username || "U")[0].toUpperCase()}
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-neon-blue/20 border border-neon-blue/30 flex items-center justify-center text-neon-blue text-xs font-semibold overflow-hidden">
+                      {message.sender_avatar_url ? (
+                        <img 
+                          src={message.sender_avatar_url} 
+                          alt={message.sender_username || "User"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        (message.sender_username || "U")[0].toUpperCase()
+                      )}
                     </div>
                   )}
                   <div
@@ -605,8 +629,16 @@ export function ChatPage() {
                     </div>
                   </div>
                   {isOwn && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-neon-blue/20 border border-neon-blue/30 flex items-center justify-center text-neon-blue text-xs font-semibold">
-                      {(chat.current_user_username || "J")[0].toUpperCase()}
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-neon-blue/20 border border-neon-blue/30 flex items-center justify-center text-neon-blue text-xs font-semibold overflow-hidden">
+                      {chat.current_user_avatar_url ? (
+                        <img 
+                          src={chat.current_user_avatar_url} 
+                          alt={chat.current_user_username || "User"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        (chat.current_user_username || "J")[0].toUpperCase()
+                      )}
                     </div>
                   )}
                 </motion.div>

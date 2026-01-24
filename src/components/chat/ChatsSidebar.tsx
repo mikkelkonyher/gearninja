@@ -18,6 +18,7 @@ interface Chat {
 interface ChatWithDetails extends Chat {
   other_user_id: string;
   other_user_username: string | null;
+  other_user_avatar_url: string | null;
   item_title: string;
   last_message?: string;
   last_message_time?: string;
@@ -124,8 +125,9 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
           const otherUserId =
             chat.buyer_id === currentUserId ? chat.seller_id : chat.buyer_id;
 
-          // Fetch other user's username
+          // Fetch other user's username and avatar
           let otherUsername: string | null = null;
+          let otherAvatarUrl: string | null = null;
           try {
             const { data: usernameData } = await supabase.rpc(
               "get_user_username",
@@ -134,6 +136,7 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
               }
             );
             otherUsername = usernameData?.username || null;
+            otherAvatarUrl = usernameData?.avatar_url || null;
           } catch {
             // Error fetching username - continue silently
           }
@@ -191,6 +194,7 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
             ...chat,
             other_user_id: otherUserId,
             other_user_username: otherUsername,
+            other_user_avatar_url: otherAvatarUrl,
             item_title: itemTitle,
             last_message: lastMessage?.content,
             last_message_time: lastMessage?.created_at,
@@ -356,37 +360,55 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
                   onChatSelect?.();
                 }}
               >
-                <div className="flex justify-between items-start mb-1">
-                  <span className={`text-sm font-medium truncate pr-2 ${
-                    chat.unread_count > 0 ? "text-white" : "text-white/90"
-                  }`}>
-                    {chat.other_user_username || "Bruger"}
-                  </span>
+                <div className="flex gap-3">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-neon-blue/20 border border-neon-blue/30 flex items-center justify-center text-neon-blue text-sm font-semibold overflow-hidden">
+                    {chat.other_user_avatar_url ? (
+                      <img 
+                        src={chat.other_user_avatar_url} 
+                        alt={chat.other_user_username || "User"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      (chat.other_user_username || "B")[0].toUpperCase()
+                    )}
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className={`text-sm font-medium truncate pr-2 ${
+                        chat.unread_count > 0 ? "text-white" : "text-white/90"
+                      }`}>
+                        {chat.other_user_username || "Bruger"}
+                      </span>
                   {chat.last_message_time && (
-                    <span className={`text-xs whitespace-nowrap ${
-                      chat.unread_count > 0 ? "text-neon-blue font-medium" : "text-muted-foreground"
-                    }`}>
-                      {formatTime(chat.last_message_time)}
-                    </span>
-                  )}
-                </div>
-                
-                <div className="text-xs text-muted-foreground mb-1 truncate">
-                  {chat.item_title}
-                </div>
+                        <span className={`text-xs whitespace-nowrap ${
+                          chat.unread_count > 0 ? "text-neon-blue font-medium" : "text-muted-foreground"
+                        }`}>
+                          {formatTime(chat.last_message_time)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground mb-1 truncate">
+                      {chat.item_title}
+                    </div>
 
-                <div className="flex justify-between items-center gap-2">
-                  <p className={`text-sm truncate ${
-                    chat.unread_count > 0 ? "text-white font-medium" : "text-muted-foreground"
-                  }`}>
-                    {chat.last_message || "Ingen beskeder"}
-                  </p>
-                  {chat.unread_count > 0 && (
-                    <span className="flex-shrink-0 min-w-[40px] h-[18px] px-2 rounded-full bg-neon-blue text-white text-[10px] font-bold flex items-center justify-center">
-                      {chat.unread_count}{" "}
-                      {chat.unread_count === 1 ? "ulæst" : "ulæste"}
-                    </span>
-                  )}
+                    <div className="flex justify-between items-center gap-2">
+                      <p className={`text-sm truncate ${
+                        chat.unread_count > 0 ? "text-white font-medium" : "text-muted-foreground"
+                      }`}>
+                        {chat.last_message || "Ingen beskeder"}
+                      </p>
+                      {chat.unread_count > 0 && (
+                        <span className="flex-shrink-0 min-w-[40px] h-[18px] px-2 rounded-full bg-neon-blue text-white text-[10px] font-bold flex items-center justify-center">
+                          {chat.unread_count}{" "}
+                          {chat.unread_count === 1 ? "ulæst" : "ulæste"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Delete Button - Always visible on mobile, hover on desktop */}
