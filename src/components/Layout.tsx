@@ -153,7 +153,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             
             <Link
               to="/create"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
+              className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-neon-blue/20 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/30 transition-colors"
               aria-label="Opret annonce"
             >
               <Plus className="w-5 h-5" />
@@ -163,14 +163,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="hidden min-[1400px]:flex items-center gap-4">
               {userEmail ? (
                 <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
-                  <div className="relative" ref={userMenuRef}>
-<span className="hidden text-sm text-muted-foreground md:inline mr-3">
-                                      {username ?? userEmail}
-                                    </span>
-                                    <button
-                                      onClick={() => setIsUserMenuOpen((open) => !open)}
-                                      className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors overflow-hidden"
-                                    >
+                  <div className="relative flex items-center" ref={userMenuRef}>
+                    <span className="hidden text-sm text-muted-foreground md:inline mr-3">
+                      {username ?? userEmail}
+                    </span>
+                    <button
+                      onClick={() => setIsUserMenuOpen((open) => !open)}
+                      className="relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors overflow-hidden"
+                    >
                                       {avatarUrl ? (
                                         <img 
                                           src={avatarUrl} 
@@ -241,10 +241,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {/* Mobile-only elements */}
             <div className="min-[1400px]:hidden flex items-center gap-3">
               {userEmail && (
-                <div className="relative" ref={userMenuRef}>
+                <div className="relative flex items-center" ref={userMenuRef}>
                   <button
                     onClick={() => setIsUserMenuOpen((open) => !open)}
-                    className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors overflow-hidden"
+                    className="relative inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-secondary/60 border border-white/10 text-sm font-medium text-white hover:bg-secondary/80 transition-colors overflow-hidden"
                   >
                     {avatarUrl ? (
                       <img 
