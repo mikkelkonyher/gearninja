@@ -13,7 +13,6 @@ export function IndstillingerPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [username, setUsername] = useState<string>("");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const [avatarSuccess, setAvatarSuccess] = useState("");
@@ -27,7 +26,6 @@ export function IndstillingerPage() {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     if (currentUser) {
       setUser(currentUser);
-      setUsername(currentUser.user_metadata?.username || currentUser.email?.split("@")[0] || "");
       setAvatarUrl(currentUser.user_metadata?.avatar_url || null);
     }
   };
