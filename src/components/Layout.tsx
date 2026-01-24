@@ -371,7 +371,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </a>
             <Link
               to="/om"
-              className="hover:text-neon-blue transition-colors"
+              className="hover:text-neon-blue transition-colors underline underline-offset-2"
             >
               Om GearNinja
             </Link>
