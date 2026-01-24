@@ -156,7 +156,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {userEmail ? (
               <div className="relative flex items-center gap-3 border-l border-white/10 pl-4">
                 <div className="relative" ref={userMenuRef}>
-                  <span className="hidden text-sm text-muted-foreground md:inline">
+                  <span className="hidden text-sm text-muted-foreground md:inline mr-3">
                     {username ?? userEmail}
                   </span>
                   <button
