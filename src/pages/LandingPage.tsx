@@ -225,7 +225,7 @@ export function LandingPage() {
               <Button
                 variant="neon"
                 size="lg"
-                className={`w-full sm:w-auto group ${currentUserId ? "hidden sm:inline-flex" : ""}`}
+                className={`w-full sm:w-auto group ${currentUserId ? "hidden" : ""}`}
                 onClick={handleGetStartedClick}
               >
                 Kom i gang
