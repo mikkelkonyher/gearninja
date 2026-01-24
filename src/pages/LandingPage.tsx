@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Search, Loader2, Share2, Copy, Check, X } from "lucide-react";
+import { ArrowRight, Search, Loader2, Share2, Copy, Check, X, Bug, Send } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
@@ -52,6 +52,11 @@ export function LandingPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showBugReportModal, setShowBugReportModal] = useState(false);
+  const [bugReport, setBugReport] = useState("");
+  const [bugReportEmail, setBugReportEmail] = useState("");
+  const [bugReportSending, setBugReportSending] = useState(false);
+  const [bugReportSent, setBugReportSent] = useState(false);
 
   useEffect(() => {
     fetchNewestProducts();
@@ -205,6 +210,38 @@ export function LandingPage() {
       document.body.removeChild(textArea);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleSendBugReport = async () => {
+    if (!bugReport.trim()) return;
+    
+    setBugReportSending(true);
+    
+    try {
+      const { error } = await supabase.functions.invoke("send-bug-report", {
+        body: {
+          description: bugReport.trim(),
+          email: bugReportEmail.trim() || undefined,
+          pageUrl: window.location.href,
+          userAgent: navigator.userAgent,
+        },
+      });
+
+      if (error) throw error;
+
+      setBugReportSending(false);
+      setBugReportSent(true);
+      setTimeout(() => {
+        setShowBugReportModal(false);
+        setBugReport("");
+        setBugReportEmail("");
+        setBugReportSent(false);
+      }, 2500);
+    } catch (err) {
+      console.error("Error sending bug report:", err);
+      setBugReportSending(false);
+      alert("Kunne ikke sende fejlrapport. Prøv igen senere.");
     }
   };
 
@@ -536,6 +573,115 @@ export function LandingPage() {
           <div className="absolute inset-0 bg-grid-white/[0.02]" />
         </div>
       </section>
+
+      {/* Feedback Section */}
+      <section className="container mx-auto px-4 pb-8">
+        <div className="text-center">
+          <button
+            onClick={() => setShowBugReportModal(true)}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-neon-blue transition-colors group"
+          >
+            <Bug className="w-4 h-4" />
+            <span>Fandt du en fejl? Hjælp os med at gøre GearNinja bedre</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Bug Report Modal */}
+      {showBugReportModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => {
+              setShowBugReportModal(false);
+              setBugReport("");
+              setBugReportEmail("");
+              setBugReportSent(false);
+            }}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative bg-background border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+          >
+            <button
+              onClick={() => {
+                setShowBugReportModal(false);
+                setBugReport("");
+                setBugReportSent(false);
+              }}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-neon-blue/10 border border-neon-blue/20">
+                <Bug className="w-5 h-5 text-neon-blue" />
+              </div>
+              <h3 className="text-xl font-bold text-white">Rapporter en fejl</h3>
+            </div>
+            <p className="text-muted-foreground text-sm mb-6">
+              Vi sætter pris på din feedback! Beskriv fejlen så detaljeret som muligt, så vi kan rette den hurtigst muligt.
+            </p>
+            
+            {bugReportSent ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+                  <Check className="w-6 h-6 text-green-500" />
+                </div>
+                <p className="text-white font-medium">Tak for din feedback!</p>
+                <p className="text-muted-foreground text-sm">Din rapport er blevet sendt.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-2">
+                    Din email (valgfrit - så vi kan svare dig)
+                  </label>
+                  <input
+                    type="email"
+                    value={bugReportEmail}
+                    onChange={(e) => setBugReportEmail(e.target.value)}
+                    placeholder="din@email.dk"
+                    className="w-full bg-secondary/50 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-muted-foreground mb-2">
+                    Beskriv fejlen
+                  </label>
+                  <textarea
+                    value={bugReport}
+                    onChange={(e) => setBugReport(e.target.value)}
+                    placeholder="F.eks. 'Når jeg trykker på X, sker der Y i stedet for Z'"
+                    className="w-full h-32 bg-secondary/50 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-muted-foreground/70 resize-none focus:outline-none focus:ring-2 focus:ring-neon-blue focus:border-transparent"
+                  />
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    variant="neon"
+                    onClick={handleSendBugReport}
+                    disabled={!bugReport.trim() || bugReportSending}
+                  >
+                    {bugReportSending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Sender...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4 mr-2" />
+                        Send rapport
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      )}
 
       {/* Share Modal */}
       {showShareModal && (
