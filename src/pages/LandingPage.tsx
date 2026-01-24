@@ -223,13 +223,24 @@ export function LandingPage() {
     }
   };
 
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
+
   const handleSendBugReport = async () => {
     if (!bugReport.trim()) return;
+
+    // Validate email if provided
+    if (bugReportEmail.trim() && !isValidEmail(bugReportEmail.trim())) {
+      alert("Indtast venligst en gyldig email-adresse");
+      return;
+    }
 
     setBugReportSending(true);
 
     try {
-      const { error } = await supabase.functions.invoke("send-bug-report", {
+      const { data, error } = await supabase.functions.invoke("send-bug-report", {
         body: {
           description: bugReport.trim(),
           email: bugReportEmail.trim() || undefined,
@@ -239,6 +250,7 @@ export function LandingPage() {
       });
 
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       setBugReportSending(false);
       setBugReportSent(true);
@@ -248,10 +260,11 @@ export function LandingPage() {
         setBugReportEmail("");
         setBugReportSent(false);
       }, 2500);
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Error sending bug report:", err);
       setBugReportSending(false);
-      alert("Kunne ikke sende fejlrapport. Prøv igen senere.");
+      const errorMessage = err instanceof Error ? err.message : "Kunne ikke sende fejlrapport. Prøv igen senere.";
+      alert(errorMessage);
     }
   };
 

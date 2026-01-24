@@ -8,6 +8,47 @@ const ALLOWED_ORIGINS = [
   "https://gearninja.dk"
 ];
 
+// Rate limiting: max 3 reports per IP per hour
+const RATE_LIMIT_MAX = 3;
+const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+// Email validation regex
+const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+function isValidEmail(email: string): boolean {
+  return EMAIL_REGEX.test(email);
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSeconds?: number } {
+  const now = Date.now();
+  const record = rateLimitStore.get(ip);
+
+  // Clean up expired entries periodically
+  if (rateLimitStore.size > 1000) {
+    for (const [key, value] of rateLimitStore.entries()) {
+      if (now > value.resetAt) {
+        rateLimitStore.delete(key);
+      }
+    }
+  }
+
+  if (!record || now > record.resetAt) {
+    // First request or window expired
+    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true };
+  }
+
+  if (record.count >= RATE_LIMIT_MAX) {
+    const retryAfterSeconds = Math.ceil((record.resetAt - now) / 1000);
+    return { allowed: false, retryAfterSeconds };
+  }
+
+  // Increment count
+  record.count++;
+  return { allowed: true };
+}
+
 function getCorsHeaders(origin: string | null) {
   const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
@@ -31,6 +72,26 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Get client IP for rate limiting
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                   req.headers.get("x-real-ip") || 
+                   "unknown";
+
+  // Check rate limit
+  const rateLimit = checkRateLimit(clientIp);
+  if (!rateLimit.allowed) {
+    return new Response(JSON.stringify({ 
+      error: `Du har sendt for mange rapporter. Prøv igen om ${Math.ceil(rateLimit.retryAfterSeconds! / 60)} minutter.`,
+    }), {
+      status: 429,
+      headers: { 
+        ...getCorsHeaders(origin), 
+        "Content-Type": "application/json",
+        "Retry-After": String(rateLimit.retryAfterSeconds),
+      },
+    });
+  }
+
   try {
     const { description, email, pageUrl, userAgent } = await req.json();
 
@@ -41,8 +102,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Validate email if provided
-    const userEmail = email && typeof email === "string" && email.includes("@") ? email.trim() : null;
+    // Validate email if provided - must be a valid email format
+    let userEmail: string | null = null;
+    if (email && typeof email === "string" && email.trim().length > 0) {
+      const trimmedEmail = email.trim();
+      if (!isValidEmail(trimmedEmail)) {
+        return new Response(JSON.stringify({ error: "Ugyldig email-adresse" }), {
+          status: 400,
+          headers: { ...getCorsHeaders(origin), "Content-Type": "application/json" },
+        });
+      }
+      userEmail = trimmedEmail;
+    }
 
     // Create email HTML
     const emailHtml = `
