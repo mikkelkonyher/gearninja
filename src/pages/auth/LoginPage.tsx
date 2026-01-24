@@ -32,7 +32,17 @@ export function LoginPage() {
 
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Forkert email eller adgangskode');
+      // Translate common Supabase auth errors to Danish
+      const errorMessage = err.message || '';
+      if (errorMessage.includes('Invalid login credentials')) {
+        setError('Forkert email eller adgangskode');
+      } else if (errorMessage.includes('Email not confirmed')) {
+        setError('Email er ikke bekræftet. Tjek din indbakke.');
+      } else if (errorMessage.includes('Too many requests')) {
+        setError('For mange forsøg. Prøv igen senere.');
+      } else {
+        setError(errorMessage || 'Forkert email eller adgangskode');
+      }
     } finally {
       setLoading(false);
     }
