@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Search, Loader2 } from "lucide-react";
+import { ArrowRight, Search, Loader2, Share2, Copy, Check, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../components/ui/Button";
 import { supabase } from "../lib/supabase";
@@ -50,6 +50,8 @@ export function LandingPage() {
   const [roomsLoading, setRoomsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchNewestProducts();
@@ -186,6 +188,24 @@ export function LandingPage() {
       return;
     }
     navigate("/register");
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText("https://gearninja.dk");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = "https://gearninja.dk";
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   return (
@@ -485,20 +505,87 @@ export function LandingPage() {
       <section className="container mx-auto px-4 py-20">
         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-white/10 p-12 text-center">
           <div className="relative z-10">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
-              Klar til at tage din musik til næste niveau?
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Opret en gratis profil i dag og bliv en del af Danmarks hurtigst
-              voksende musikfællesskab.
-            </p>
-            <Button variant="neon" size="lg" onClick={handleGetStartedClick}>
-              Opret gratis profil
-            </Button>
+            {currentUserId ? (
+              <>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                  Hjælp fællesskabet med at vokse
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+                  GearNinja.dk bliver bedre, jo flere musikere der er med. Inviter en ven og vær med til at bygge fællesskabet.
+                </p>
+                <Button variant="neon" size="lg" onClick={() => setShowShareModal(true)}>
+                  <Share2 className="w-5 h-5 mr-2" />
+                  Del GearNinja.dk
+                </Button>
+              </>
+            ) : (
+              <>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+                  Klar til at tage din musik til næste niveau?
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+                  Opret en gratis profil i dag og bliv en del af Danmarks hurtigst
+                  voksende musikfællesskab.
+                </p>
+                <Button variant="neon" size="lg" onClick={handleGetStartedClick}>
+                  Opret gratis profil
+                </Button>
+              </>
+            )}
           </div>
           <div className="absolute inset-0 bg-grid-white/[0.02]" />
         </div>
       </section>
+
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            onClick={() => setShowShareModal(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative bg-background border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl"
+          >
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            
+            <h3 className="text-xl font-bold text-white mb-2">Del GearNinja.dk</h3>
+            <p className="text-muted-foreground text-sm mb-6">
+              Kopier linket og del det med dine musikervenner.
+            </p>
+            
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-secondary/50 border border-white/10 rounded-lg px-4 py-3 text-white">
+                https://gearninja.dk
+              </div>
+              <Button
+                variant="neon"
+                onClick={handleCopyLink}
+                className="shrink-0"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Kopieret
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4 mr-2" />
+                    Kopier
+                  </>
+                )}
+              </Button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
