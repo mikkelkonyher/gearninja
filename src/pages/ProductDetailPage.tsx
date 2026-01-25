@@ -450,7 +450,9 @@ export function ProductDetailPage() {
                       </span>
                       {product.sold_at && sale?.status === "completed" && (
                         <span className="text-xs text-muted-foreground">
-                          Slettes automatisk om {Math.max(0, 3 - Math.floor((new Date().getTime() - new Date(product.sold_at).getTime()) / (1000 * 60 * 60 * 24)))} dage
+                          {Math.max(0, 3 - Math.floor((new Date().getTime() - new Date(product.sold_at).getTime()) / (1000 * 60 * 60 * 24))) === 0
+                            ? "Produktet er ikke længere synligt for offentligheden"
+                            : `Slettes automatisk om ${Math.max(0, 3 - Math.floor((new Date().getTime() - new Date(product.sold_at).getTime()) / (1000 * 60 * 60 * 24)))} dage`}
                         </span>
                       )}
                       {product.sold_at && sale?.status !== "completed" && (
