@@ -66,6 +66,8 @@ export function CreateGuitarPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [images, setImages] = useState<ImageFile[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [selectedSwapIndex, setSelectedSwapIndex] = useState<number | null>(null);
@@ -85,7 +87,7 @@ export function CreateGuitarPage() {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setError("Log ind for at oprette en annonce");
+        setAuthError("Log ind for at oprette en annonce");
       }
     };
     checkAuth();
@@ -137,6 +139,7 @@ export function CreateGuitarPage() {
 
     setImages([...images, ...newImages]);
     setError(null);
+    if (fieldErrors.images) setFieldErrors({ ...fieldErrors, images: "" });
   };
 
   const removeImage = (index: number) => {
@@ -254,14 +257,36 @@ export function CreateGuitarPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
+    // Validate all required fields
+    const errors: Record<string, string> = {};
+    
     if (!formData.type) {
-      setError("Vælg venligst en type");
-      return;
+      errors.type = "Vælg venligst en type";
+    }
+    if (!formData.brand.trim()) {
+      errors.brand = "Indtast venligst et mærke";
+    }
+    if (!formData.model.trim()) {
+      errors.model = "Indtast venligst en model";
+    }
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      errors.price = "Indtast venligst en gyldig pris";
+    }
+    if (!formData.location) {
+      errors.location = "Vælg venligst en lokation";
+    }
+    if (!formData.condition) {
+      errors.condition = "Vælg venligst produktets stand";
+    }
+    if (images.length === 0) {
+      errors.images = "Tilføj mindst ét billede";
     }
 
-    if (images.length === 0) {
-      setError("Tilføj mindst ét billede");
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Udfyld venligst alle obligatoriske felter markeret med *");
       return;
     }
 
@@ -353,9 +378,9 @@ export function CreateGuitarPage() {
             </p>
           </div>
 
-          {error && (
+          {authError && (
             <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {error}
+              {authError}
             </div>
           )}
 
@@ -368,10 +393,13 @@ export function CreateGuitarPage() {
               <select
                 required
                 value={formData.type}
-                onChange={(e) =>
-                  setFormData({ ...formData, type: e.target.value })
-                }
-                className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, type: e.target.value });
+                  if (fieldErrors.type) setFieldErrors({ ...fieldErrors, type: "" });
+                }}
+                className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                  fieldErrors.type ? "border-red-500" : "border-white/10"
+                }`}
               >
                 <option value="">Vælg type</option>
                 {guitarTypes.map((type) => (
@@ -380,45 +408,62 @@ export function CreateGuitarPage() {
                   </option>
                 ))}
               </select>
+              {fieldErrors.type && (
+                <p className="text-xs text-red-400">{fieldErrors.type}</p>
+              )}
             </div>
 
             {/* Brand and Model */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  Mærke
+                  Mærke <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   maxLength={100}
                   value={formData.brand}
-                  onChange={(e) =>
-                    setFormData({ ...formData, brand: e.target.value })
-                  }
-                  className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                  onChange={(e) => {
+                    setFormData({ ...formData, brand: e.target.value });
+                    if (fieldErrors.brand) setFieldErrors({ ...fieldErrors, brand: "" });
+                  }}
+                  className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                    fieldErrors.brand ? "border-red-500" : "border-white/10"
+                  }`}
                   placeholder="f.eks. Fender, Gibson"
                 />
-                <p className="text-xs text-muted-foreground">
-                  {formData.brand.length}/100 tegn
-                </p>
+                {fieldErrors.brand ? (
+                  <p className="text-xs text-red-400">{fieldErrors.brand}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {formData.brand.length}/100 tegn
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  Model
+                  Model <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   maxLength={100}
                   value={formData.model}
-                  onChange={(e) =>
-                    setFormData({ ...formData, model: e.target.value })
-                  }
-                  className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                  onChange={(e) => {
+                    setFormData({ ...formData, model: e.target.value });
+                    if (fieldErrors.model) setFieldErrors({ ...fieldErrors, model: "" });
+                  }}
+                  className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                    fieldErrors.model ? "border-red-500" : "border-white/10"
+                  }`}
                   placeholder="f.eks. Stratocaster"
                 />
-                <p className="text-xs text-muted-foreground">
-                  {formData.model.length}/100 tegn
-                </p>
+                {fieldErrors.model ? (
+                  <p className="text-xs text-red-400">{fieldErrors.model}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    {formData.model.length}/100 tegn
+                  </p>
+                )}
               </div>
             </div>
 
@@ -446,30 +491,39 @@ export function CreateGuitarPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  Pris (kr.)
+                  Pris (kr.) <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="number"
                   min="0"
                   step="0.01"
                   value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
-                  className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                  onChange={(e) => {
+                    setFormData({ ...formData, price: e.target.value });
+                    if (fieldErrors.price) setFieldErrors({ ...fieldErrors, price: "" });
+                  }}
+                  className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                    fieldErrors.price ? "border-red-500" : "border-white/10"
+                  }`}
                   placeholder="0.00"
                 />
+                {fieldErrors.price && (
+                  <p className="text-xs text-red-400">{fieldErrors.price}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  Lokation
+                  Lokation <span className="text-red-400">*</span>
                 </label>
                 <select
                   value={formData.location}
-                  onChange={(e) =>
-                    setFormData({ ...formData, location: e.target.value })
-                  }
-                  className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                  onChange={(e) => {
+                    setFormData({ ...formData, location: e.target.value });
+                    if (fieldErrors.location) setFieldErrors({ ...fieldErrors, location: "" });
+                  }}
+                  className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                    fieldErrors.location ? "border-red-500" : "border-white/10"
+                  }`}
                 >
                   <option value="">Vælg lokation</option>
                   {locations.map((location) => (
@@ -478,17 +532,23 @@ export function CreateGuitarPage() {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.location && (
+                  <p className="text-xs text-red-400">{fieldErrors.location}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">
-                  Stand
+                  Stand <span className="text-red-400">*</span>
                 </label>
                 <select
                   value={formData.condition}
-                  onChange={(e) =>
-                    setFormData({ ...formData, condition: e.target.value })
-                  }
-                  className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                  onChange={(e) => {
+                    setFormData({ ...formData, condition: e.target.value });
+                    if (fieldErrors.condition) setFieldErrors({ ...fieldErrors, condition: "" });
+                  }}
+                  className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                    fieldErrors.condition ? "border-red-500" : "border-white/10"
+                  }`}
                 >
                   <option value="">Vælg stand</option>
                   {conditions.map((cond) => (
@@ -497,6 +557,9 @@ export function CreateGuitarPage() {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.condition && (
+                  <p className="text-xs text-red-400">{fieldErrors.condition}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-300">Produktionsår</label>
@@ -524,12 +587,15 @@ export function CreateGuitarPage() {
                 Billeder <span className="text-red-400">*</span> (max 6, første
                 er hovedbillede)
               </label>
+              {fieldErrors.images && (
+                <p className="text-xs text-red-400">{fieldErrors.images}</p>
+              )}
               {images.length > 1 && (
                 <p className="text-xs text-muted-foreground">
                   Tryk på et billede for at vælge det, og tryk på et andet for at bytte plads
                 </p>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className={`grid grid-cols-2 md:grid-cols-3 gap-4 ${fieldErrors.images ? "ring-1 ring-red-500 rounded-lg p-2" : ""}`}>
                 {images.map((image, index) => (
                   <motion.div
                     key={index}
@@ -634,6 +700,12 @@ export function CreateGuitarPage() {
                 )}
               </Button>
             </div>
+
+            {error && (
+              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                {error}
+              </div>
+            )}
           </form>
         </motion.div>
       </div>

@@ -54,6 +54,8 @@ export function CreateOevelokalerPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [images, setImages] = useState<ImageFile[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [selectedSwapIndex, setSelectedSwapIndex] = useState<number | null>(null);
@@ -73,7 +75,7 @@ export function CreateOevelokalerPage() {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setError("Log ind for at oprette en annonce");
+        setAuthError("Log ind for at oprette en annonce");
       }
     };
     checkAuth();
@@ -125,6 +127,7 @@ export function CreateOevelokalerPage() {
 
     setImages([...images, ...newImages]);
     setError(null);
+    if (fieldErrors.images) setFieldErrors({ ...fieldErrors, images: "" });
   };
 
   const removeImage = (index: number) => {
@@ -242,19 +245,33 @@ export function CreateOevelokalerPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
+    // Validate all required fields
+    const errors: Record<string, string> = {};
+    
     if (!formData.type) {
-      setError("Vælg venligst en type");
-      return;
+      errors.type = "Vælg venligst en type";
     }
-
+    if (!formData.name.trim()) {
+      errors.name = "Indtast venligst et navn";
+    }
+    if (!formData.location) {
+      errors.location = "Vælg venligst en lokation";
+    }
     if (!formData.paymentType) {
-      setError("Vælg venligst en betalingstype");
-      return;
+      errors.paymentType = "Vælg venligst en betalingstype";
+    }
+    if (!formData.price || parseFloat(formData.price) <= 0) {
+      errors.price = "Indtast venligst en gyldig pris";
+    }
+    if (images.length === 0) {
+      errors.images = "Tilføj mindst ét billede";
     }
 
-    if (images.length === 0) {
-      setError("Tilføj mindst ét billede");
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Udfyld venligst alle obligatoriske felter markeret med *");
       return;
     }
 
@@ -345,9 +362,9 @@ export function CreateOevelokalerPage() {
             </p>
           </div>
 
-          {error && (
+          {authError && (
             <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {error}
+              {authError}
             </div>
           )}
 
@@ -360,10 +377,13 @@ export function CreateOevelokalerPage() {
               <select
                 required
                 value={formData.type}
-                onChange={(e) =>
-                  setFormData({ ...formData, type: e.target.value })
-                }
-                className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, type: e.target.value });
+                  if (fieldErrors.type) setFieldErrors({ ...fieldErrors, type: "" });
+                }}
+                className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                  fieldErrors.type ? "border-red-500" : "border-white/10"
+                }`}
               >
                 <option value="">Vælg type</option>
                 {roomTypes.map((type) => (
@@ -372,24 +392,36 @@ export function CreateOevelokalerPage() {
                   </option>
                 ))}
               </select>
+              {fieldErrors.type && (
+                <p className="text-xs text-red-400">{fieldErrors.type}</p>
+              )}
             </div>
 
             {/* Name */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Navn</label>
+              <label className="text-sm font-medium text-gray-300">
+                Navn <span className="text-red-400">*</span>
+              </label>
               <input
                 type="text"
                 maxLength={200}
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  if (fieldErrors.name) setFieldErrors({ ...fieldErrors, name: "" });
+                }}
                 placeholder="F.eks. Musikstudie i København"
-                className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                  fieldErrors.name ? "border-red-500" : "border-white/10"
+                }`}
               />
-              <p className="text-xs text-muted-foreground">
-                {formData.name.length}/200 tegn
-              </p>
+              {fieldErrors.name ? (
+                <p className="text-xs text-red-400">{fieldErrors.name}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {formData.name.length}/200 tegn
+                </p>
+              )}
             </div>
 
             {/* Address */}
@@ -412,13 +444,18 @@ export function CreateOevelokalerPage() {
 
             {/* Location */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300">Lokation</label>
+              <label className="text-sm font-medium text-gray-300">
+                Lokation <span className="text-red-400">*</span>
+              </label>
               <select
                 value={formData.location}
-                onChange={(e) =>
-                  setFormData({ ...formData, location: e.target.value })
-                }
-                className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                onChange={(e) => {
+                  setFormData({ ...formData, location: e.target.value });
+                  if (fieldErrors.location) setFieldErrors({ ...fieldErrors, location: "" });
+                }}
+                className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                  fieldErrors.location ? "border-red-500" : "border-white/10"
+                }`}
               >
                 <option value="">Vælg lokation</option>
                 {locations.map((loc) => (
@@ -427,6 +464,9 @@ export function CreateOevelokalerPage() {
                   </option>
                 ))}
               </select>
+              {fieldErrors.location && (
+                <p className="text-xs text-red-400">{fieldErrors.location}</p>
+              )}
             </div>
 
             {/* Description */}
@@ -458,10 +498,13 @@ export function CreateOevelokalerPage() {
                 <select
                   required
                   value={formData.paymentType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, paymentType: e.target.value })
-                  }
-                  className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                  onChange={(e) => {
+                    setFormData({ ...formData, paymentType: e.target.value });
+                    if (fieldErrors.paymentType) setFieldErrors({ ...fieldErrors, paymentType: "" });
+                  }}
+                  className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                    fieldErrors.paymentType ? "border-red-500" : "border-white/10"
+                  }`}
                 >
                   <option value="">Vælg betalingstype</option>
                   {paymentTypes.map((type) => (
@@ -470,20 +513,31 @@ export function CreateOevelokalerPage() {
                     </option>
                   ))}
                 </select>
+                {fieldErrors.paymentType && (
+                  <p className="text-xs text-red-400">{fieldErrors.paymentType}</p>
+                )}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Pris</label>
+                <label className="text-sm font-medium text-gray-300">
+                  Pris <span className="text-red-400">*</span>
+                </label>
                 <input
                   type="number"
                   value={formData.price}
-                  onChange={(e) =>
-                    setFormData({ ...formData, price: e.target.value })
-                  }
+                  onChange={(e) => {
+                    setFormData({ ...formData, price: e.target.value });
+                    if (fieldErrors.price) setFieldErrors({ ...fieldErrors, price: "" });
+                  }}
                   placeholder="F.eks. 500"
                   min="0"
                   step="0.01"
-                  className="w-full bg-background/50 border border-white/10 rounded-lg py-2 px-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all"
+                  className={`w-full bg-background/50 border rounded-lg py-2 px-3 text-white placeholder:text-muted-foreground focus:outline-none focus:border-neon-blue focus:ring-1 focus:ring-neon-blue transition-all ${
+                    fieldErrors.price ? "border-red-500" : "border-white/10"
+                  }`}
                 />
+                {fieldErrors.price && (
+                  <p className="text-xs text-red-400">{fieldErrors.price}</p>
+                )}
               </div>
             </div>
 
@@ -511,12 +565,15 @@ export function CreateOevelokalerPage() {
                 Billeder <span className="text-red-400">*</span> (max 6, første
                 er hovedbillede)
               </label>
+              {fieldErrors.images && (
+                <p className="text-xs text-red-400">{fieldErrors.images}</p>
+              )}
               {images.length > 1 && (
                 <p className="text-xs text-muted-foreground">
                   Tryk på et billede for at vælge det, og tryk på et andet for at bytte plads
                 </p>
               )}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className={`grid grid-cols-2 md:grid-cols-3 gap-4 ${fieldErrors.images ? "ring-1 ring-red-500 rounded-lg p-2" : ""}`}>
                 {images.map((image, index) => (
                   <div
                     key={index}
@@ -620,6 +677,12 @@ export function CreateOevelokalerPage() {
                 )}
               </Button>
             </div>
+
+            {error && (
+              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+                {error}
+              </div>
+            )}
           </form>
         </motion.div>
       </div>
