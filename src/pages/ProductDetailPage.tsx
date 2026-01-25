@@ -433,12 +433,12 @@ export function ProductDetailPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
-              className="space-y-6"
+              className="space-y-6 min-w-0 overflow-hidden"
             >
               {/* Header Section */}
-              <div className="pb-6 border-b border-white/10">
-                <div className="flex items-center gap-3 mb-3">
-                  <h1 className="text-3xl md:text-4xl font-bold text-white">
+              <div className="pb-6 border-b border-white/10 min-w-0">
+                <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <h1 className="text-3xl md:text-4xl font-bold text-white break-words w-full">
                     {product.brand && product.model
                       ? `${product.brand} ${product.model}`
                       : product.type}
@@ -587,7 +587,7 @@ export function ProductDetailPage() {
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Mærke
                         </h3>
-                        <p className="text-white text-base">{product.brand}</p>
+                        <p className="text-white text-base break-words">{product.brand}</p>
                       </div>
                     )}
 
@@ -596,7 +596,7 @@ export function ProductDetailPage() {
                         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1.5">
                           Model
                         </h3>
-                        <p className="text-white text-base">{product.model}</p>
+                        <p className="text-white text-base break-words">{product.model}</p>
                       </div>
                     )}
                   </div>

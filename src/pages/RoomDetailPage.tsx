@@ -282,13 +282,13 @@ export function RoomDetailPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
-              className="space-y-6"
+              className="space-y-6 min-w-0 overflow-hidden"
             >
               {/* Header Section */}
-              <div className="pb-6 border-b border-white/10">
+              <div className="pb-6 border-b border-white/10 min-w-0">
                 <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex-1">
-                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 break-words">
                       {room.name || room.type}
                     </h1>
                     <div className="flex flex-wrap items-center gap-2">
@@ -339,7 +339,7 @@ export function RoomDetailPage() {
                         Lokation
                       </h3>
                     </div>
-                    <p className="text-white">{room.location}</p>
+                    <p className="text-white break-words">{room.location}</p>
                   </div>
                 )}
 
@@ -351,7 +351,7 @@ export function RoomDetailPage() {
                         Adresse
                       </h3>
                     </div>
-                    <p className="text-white">{room.address}</p>
+                    <p className="text-white break-words">{room.address}</p>
                   </div>
                 )}
 
