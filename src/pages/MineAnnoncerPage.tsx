@@ -598,13 +598,6 @@ export function MineAnnoncerPage() {
                             e.preventDefault();
                             handleDelete(item.id, item.itemType);
                           }}
-                          onTouchEnd={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            if (deletingId !== item.id) {
-                              handleDelete(item.id, item.itemType);
-                            }
-                          }}
                           disabled={deletingId === item.id}
                           className="p-2 rounded-lg bg-red-500/80 hover:bg-red-500 text-white backdrop-blur-sm transition-colors disabled:opacity-50"
                           title="Slet"

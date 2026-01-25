@@ -260,7 +260,7 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
     };
   };
 
-  const deleteChat = async (e: React.MouseEvent | React.TouchEvent, chat: ChatWithDetails) => {
+  const deleteChat = async (e: React.MouseEvent, chat: ChatWithDetails) => {
     e.stopPropagation(); // Prevent navigation
     e.preventDefault();
     if (!confirm("Er du sikker på, at du vil slette denne samtale?")) return;
@@ -415,7 +415,6 @@ export function ChatsSidebar({ currentChatId, onChatSelect }: ChatsSidebarProps)
                 {/* Delete Button - Always visible on mobile, hover on desktop */}
                 <button
                   onClick={(e) => deleteChat(e, chat)}
-                  onTouchEnd={(e) => deleteChat(e, chat)}
                   className="absolute right-2 bottom-2 p-2 rounded-full bg-background/80 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
                   title="Slet samtale"
                 >
