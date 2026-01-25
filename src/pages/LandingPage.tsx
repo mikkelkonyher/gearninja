@@ -391,10 +391,6 @@ export function LandingPage() {
                       <h3 className="text-sm font-semibold text-white line-clamp-2 flex-1">
                         {getProductTitle(product)}
                       </h3>
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <span>♥</span>
-                        <span>{product.favoriteCount}</span>
-                      </span>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">
                       {product.type && `${product.type} · `}
