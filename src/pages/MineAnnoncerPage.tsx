@@ -582,11 +582,6 @@ export function MineAnnoncerPage() {
                             e.preventDefault();
                             handleEdit(item.id, item.itemType);
                           }}
-                          onTouchEnd={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleEdit(item.id, item.itemType);
-                          }}
                           className="p-2 rounded-lg bg-blue-500/80 hover:bg-blue-500 text-white backdrop-blur-sm transition-colors"
                           title="Rediger"
                         >
