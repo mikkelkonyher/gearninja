@@ -1,17 +1,18 @@
 # GearNinja
 
-Et online musikmarked og fællesskab skabt af musikere – for musikere.
+Et dansk online musikmarked og fællesskab skabt af musikere – for musikere.
 
 ## Om projektet
 
 GearNinja er en non-profit platform, hvor musikere kan købe, sælge og leje musikudstyr og øvelokaler. Bygget på gennemsigtighed og tillid, uden skjult datahøst eller algoritmer med skjulte dagsordener.
 
 **Features:**
-- 🎸 Køb og salg af instrumenter (guitar, bas, trommer, keyboards, blæsere, strygere, studieudstyr)
-- 🎵 Udlejning af øvelokaler
-- 💬 Forum og chat for musikfællesskabet
-- ⭐ Brugeranmeldelser og ratings
-- 🔔 Notifikationer og favoritter
+
+- Køb og salg af instrumenter (guitar, bas, trommer, keyboards, blæsere, strygere, studieudstyr)
+- Udlejning af øvelokaler
+- Forum og chat for musikfællesskabet
+- Brugeranmeldelser og ratings
+- Notifikationer og favoritter
 
 ## Tech Stack
 
@@ -36,4 +37,4 @@ npm run build
 
 ---
 
-*Hvor gearskift sker med god karma* ✨
+_Hvor gearskift sker med god karma_
