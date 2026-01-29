@@ -20,7 +20,7 @@ GearNinja er en non-profit platform, hvor musikere kan købe, sælge og leje mus
 - **Styling:** Tailwind CSS
 - **Backend:** Supabase (Auth, Database, Storage)
 - **Edge Functions:** Deno/TypeScript
-- **AI Integration:** Claude with MCP (Model Context Protocol)
+- **AI Integration:** Claude Code via MCP (Supabase SQL & Schema Management)
 - **Animations:** Framer Motion
 
 ## Udvikling
@@ -38,4 +38,4 @@ npm run build
 
 ---
 
-_Hvor gearskift sker med god karma_
+*Hvor gearskift sker med god karma*
