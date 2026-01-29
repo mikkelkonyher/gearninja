@@ -20,6 +20,7 @@ GearNinja er en non-profit platform, hvor musikere kan købe, sælge og leje mus
 - **Styling:** Tailwind CSS
 - **Backend:** Supabase (Auth, Database, Storage)
 - **Edge Functions:** Deno/TypeScript
+- **AI Integration:** Claude with MCP (Model Context Protocol)
 - **Animations:** Framer Motion
 
 ## Udvikling
