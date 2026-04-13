@@ -39,10 +39,12 @@ import { ForumPage } from './pages/ForumPage';
 import { ForumThreadPage } from './pages/ForumThreadPage';
 import { CreateThreadPage } from './pages/CreateThreadPage';
 import { AboutPage } from './pages/AboutPage';
+import { Analytics } from '@vercel/analytics/react';
 
 function App() {
   return (
     <Router>
+      <Analytics />
       <Layout>
         <Routes>
           <Route path="/" element={<LandingPage />} />
